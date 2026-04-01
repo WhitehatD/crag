@@ -6,147 +6,322 @@ scaffold-cli is a meta-framework for Claude Code. It interviews you about your p
 
 ---
 
-## The Problem
+## Quick Start
 
-Setting up Claude Code for a serious project means creating skills, hooks, agents, rules, settings, and CI playbooks. Today you have two options:
+```bash
+# Install globally
+npm install -g scaffold-cli
 
-1. **Templates** — copy someone's config and rewrite it for your stack. It works for their project, not yours. Spring Boot ≠ Express ≠ Django. Kubernetes ≠ Docker Compose ≠ Vercel.
+# Navigate to your project
+cd my-project
 
-2. **Collections** — browse 220+ skills, 1000+ templates, pick what you need, wire them together, hope they don't conflict. Manual assembly with no guarantees.
+# Run the interview → generates everything
+scaffold init
 
-Both produce **static output** that decays. You write "11 Gradle subprojects" in your skill file — next month there's 12 and the instruction is lying to your agent. Every hardcoded fact is a future bug.
-
-## The Solution
-
-scaffold-cli generates infrastructure that **maintains itself**.
-
-```
-You run: /scaffold-project
-Agent asks: What's your stack? How do you deploy? What's your quality bar?
-Agent generates: Complete .claude/ directory — skills, hooks, agents, playbooks
-Every instruction classified: Discovery (auto-updates) or Governance (human-controlled)
-Result: Workflows that get more accurate with every session, not less
+# Verify infrastructure is complete
+scaffold check
 ```
 
-### Discovery vs Governance
+Or without installing:
+```bash
+npx scaffold-cli init
+```
 
-The core architectural principle. Every instruction in a generated workflow is one of two types:
+Or from inside Claude Code directly:
+```bash
+/scaffold-project
+```
 
-**Discovery** — reads the codebase at runtime:
+---
+
+## How It Works
+
+```mermaid
+flowchart TB
+    subgraph INPUT["You answer questions"]
+        Q1["What's your stack?"]
+        Q2["How do you deploy?"]
+        Q3["What's your quality bar?"]
+        Q4["Branch strategy?"]
+        Q1 --> Q2 --> Q3 --> Q4
+    end
+
+    subgraph CLASSIFY["Every instruction classified"]
+        D["Discovery\nReads codebase at runtime\nAuto-updates when code changes"]
+        G["Governance\nYour policies and standards\nOnly changes when you decide"]
+    end
+
+    subgraph OUTPUT["Generated infrastructure"]
+        SKILLS["Skills\npre-start + post-start"]
+        HOOKS["Hooks\ndrift · circuit-breaker\ncompaction · auto-format"]
+        AGENTS["Agents\ntest-runner · security\ndeps · auditor"]
+        OTHER["CI Playbook\nSettings · Rules\nSession config"]
+    end
+
+    INPUT --> CLASSIFY
+    CLASSIFY --> OUTPUT
+
+    style INPUT fill:#1a1a2e,stroke:#bb86fc,color:#eee
+    style CLASSIFY fill:#1a3a1a,stroke:#00ff88,color:#eee
+    style OUTPUT fill:#0f3460,stroke:#00d2ff,color:#eee
+    style D fill:#2d4a5a,stroke:#03dac6,color:#eee
+    style G fill:#3a2a1a,stroke:#ffbb33,color:#eee
+```
+
+---
+
+## The Session Loop
+
+Once generated, your Claude Code sessions follow this self-improving loop:
+
+```mermaid
+flowchart LR
+    subgraph PRE["Pre-start"]
+        direction TB
+        P1["Hooks fire\ndrift detection"]
+        P2["MemStack loads\npast knowledge"]
+        P3["Adaptive depth\nskip unchanged modules"]
+        P4["CI health check"]
+        P1 --> P2 --> P3 --> P4
+    end
+
+    TASK["Execute\ntask"]
+
+    subgraph POST["Post-start"]
+        direction TB
+        V1["Validate\nlint · types · build · tests"]
+        V2["Security review"]
+        V3["Capture knowledge\nto MemStack"]
+        V4["Self-update\nfix stale instructions"]
+        V5["Commit · Push\nVerify deploy"]
+        V1 --> V2 --> V3 --> V4 --> V5
+    end
+
+    PRE --> TASK --> POST
+    POST -.->|"Knowledge feeds\nnext session"| PRE
+
+    style PRE fill:#1a2a3a,stroke:#03dac6,color:#eee
+    style TASK fill:#2a1a3a,stroke:#bb86fc,color:#eee
+    style POST fill:#1a3a2a,stroke:#00ff88,color:#eee
+```
+
+**Each session reads less and knows more than the last.** Discovery instructions adapt to code changes. Knowledge insights are verified against source files. Stale instructions get corrected. The system compounds.
+
+---
+
+## The Core Idea: Discovery vs Governance
+
+The architectural principle that makes generated infrastructure self-maintaining.
+
+```mermaid
+flowchart LR
+    subgraph DISCOVERY["Discovery Instructions"]
+        D1["Read settings.gradle.kts\nto find subprojects"]
+        D2["Glob controller directory\nto count endpoints"]
+        D3["Read CI workflow file\nfor current pipeline stages"]
+    end
+
+    subgraph GOVERNANCE["Governance Rules"]
+        G1["Every endpoint must\nhave rate limiting"]
+        G2["Gradle flags always:\n--console=plain -q --no-daemon"]
+        G3["Never commit as\nprimary author"]
+    end
+
+    CODE["Codebase changes\nnew controller added"] -.->|"Auto-discovered\nnext session"| DISCOVERY
+    HUMAN["Team decision\nnew security policy"] -.->|"Manually updated\nwhen you decide"| GOVERNANCE
+
+    S86["S8.6 Self-Update\nafter every task"] -->|"Updates facts"| DISCOVERY
+    S86 -->|"Never touches"| GOVERNANCE
+
+    style DISCOVERY fill:#2d4a5a,stroke:#03dac6,color:#eee
+    style GOVERNANCE fill:#3a2a1a,stroke:#ffbb33,color:#eee
+    style S86 fill:#2a1a3a,stroke:#bb86fc,color:#eee
+```
+
+**Discovery** reads the filesystem at runtime:
 ```markdown
 ## 3. Architecture Map
 Read the controller directory and count them:
 Glob backend/src/main/java/com/example/controller/*
 ```
-This never goes stale. If you add a controller, the agent discovers it naturally. No one updates the instruction.
+Add a controller → the agent discovers it naturally. No one updates the instruction.
 
-**Governance** — encodes your policies:
+**Governance** encodes your policies:
 ```markdown
 ## 5. Development Mentality
 Every endpoint must have rate limiting.
-Gradle flags always: --console=plain -q --no-daemon --stacktrace
 Never commit as primary author — co-author only.
 ```
-This only changes when you decide to change it. The agent enforces it but never modifies it.
+This only changes when you decide. The agent enforces it but never modifies it.
 
-After every task, a self-update step (S8.6) checks: "Did any discovery instruction find something different from what the workflow described?" If yes, it updates the workflow. Governance rules are never touched.
+---
 
-**The result:** workflows that self-correct their facts while preserving your quality bar. Each session leaves the instructions more accurate without breaking your standards.
+## CLI Commands
+
+### `scaffold init`
+
+Launches the interactive interview and generates all infrastructure files.
+
+```
+$ scaffold init
+
+  Starting scaffold interview...
+
+  Claude Code will ask about your project.
+  Answer the questions — it generates your .claude/ infrastructure.
+```
+
+The interview covers 8 phases — identity, stack, architecture, deployment, quality, security, workflow, session management. Questions adapt based on your answers. "Spring Boot + Gradle" auto-infers Java, JUnit, and `./gradlew` without asking.
+
+### `scaffold check`
+
+Verifies all generated infrastructure files exist.
+
+```
+$ scaffold check
+
+  Checking scaffold infrastructure in /home/user/my-project
+
+  ✓ Pre-start skill (.claude/skills/pre-start-context/SKILL.md)
+  ✓ Post-start skill (.claude/skills/post-start-validation/SKILL.md)
+  ✓ Drift detector hook (.claude/hooks/drift-detector.sh)
+  ✓ Circuit breaker hook (.claude/hooks/circuit-breaker.sh)
+  ✓ Test runner agent (.claude/agents/test-runner.md)
+  ✓ Security reviewer agent (.claude/agents/security-reviewer.md)
+  ✓ CI playbook (.claude/ci-playbook.md)
+  ✓ Session name (.claude/.session-name)
+  ✓ Settings with hooks (.claude/settings.local.json)
+
+  9/9 files present.
+  Infrastructure complete.
+```
+
+### `scaffold install`
+
+Installs the scaffold agent globally so you can use `/scaffold-project` from any Claude Code session.
+
+```
+$ scaffold install
+
+  Installed scaffold-project agent to ~/.claude/agents/scaffold-project.md
+  You can now run /scaffold-project from any Claude Code session.
+```
+
+---
 
 ## What Gets Generated
 
 ```
 .claude/
 ├── skills/
-│   ├── pre-start-context/SKILL.md        # Session startup: context loading
-│   └── post-start-validation/SKILL.md    # Task completion: validation + capture
+│   ├── pre-start-context/SKILL.md        # Context loading workflow
+│   └── post-start-validation/SKILL.md    # Validation + knowledge capture
 ├── hooks/
-│   ├── drift-detector.sh                 # Checks if skill assumptions still hold
-│   ├── circuit-breaker.sh                # Detects failure loops (warns at 3, alerts at 5)
-│   ├── pre-compact-snapshot.sh           # Saves state before context compaction
+│   ├── drift-detector.sh                 # Checks if skill assumptions hold
+│   ├── circuit-breaker.sh                # Detects failure loops
+│   ├── pre-compact-snapshot.sh           # Saves state before compaction
 │   └── post-compact-recovery.sh          # Restores context after compaction
 ├── agents/
 │   ├── test-runner.md                    # Parallel test execution (Sonnet)
 │   ├── security-reviewer.md             # Security audit (Opus, read-only)
 │   ├── dependency-scanner.md            # Vulnerability scanning
 │   └── skill-auditor.md                 # Workflow accuracy audit
-├── rules/                               # MemStack integration (if enabled)
+├── rules/                               # Cross-session memory (if enabled)
 │   ├── knowledge.md
 │   ├── diary.md
 │   └── echo.md
 ├── ci-playbook.md                        # Known CI failure patterns
 ├── .session-name                         # Notification routing
-└── settings.local.json                   # Hooks + permissions (rtk wildcards)
+└── settings.local.json                   # Hooks + permissions
 
 .agents/
 └── workflows/
-    ├── pre-start-context.md              # Skill copy for workflow runners
+    ├── pre-start-context.md
     └── post-start-validation.md
 ```
 
-Every file is tailored to YOUR answers. Spring Boot projects get Gradle gates. Next.js projects get Biome + TSC gates. Kubernetes deployments get pod health verification. Docker Compose deployments get blue-green checks. Nothing is generic — everything is specific.
+Every file is tailored to your answers. Spring Boot → Gradle gates. Next.js → Biome + TSC gates. Kubernetes → pod health verification. Docker Compose → blue-green checks. Nothing generic.
 
-## How the Interview Works
+---
 
-The agent asks 8 phases of questions, one at a time, adapting based on your answers:
+## The Interview
 
-| Phase | What it covers | What it generates |
-|-------|---------------|------------------|
-| **Identity** | Project name, description, purpose | MemStack project ID, .session-name, skill headers |
+| Phase | Questions | What it generates |
+|-------|-----------|------------------|
+| **Identity** | Name, description, purpose | Project IDs, session routing, skill headers |
 | **Tech Stack** | Languages, frameworks, databases, build tools | Gate commands, test commands, dependency scanning |
-| **Architecture** | Monolith/microservices, mono/multi-repo | Service discovery patterns, cross-stack checks |
-| **Deployment** | CI/CD, infrastructure, deploy strategy | S9 commit/push/verify flow, CI monitoring |
-| **Quality Bar** | Testing, linting, formatting, type checking | S2-S4 validation gates, auto-format hooks |
-| **Security** | Auth, rate limiting, uploads, headers | S7 security review checklist |
-| **Workflow** | Branch strategy, commits, autonomy level | S0 execution policy, S9 commit flow |
-| **Session** | Remote access, notifications, persistence | Hooks, .session-name, resume aliases |
+| **Architecture** | Monolith/microservices, mono/multi-repo | Service discovery, cross-stack checks |
+| **Deployment** | CI/CD, infrastructure, deploy strategy | Commit/push/verify flow, CI monitoring |
+| **Quality** | Testing, linting, formatting, type checking | Validation gates, auto-format hooks |
+| **Security** | Auth, rate limiting, uploads, headers | Security review checklist |
+| **Workflow** | Branch strategy, commits, autonomy level | Execution policy, commit flow |
+| **Session** | Remote access, notifications, persistence | Hooks, notifications, resume aliases |
 
-Questions are skipped when the answer is obvious from previous answers. A "Spring Boot + Gradle" answer auto-infers Java, JUnit, and `./gradlew` commands without asking.
-
-## Usage
-
-```bash
-# From any Claude Code session:
-/scaffold-project
-
-# The agent will guide you through the interview.
-# After answering, it generates all files in the current directory.
-# Review, customize governance rules, and start working.
-```
+---
 
 ## Why Not Templates?
 
 | | Templates | Collections | scaffold-cli |
 |---|---|---|---|
-| **Adapts to your stack** | No (one stack per template) | Manual assembly | Yes (from interview) |
-| **Self-maintaining** | No (hardcoded facts rot) | No | Yes (discovery/governance split) |
-| **Integrated** | Partially | No (mix and match) | Fully (hooks aware of MemStack, skills aware of hooks) |
-| **Classified instructions** | No | No | Yes (every line is Discovery or Governance) |
-| **Self-correcting** | No | No | Yes (S8.6 updates discovery, preserves governance) |
-| **Time to working setup** | Hours of customization | Days of assembly | One interview session |
+| Adapts to your stack | No | Manual | **Yes** |
+| Self-maintaining | No | No | **Yes** |
+| Integrated components | Partially | No | **Fully** |
+| Classified instructions | No | No | **Yes** |
+| Self-correcting | No | No | **Yes** |
+| Time to setup | Hours | Days | **One session** |
+
+---
+
+## Hooks Generated
+
+All hooks are **deterministic** (100% reliable) and **zero token cost** (run as shell commands, not LLM calls).
+
+```mermaid
+flowchart LR
+    subgraph SESSION["Hook Lifecycle"]
+        direction TB
+        H1["SessionStart\nDrift detector runs"]
+        H2["UserPromptSubmit\nBranch context injected"]
+        H3["PreToolUse\nDestructive command guard"]
+        H4["PostToolUse\nAuto-format after edits"]
+        H5["PostToolUseFailure\nCircuit breaker tracks"]
+        H6["PreCompact\nSnapshot state to memory"]
+        H7["PostCompact\nRestore context from memory"]
+        H1 --> H2 --> H3 --> H4 --> H5 --> H6 --> H7
+    end
+
+    style SESSION fill:#3a1a1a,stroke:#ff6b6b,color:#eee
+```
+
+---
 
 ## Architecture Principles
 
-1. **Enforce, don't instruct.** If it can be a hook, make it a hook. Hooks are 100% reliable at zero token cost. CLAUDE.md rules are ~80% compliance.
+1. **Enforce, don't instruct.** Hooks are 100% reliable at zero cost. CLAUDE.md is ~80%. If it matters, make it a hook.
 
-2. **Discover, don't hardcode.** Every fact about the codebase should be read at runtime, not written in the skill file. Files get added, versions change, pipelines evolve. Discovery instructions adapt automatically.
+2. **Discover, don't hardcode.** Every codebase fact is read at runtime. Files get added, versions change, pipelines evolve. Discovery adapts.
 
-3. **Govern, don't hope.** Quality bar, security requirements, and workflow policies are governance rules that the agent enforces but never modifies. They change only when you change them.
+3. **Govern, don't hope.** Policies are enforced but never auto-modified. They change only when you change them.
 
-4. **Compound, don't repeat.** Cross-session memory (MemStack) means each session builds on the last. Stale insights are verified against source files. Knowledge self-corrects over time.
+4. **Compound, don't repeat.** Cross-session memory means each session builds on the last. Knowledge self-corrects over time.
 
-5. **Survive, don't restart.** Compaction hooks snapshot and restore state. Session persistence reconnects in seconds. Resume aliases pick up where you left off. Context is never truly lost.
+5. **Survive, don't restart.** Compaction hooks save and restore state. Sessions reconnect. Context is never truly lost.
 
-## Status
+---
 
-Early development. The scaffold agent works as a Claude Code agent (`/scaffold-project`). Future plans:
+## Roadmap
 
-- [ ] Template fragments per stack (Spring Boot, Next.js, Django, Go, Rust)
-- [ ] `--from-existing` mode (analyze a project and generate infrastructure)
-- [ ] `--diff` mode (compare generated vs current, suggest updates)
-- [ ] npm package (`npx scaffold-cli init`)
-- [ ] Test suite (generate for sample projects, verify output)
+- [x] Interview-driven scaffold agent
+- [x] CLI (`scaffold init`, `scaffold check`, `scaffold install`)
+- [ ] Template fragments per stack (Spring Boot, Next.js, Django, Go, Rust, Rails)
+- [ ] `scaffold analyze` — reads existing project, generates infrastructure without interview
+- [ ] `scaffold diff` — compares generated vs current, suggests updates
+- [ ] `scaffold upgrade` — updates generated files when scaffold-cli adds new features
+- [ ] Published npm package (`npx scaffold-cli init`)
+- [ ] Test suite across sample projects
 - [ ] Multi-agent orchestration templates
+
+---
 
 ## License
 
@@ -154,4 +329,4 @@ MIT
 
 ---
 
-*Built by [WhitehatD](https://github.com/WhitehatD). The discovery/governance framework and self-correcting workflow architecture are original contributions to the Claude Code ecosystem.*
+*Built by [WhitehatD](https://github.com/WhitehatD).*
