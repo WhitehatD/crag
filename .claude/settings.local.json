@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk node:*)",
+      "Bash(rtk npm:*)",
+      "Bash(rtk npx:*)",
+      "Bash(rtk git:*)",
+      "Bash(rtk gh:*)",
+      "Bash(rtk curl:*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {"matcher": "startup", "hooks": [{"type": "command", "command": "bash .claude/hooks/drift-detector.sh"}]}
+    ],
+    "PreCompact": [
+      {"hooks": [{"type": "command", "command": "bash .claude/hooks/pre-compact-snapshot.sh"}]}
+    ],
+    "PostCompact": [
+      {"hooks": [{"type": "command", "command": "bash .claude/hooks/post-compact-recovery.sh"}]}
+    ],
+    "PostToolUseFailure": [
+      {"hooks": [{"type": "command", "command": "bash .claude/hooks/circuit-breaker.sh"}]}
+    ]
+  }
+}
