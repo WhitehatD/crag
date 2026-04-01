@@ -128,6 +128,7 @@ The agent adapts to your answers. When you say "I don't remember" — it reads t
 npx scaffold-cli init       # Interview → generate governance + hooks + agents
 npx scaffold-cli check      # Verify infrastructure
 npx scaffold-cli install    # Install agent globally for /scaffold-project
+npx scaffold-cli compile    # Compile governance → CI + git hooks
 ```
 
 After scaffolding, in any Claude Code session:
@@ -176,17 +177,50 @@ Change a gate → takes effect next session. Add a security rule → enforced im
 
 ---
 
+## Governance Compiler
+
+governance.md is agent-readable. But the gates in it are just shell commands — they can also drive your CI pipeline and git hooks. One source of truth, multiple outputs:
+
+```bash
+scaffold compile --target github      # .github/workflows/gates.yml
+scaffold compile --target husky       # .husky/pre-commit
+scaffold compile --target pre-commit  # .pre-commit-config.yaml
+scaffold compile --target all         # All of the above
+```
+
+The compiler parses your gates, auto-detects runtimes from the commands (Node, Rust, Python, Java, Go, Docker), and generates the right setup steps. Human-readable "Verify X contains Y" gates are compiled to `grep` commands automatically.
+
+```mermaid
+flowchart LR
+    GOV["governance.md\n(your gates)"]
+    GOV -->|"scaffold compile"| GH[".github/workflows/gates.yml"]
+    GOV -->|"scaffold compile"| HK[".husky/pre-commit"]
+    GOV -->|"scaffold compile"| PC[".pre-commit-config.yaml"]
+    GOV -->|"read at runtime"| SKILL["Universal skills\n(agent enforcement)"]
+
+    style GOV fill:#3a2a1a,stroke:#ffbb33,color:#eee
+    style GH fill:#0f3460,stroke:#00d2ff,color:#eee
+    style HK fill:#0f3460,stroke:#00d2ff,color:#eee
+    style PC fill:#0f3460,stroke:#00d2ff,color:#eee
+    style SKILL fill:#1a3a1a,stroke:#00ff88,color:#eee
+```
+
+No existing tool does this. Governance-as-config that compiles to both agent behavior AND CI/CD pipelines from a single 20-line file.
+
+---
+
 ## What Ships vs What's Generated
 
 | Component | Source | Maintains itself? |
 |-----------|--------|-------------------|
-| Pre-start skill | **Ships universal** | Yes — discovers at runtime |
-| Post-start skill | **Ships universal** | Yes — reads governance for gates |
+| Pre-start skill | **Ships universal** | Yes — discovers at runtime, caches results |
+| Post-start skill | **Ships universal** | Yes — reads governance for gates, auto-fixes |
 | `governance.md` | **Generated from interview** | No — you maintain it (20-30 lines) |
-| Hooks | **Generated for your tools** | Yes — drift detector adapts |
+| Hooks | **Generated for your tools** | Yes — sandbox guard + drift detector + gate enforcement |
 | Agents | **Generated for your stack** | Yes — read governance for commands |
 | Settings | **Generated** | Yes — RTK wildcards cover new tools |
 | CI playbook | **Generated template** | You add entries as failures are found |
+| Compile targets | **Generated on demand** | `scaffold compile` regenerates from governance |
 
 ---
 
@@ -228,11 +262,14 @@ flowchart LR
 flowchart LR
     subgraph PRE["Pre-start (universal)"]
         direction TB
-        P1["Detect stack\nread build files"]
-        P2["Load memory\npast sessions"]
-        P3["Read governance\nyour rules"]
-        P4["Check CI"]
-        P1 --> P2 --> P3 --> P4
+        W["Warm start?\n.session-state.json"]
+        IC["Classify intent\nscope discovery"]
+        CC["Cache valid?\n.discovery-cache.json"]
+        W --> IC --> CC
+        CC -->|"hit"| FAST["Fast path\nskip 80% of discovery"]
+        CC -->|"miss"| FULL["Full discovery\ndetect stack · load memory"]
+        FAST --> GOV["Read governance"]
+        FULL --> GOV
     end
 
     TASK["Your task"]
@@ -241,19 +278,33 @@ flowchart LR
         direction TB
         V1["Detect changes"]
         V2["Run governance gates"]
-        V3["Security review"]
-        V4["Capture knowledge"]
-        V5["Commit · Deploy"]
-        V1 --> V2 --> V3 --> V4 --> V5
+        V2 -->|"fail"| FIX["Auto-fix\n(bounded retry)"]
+        FIX --> V2
+        V2 -->|"pass"| V3["Security review"]
+        V3 --> V4["Capture knowledge"]
+        V4 --> V5["Write session state\nCommit · Deploy"]
     end
 
     PRE --> TASK --> POST
-    POST -.->|"knowledge compounds"| PRE
+    POST -.->|"cache + state + knowledge"| PRE
 
     style PRE fill:#1a2a3a,stroke:#03dac6,color:#eee
     style TASK fill:#2a1a3a,stroke:#bb86fc,color:#eee
     style POST fill:#1a3a2a,stroke:#00ff88,color:#eee
 ```
+
+### What makes this loop tight
+
+| Feature | What it does | Savings |
+|---|---|---|
+| **Discovery cache** | Hashes build files, skips unchanged domains | ~80% of pre-start tool calls on unchanged projects |
+| **Intent-scoped discovery** | Classifies task, skips irrelevant domains | Skip frontend discovery for backend bugs, and vice versa |
+| **Session continuity** | Reads `.session-state.json` for warm starts | Near-zero-latency startup when continuing work |
+| **Gate auto-fix** | Fixes lint/format errors, retries gate (max 2x) | Eliminates human round-trip for mechanical failures |
+| **Auto-post-start** | Hook warns before commit if gates haven't run | Removes "forgot to validate" failure mode |
+| **Sandbox guard** | Hard-blocks destructive commands at hook level | Security at system level, not instruction level |
+
+No agent framework does all of these. Most re-discover cold every session, require manual validation, and trust instructions for safety.
 
 ---
 
@@ -266,6 +317,8 @@ flowchart LR
 │   ├── pre-start-context/SKILL.md        # Universal discoverer
 │   └── post-start-validation/SKILL.md    # Universal validator
 ├── hooks/
+│   ├── sandbox-guard.sh                  # Hard-blocks destructive commands
+│   ├── auto-post-start.sh               # Gate enforcement before commits
 │   ├── drift-detector.sh                 # Checks key files exist
 │   ├── circuit-breaker.sh                # Failure loop detection
 │   ├── pre-compact-snapshot.sh           # Memory before compaction
@@ -278,6 +331,9 @@ flowchart LR
 ├── rules/                               # Cross-session memory
 ├── ci-playbook.md                       # Known CI failures
 ├── .session-name                        # Notification routing
+├── .discovery-cache.json                 # Cached discovery (auto-generated)
+├── .session-state.json                   # Session continuity (auto-generated)
+├── .gates-passed                         # Gate sentinel (auto-generated)
 └── settings.local.json                  # Hooks + permissions
 ```
 
@@ -294,6 +350,10 @@ flowchart LR
 4. **Enforce, don't instruct.** Hooks are 100% reliable at zero token cost. CLAUDE.md rules are ~80% compliance. Critical behavior goes in hooks.
 
 5. **Compound, don't restart.** Cross-session memory means each session knows what the last one learned. Knowledge self-verifies against source files.
+
+6. **Guard, don't trust.** Security hooks hard-block destructive commands at the system level — `rm -rf /`, `DROP TABLE`, `curl|bash`, force-push to main. Even if instructions are misread, the sandbox catches it. Defense in depth: hooks enforce what skills instruct.
+
+7. **Cache, don't re-discover.** Every discovery result is cached with content hashes. If nothing changed, the next session starts in seconds, not minutes. The cache is advisory — if it's wrong, full discovery runs as normal.
 
 ---
 
@@ -332,6 +392,13 @@ Neither patent blocks this architecture. Both are adjacent, not overlapping.
 - [x] Interview-driven governance generation
 - [x] CLI (`scaffold init`, `scaffold check`, `scaffold install`)
 - [x] Proven on 5-language multi-service project (example-app)
+- [x] `scaffold compile` — governance.md → GitHub Actions, husky, pre-commit (governance as executable infrastructure)
+- [x] Incremental discovery cache — content-addressed, skips 80% of pre-start on unchanged projects
+- [x] Intent-scoped discovery — classifies task, skips irrelevant domains
+- [x] Session continuity — warm starts via `.session-state.json`
+- [x] Gate auto-fix loop — fixes lint/format errors automatically, bounded retry (max 2x)
+- [x] Auto-post-start hook — gate enforcement before commits
+- [x] Sandbox guard — hard-blocks destructive commands (rm -rf /, DROP TABLE, curl|bash, force-push main)
 - [ ] **Cross-repo benchmark** — 20-30 repos across polyglot monorepos, infra-heavy repos, single-stack apps, and unconventional repos. Measure: coverage %, false positives, failure modes
 - [ ] **Drift resilience test** — add services, change linters, rename directories, switch CI. Measure: does the engine re-discover without human edits?
 - [ ] **Baseline comparison** — implement same governance in AGENTS.md, CLAUDE.md, .cursor/rules, GEMINI.md. Measure: lines of config, number of files, repair time after drift

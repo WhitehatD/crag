@@ -32,6 +32,13 @@
 - The scaffold agent runs inside Claude Code's sandbox — no arbitrary code execution outside it
 - governance.md files generated for users must never contain secrets
 
+## Security Boundaries
+- All tools and subagents operate ONLY within this repository
+- Hard-blocked: rm -rf /, dd, mkfs, fdisk, DROP TABLE/DATABASE, docker system prune -a, kubectl delete namespace, curl|bash, force-push to main/master, shutdown/reboot
+- Warned: file write/delete operations targeting paths outside the project root
+- Subagents: inherit all boundaries, cannot escalate permissions
+- Enforced by: sandbox-guard.sh hook (PreToolUse) + skill-level instructions
+
 ## Autonomy
 - Auto-commit after gates pass
 

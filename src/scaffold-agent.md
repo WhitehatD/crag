@@ -153,6 +153,10 @@ Create `.claude/hooks/`:
 
 **circuit-breaker.sh** — always generate. Same for all projects.
 
+**auto-post-start.sh** — always generate. Gate enforcement safety net. Reads tool input from stdin, checks if the command is a `git commit`, warns if `.claude/.gates-passed` sentinel doesn't exist. Non-blocking (warns, doesn't prevent). Same for all projects.
+
+**sandbox-guard.sh** — always generate. Security hardening. Reads tool input from stdin (PreToolUse on Bash), hard-blocks destructive system commands (rm -rf /, dd, mkfs, DROP TABLE, docker system prune, kubectl delete namespace, curl|bash, force-push to main). Warns on file operations targeting paths outside the project root. Same for all projects.
+
 **pre-compact-snapshot.sh** — only if MemStack enabled. Use correct project name.
 
 **post-compact-recovery.sh** — only if MemStack enabled. Use correct project name.
@@ -183,6 +187,25 @@ Write `.claude/settings.local.json`:
 ```
 
 Include PostToolUse auto-format hook using the project's formatter (Biome, Prettier, rustfmt, etc.).
+
+Wire the security and gate hooks as PreToolUse for Bash (sandbox-guard runs FIRST):
+```json
+"PreToolUse": [
+  {
+    "matcher": "Bash",
+    "hooks": [
+      {
+        "type": "command",
+        "command": "bash .claude/hooks/sandbox-guard.sh"
+      },
+      {
+        "type": "command",
+        "command": "bash .claude/hooks/auto-post-start.sh"
+      }
+    ]
+  }
+]
+```
 
 ### 2.5 Generate Agents
 
@@ -215,6 +238,7 @@ Present:
 - Hooks configured (list)
 - Agents defined (list)
 - Next step: "Run /pre-start-context to verify everything works"
+- Mention: "Run `scaffold compile --target all` to generate CI workflows and git hooks from your governance"
 
 ## Rules
 
@@ -226,3 +250,5 @@ Present:
 6. **Check pwd before navigating.** Don't cd into a directory you're already in.
 7. **Don't regenerate universal skills.** The CLI installs them. Check if they exist, don't overwrite.
 8. **MemStack: if user's system has a shared MemStack DB** (at `D:/playground/memstack/db/memstack-db.py`), use it. Otherwise generate local SQLite rules. Ask the user: "Do you have MemStack installed? If so, where?"
+9. **Sandbox boundaries.** Never run destructive commands (rm -rf /, dd, mkfs, DROP TABLE, docker system prune -a, kubectl delete namespace). Only write files within .claude/ and the project directory. Never modify system files or global config. Generated hooks and agents must inherit these boundaries.
+10. **Subagent isolation.** All generated agent definitions must include a `## Boundaries` section stating: operate only within this repository, no destructive system commands, no network access beyond task requirements, no permission escalation.

@@ -1,4 +1,5 @@
 ---
+name: pre-start-context
 description: Universal context loader. Discovers any project's stack, architecture, and state at runtime. Reads governance.md for project-specific rules. Works for any language, framework, or deployment target.
 ---
 
@@ -14,6 +15,25 @@ Run this **before starting any task**. It discovers the project, loads cross-ses
 
 Read `.claude/governance.md` for project-specific rules. If it exists, its policies override defaults below.
 
+### Sandbox Boundaries
+
+All tools and subagents MUST operate within these limits:
+
+- **Filesystem:** Write/delete ONLY within this repository (`git rev-parse --show-toplevel`). Read access is broader for discovery, but mutations stay in-repo.
+- **Network:** Only access resources explicitly required by the task (package registries, CI APIs, documented endpoints). NEVER pipe remote content to a shell (`curl|bash`, `wget|sh`).
+- **System:** NEVER modify system files, global packages, PATH, system services, or environment outside this process.
+- **Destructive commands — NEVER run:**
+  - `rm -rf` on paths above the project root, `/`, `~`, `$HOME`
+  - `dd`, `mkfs`, `fdisk`, `parted` (raw disk operations)
+  - `shutdown`, `reboot`, `halt`, `init 0/6`
+  - `DROP TABLE/DATABASE/SCHEMA` without explicit user confirmation
+  - `docker system prune -a`, `kubectl delete namespace`
+  - `git push --force` to main/master
+  - `chmod -R 777` or recursive permission changes outside repo
+- **Subagents:** Spawned agents inherit these boundaries. Agent definitions should include `## Boundaries` referencing these rules. Subagents MUST NOT escalate their own permissions.
+
+> The `sandbox-guard.sh` hook enforces these rules at the system level. Even if instructions are misread, destructive commands are hard-blocked.
+
 **Default AUTO-EXECUTE (unless governance overrides):**
 - Reading files, build, compile, test, lint, format, git operations, package management, environment checks
 - Any command operating on files within this repository
@@ -27,6 +47,108 @@ Read `.claude/governance.md` for project-specific rules. If it exists, its polic
 ### Shell Rule
 
 Detect OS and shell. Use appropriate syntax (Unix forward slashes if Git Bash on Windows).
+
+---
+
+## 0.1. Session Continuity (Warm Start)
+
+Check for a previous session state:
+
+```
+Read .claude/.session-state.json
+```
+
+If the file exists, check:
+- **Timestamp:** Less than 4 hours old?
+- **Branch:** Same as current? (`git branch --show-current`)
+- **Commit:** Same or ancestor of HEAD? (`git merge-base --is-ancestor <cached-commit> HEAD`)
+
+**Warm start** (all three pass):
+- Report: `"Warm start — continuing from <N> minutes ago: <task_summary>"`
+- Previous session's open questions and next steps are immediately relevant
+- If discovery cache is also valid (Section 0.3), most discovery is skipped
+- Skip full MemStack loading if session was recent (< 1 hour) — just load new insights
+
+**Cold start** (any check fails):
+- Treat as a fresh session. Full discovery.
+- Stale `.claude/.session-state.json` can be ignored
+
+---
+
+## 0.2. Intent Classification
+
+Before running discovery, classify the task scope from the user's message or skill arguments.
+
+| Signals in user message | Scope | Discovery to skip |
+|---|---|---|
+| component, style, CSS, UI, page, layout, form, React, Vue | **Frontend** | Backend runtimes, backend architecture |
+| API, endpoint, database, migration, model, query, auth, server | **Backend** | Frontend architecture, frontend configs |
+| Docker, deploy, CI, k8s, infra, pipeline, workflow, terraform | **Infra** | Code architecture (keep runtimes for CI) |
+| README, docs, changelog, license, typo | **Docs** | All code + infra discovery |
+| Ambiguous, multiple domains, or no clear signal | **Full** | Nothing — run everything |
+
+Set the discovery scope. Sections 1–3 respect it — skip domains outside scope. Section 4 (Governance) and Section 0.6 (Context Loading) always run regardless of scope.
+
+> **Override:** If governance.md contains `## Discovery: full`, always do full discovery regardless of intent.
+
+---
+
+## 0.3. Discovery Cache (Fast Path)
+
+Check for a cached discovery state:
+
+```
+Read .claude/.discovery-cache.json
+```
+
+If the cache exists:
+
+1. Get current state:
+
+// turbo
+```
+git rev-parse --short HEAD
+```
+
+// turbo
+```
+git branch --show-current
+```
+
+2. Compare to cached `commit` and `branch`
+3. Check if timestamp is less than 4 hours old
+
+**Decision tree:**
+
+- **Same commit + same branch + < 4 hours → FAST PATH**
+  Skip Sections 0.5, 1, 2, 3, 5 entirely. Use cached runtimes, architecture, key files.
+  Still run: Section 0.6 (context loading — MemStack may have new data), Section 4 (governance — may have changed).
+  Report: `"Fast path — cached discovery (N min old, commit XXXXXX). Skipping full scan."`
+
+- **Different commit + < 4 hours → INCREMENTAL**
+  Run: `git diff --name-only <cached-commit>..HEAD`
+  Only re-discover domains where files changed:
+    - `package.json`, `tsconfig.json`, `.js/.ts` files → re-run Node/frontend discovery
+    - `Cargo.toml`, `.rs` files → re-run Rust discovery
+    - `pyproject.toml`, `.py` files → re-run Python discovery
+    - `go.mod`, `.go` files → re-run Go discovery
+    - `build.gradle.kts`, `.java/.kt` files → re-run Java discovery
+    - `Dockerfile`, `docker-compose*` → re-run infra discovery
+    - `governance.md` → always re-read (Section 4)
+  Keep cached data for unchanged domains.
+  Report: `"Incremental discovery — N files changed since cached session."`
+
+- **No cache OR > 4 hours OR different branch → FULL DISCOVERY**
+  Run Sections 0.5 through 5 as normal (current behavior).
+  Report: `"Full discovery — no valid cache."`
+
+**Also at session start:** Delete `.claude/.gates-passed` if it exists — gates must be re-verified each session.
+
+```
+rm -f .claude/.gates-passed 2>/dev/null
+```
+
+> The fast path reduces pre-start from 15+ tool calls to 3-4. The incremental path only re-discovers what changed. Full discovery is the fallback.
 
 ---
 
@@ -254,3 +376,56 @@ Glob **/*.config.ts **/*.config.js **/tsconfig.json 2>/dev/null
 ```
 
 > Build a mental map of what exists. This is your reference for the rest of the session.
+
+---
+
+## 6. Write Discovery Cache
+
+After completing discovery (full or incremental), write the cache for next session.
+
+Get the current commit and branch:
+
+// turbo
+```
+git rev-parse --short HEAD
+```
+
+// turbo
+```
+git branch --show-current
+```
+
+Write `.claude/.discovery-cache.json` containing:
+
+```json
+{
+  "version": 1,
+  "timestamp": "<ISO 8601 — use: date -u +%Y-%m-%dT%H:%M:%SZ>",
+  "branch": "<current branch>",
+  "commit": "<HEAD short hash>",
+  "runtimes": {
+    "node": "<version or null>",
+    "java": "<version or null>",
+    "python": "<version or null>",
+    "go": "<version or null>",
+    "rust": "<version or null>",
+    "git": "<version>",
+    "docker": "<version or null>"
+  },
+  "stack_health": {
+    "headroom": "<version or null>",
+    "rtk": "<version or null>",
+    "headroom_proxy": true/false
+  },
+  "architecture": {
+    "type": "<monolith|microservices|cli|library|monorepo>",
+    "frontend": "<framework or null>",
+    "backend": "<framework or null>",
+    "services": ["<service names if multi-service>"],
+    "ci": "<github-actions|gitlab-ci|jenkins|none>"
+  },
+  "key_files": ["<list of discovered config/build files that exist>"]
+}
+```
+
+> Cost: one Write call. Savings: 10-15 tool calls skipped on next fast path. The cache is purely advisory — if it's wrong or missing, full discovery runs as normal.

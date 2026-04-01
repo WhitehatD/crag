@@ -1,4 +1,5 @@
 ---
+name: post-start-validation
 description: Universal validation and knowledge capture. Detects what changed, runs governance gates, captures knowledge, verifies deployment. Works for any project.
 ---
 
@@ -62,6 +63,64 @@ Backend gates:
 ```
 
 > Use `rtk` prefix on all commands for token compression.
+
+---
+
+## 3.5. Gate Auto-Fix (Bounded Retry)
+
+If a gate command fails, attempt an automatic fix before escalating to the user.
+
+**Step 1 — Classify the failure:**
+
+| Error pattern | Classification | Action |
+|---|---|---|
+| Lint errors with auto-fix flag | **Auto-fixable** | Run linter with `--fix` / `--write` |
+| Format errors (prettier, rustfmt, ruff, biome) | **Auto-fixable** | Run the formatter on affected files |
+| Unused imports / variables | **Auto-fixable** | Remove them |
+| Missing semicolons, trailing commas | **Auto-fixable** | Fix inline |
+| Type errors in files you changed this session | **Maybe fixable** | Attempt one fix, re-run |
+| Failing tests | **NOT auto-fixable** | Escalate — tests may be validating the change |
+| Build errors from missing dependencies | **NOT auto-fixable** | Escalate |
+| Errors in files you did NOT change | **NOT auto-fixable** | Escalate — pre-existing issue |
+
+**Step 2 — If auto-fixable, apply the fix:**
+
+```bash
+# Lint auto-fix (use whichever the project has)
+npx eslint --fix <files>           # or: npx biome check --write <files>
+npx prettier --write <files>       # format
+cargo clippy --fix --allow-dirty   # Rust
+ruff check --fix <files>           # Python
+ruff format <files>                # Python format
+```
+
+For other mechanical errors (unused imports, missing semicolons): edit the files directly.
+
+**Auto-fix boundaries:**
+- ONLY edit files within this repository
+- NEVER install new global packages as a fix
+- NEVER modify files outside the repo or system config
+- NEVER delete files that weren't created this session
+- If a fix requires out-of-bounds changes → escalate to user
+
+**Step 3 — Re-run ONLY the failed gate.** Do not re-run gates that already passed.
+
+**Step 4 — Bounded retry:**
+- Maximum **2 auto-fix attempts** per gate
+- If the same gate fails after 2 attempts → **stop and escalate to the user**
+- Never retry the exact same fix that didn't work
+- The circuit breaker hook (`PostToolUseFailure`) provides an additional safety net
+
+**Step 5 — After ALL gates pass, write the sentinel:**
+
+```bash
+touch .claude/.gates-passed
+```
+
+This sentinel is:
+- **Checked** by the auto-post-start hook before commits
+- **Cleared** by pre-start-context at the beginning of each session
+- Ensures gates are verified at least once per session before any commit
 
 ---
 
@@ -163,3 +222,32 @@ git branch -d <branch-name>
 | Backend-only (no API change) | Frontend gates |
 | Frontend-only (no API change) | Backend gates |
 | CSS/styling only | Backend gates, S4, S5 |
+
+---
+
+## 10. Write Session State
+
+Write `.claude/.session-state.json` for warm starts next session:
+
+```json
+{
+  "version": 1,
+  "timestamp": "<ISO 8601 — use: date -u +%Y-%m-%dT%H:%M:%SZ>",
+  "branch": "<current branch>",
+  "commit": "<HEAD short hash>",
+  "task_summary": "<one-line summary of what was accomplished>",
+  "gate_results": {
+    "passed": ["<gate commands that passed>"],
+    "failed": ["<gate commands that failed — empty if all passed>"],
+    "auto_fixed": ["<gates that needed auto-fix before passing>"]
+  },
+  "files_changed": ["<files modified this session>"],
+  "open_questions": ["<unresolved decisions or ambiguities>"],
+  "next_steps": ["<suggested actions for next session>"]
+}
+```
+
+This file is consumed by pre-start Section 0.1 for warm starts. It enables the next session to:
+- Skip re-explaining context if the user is continuing the same work
+- Surface open questions and next steps immediately
+- Combined with the discovery cache, achieve near-zero-latency startup
