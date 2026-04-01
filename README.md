@@ -6,7 +6,11 @@ Every AI coding setup today is static — CLAUDE.md files, AGENTS.md configs, pe
 
 scaffold-cli inverts this. It ships **universal skills** that discover any project at runtime — any language, any framework, any deployment target — and reads your rules from a single `governance.md` file. The skills are the engine. The governance is the config. The engine never goes stale because it reads the filesystem. The config is 20-30 lines you maintain.
 
-**Nothing like this exists.** We searched every public repo, every skill library (1,234+), every AI coding tool (Claude Code, Cursor, Codex, Aider, Kiro, Zencoder), every standard (AGENTS.md, SKILL.md), every framework. Everything out there is project-specific — templates for React, skills for Spring Boot, configs per stack. Nobody built a universal skill that works for everything by separating the engine from the rules.
+**Nothing like this exists.** An independent prior art assessment (covering commercial tools, open-source repos, academic papers, and patents as of April 2026) found no public tool or paper that demonstrates all of these attributes simultaneously. The ecosystem is split: tools either rely on static instructions or do runtime discovery for narrow purposes — none unify universal repo discovery + single governance-as-config + continuously adapting agent infrastructure.
+
+> *"Existing tools either (1) rely on static instructions, or (2) do runtime discovery for narrow purposes, but do not unify universal repo discovery + single governance-as-config + continuously regenerating/validating agent integration artifacts."*
+>
+> — Independent prior art review, April 2026
 
 ```bash
 npx scaffold-cli init
@@ -293,18 +297,49 @@ flowchart LR
 
 ---
 
+## Prior Art
+
+An independent review assessed every major AI coding tool, open-source project, academic paper, and patent filing as of April 2026. The closest candidates and why they differ:
+
+| Candidate | What it does | Why it's not this |
+|---|---|---|
+| **AGENTS.md** (60K+ repos) | Static config file AI agents read | Human-maintained, multiple files by scope, no runtime discovery |
+| **Claude Code** `/init` + CLAUDE.md | Scans repo, generates static instructions | Generates static output that rots. Multiple files. No governance separation |
+| **Cursor** `.cursor/rules/` | Per-directory rule files | Static context, multiple artifacts, no universal engine |
+| **Gemini CLI** GEMINI.md hierarchy | JIT instruction file scanning | Discovers *instruction files*, not the project itself |
+| **Kiro** steering docs | Generates product/tech/structure docs | Multiple steering files, not single governance, not universal |
+| **Codex** AGENTS.md + hooks + skills | Layered static instructions + extensibility | Instruction chain by directory. Could host this engine but doesn't ship one |
+| **claude-code-kit** | Framework detection + generated .claude/ | Kit/framework-specific (Next.js, React, Express). Not universal polyglot |
+| **OpenDev** (arxiv paper) | CLI agent with lazy tool discovery | Research prototype. No governance file. Not productized |
+| **Repo2Run** (arxiv paper) | Repo → runnable Dockerfile synthesis | Build/CI domain only. No agent governance architecture |
+
+**Adjacent patents identified:**
+- **US20250291583A1** (Microsoft) — YAML-configured agent rules/actions. Covers "config file drives AI agents" broadly but not universal repo discovery.
+- **US9898393B2** (Solano Labs) — Repo pattern analysis → inferred CI config. Strong historic prior art for build-system discovery, but not AI agent governance.
+
+Neither patent blocks this architecture. Both are adjacent, not overlapping.
+
+**Three novelty hypotheses validated by the review:**
+1. **Compositional:** Many systems have pieces (hooks, skills, context files). None compose them into universal discovery engine + single governance file + continuously regenerated artifacts.
+2. **Scope:** Closest implementations (claude-code-kit) are framework-specific, not polyglot-universal.
+3. **Governance-as-contract:** Existing tools treat instruction files as context (often non-enforced). This treats governance as an executable contract that deterministically shapes gates and commit behavior.
+
+---
+
 ## Roadmap
 
 - [x] Universal pre-start and post-start skills
 - [x] Interview-driven governance generation
 - [x] CLI (`scaffold init`, `scaffold check`, `scaffold install`)
 - [x] Proven on 5-language multi-service project (example-app)
+- [ ] **Cross-repo benchmark** — 20-30 repos across polyglot monorepos, infra-heavy repos, single-stack apps, and unconventional repos. Measure: coverage %, false positives, failure modes
+- [ ] **Drift resilience test** — add services, change linters, rename directories, switch CI. Measure: does the engine re-discover without human edits?
+- [ ] **Baseline comparison** — implement same governance in AGENTS.md, CLAUDE.md, .cursor/rules, GEMINI.md. Measure: lines of config, number of files, repair time after drift
 - [ ] `scaffold analyze` — generate governance from existing project without interview
 - [ ] `scaffold diff` — compare governance against codebase reality
 - [ ] `scaffold upgrade` — update universal skills when new version ships
 - [ ] Published npm package
-- [ ] Test suite across sample projects
-- [ ] Cross-agent compatibility (Cursor, Codex, Aider)
+- [ ] Cross-agent compatibility (Cursor, Codex, Gemini CLI, Aider)
 
 ---
 
