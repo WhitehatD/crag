@@ -1,325 +1,285 @@
 # scaffold-cli
 
-**Templates rot. Collections require assembly. This generates self-maintaining Claude Code infrastructure from an interview.**
+**The runtime layer for Claude Code. One config file. Self-maintaining forever.**
 
-scaffold-cli is a meta-framework for Claude Code. It interviews you about your project — stack, deployment, quality bar, workflow preferences — then generates a complete `.claude/` infrastructure tailored to your specific setup. Every generated instruction is classified as **Discovery** (reads the codebase at runtime, never goes stale) or **Governance** (your policies, only change when you decide). The output self-corrects across sessions.
+scaffold-cli installs a universal intelligence layer that works with any project — any language, any framework, any deployment target. It discovers your project at runtime instead of hardcoding facts about it. The only project-specific file is `governance.md` — your rules, your quality bar, your policies — generated from a one-time interview.
 
----
-
-## Quick Start
-
-```bash
-# Install globally
-npm install -g scaffold-cli
-
-# Navigate to your project
-cd my-project
-
-# Run the interview → generates everything
-scaffold init
-
-# Verify infrastructure is complete
-scaffold check
-```
-
-Or without installing:
 ```bash
 npx scaffold-cli init
 ```
 
-Or from inside Claude Code directly:
-```bash
-/scaffold-project
+---
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph UNIVERSAL["Ships with scaffold-cli (same for every project)"]
+        PRE["pre-start skill\ndiscovers any project at runtime"]
+        POST["post-start skill\nvalidates using governance gates"]
+    end
+
+    subgraph GENERATED["Generated from interview (project-specific)"]
+        GOV["governance.md\nyour rules · your gates · your policies"]
+        HOOKS["hooks/\ndrift · circuit-breaker · compaction"]
+        AGENTS["agents/\ntest-runner · security · scanner · auditor"]
+        SETTINGS["settings.local.json\npermissions · hook wiring"]
+    end
+
+    PRE -->|"reads"| GOV
+    POST -->|"reads"| GOV
+    PRE -->|"triggers"| AGENTS
+    POST -->|"triggers"| AGENTS
+
+    style UNIVERSAL fill:#1a3a1a,stroke:#00ff88,color:#eee
+    style GENERATED fill:#0f3460,stroke:#00d2ff,color:#eee
+    style GOV fill:#3a2a1a,stroke:#ffbb33,color:#eee
 ```
+
+**The skills are universal.** They don't know your stack — they discover it. They don't know your gates — they read them from `governance.md`. Add a service, change your CI, upgrade your framework — the skills adapt. Nothing to update.
+
+**The governance is yours.** 20-30 lines of policy. Your quality bar. Your branch strategy. Your security rules. Changes only when you decide.
 
 ---
 
 ## How It Works
 
 ```mermaid
-flowchart TB
-    subgraph INPUT["You answer questions"]
-        Q1["What's your stack?"]
-        Q2["How do you deploy?"]
-        Q3["What's your quality bar?"]
-        Q4["Branch strategy?"]
-        Q1 --> Q2 --> Q3 --> Q4
-    end
+sequenceDiagram
+    participant U as You
+    participant S as scaffold init
+    participant C as Claude Code
+    participant G as governance.md
 
-    subgraph CLASSIFY["Every instruction classified"]
-        D["Discovery\nReads codebase at runtime\nAuto-updates when code changes"]
-        G["Governance\nYour policies and standards\nOnly changes when you decide"]
-    end
+    U->>S: npx scaffold-cli init
+    S->>S: Install universal skills
+    S->>C: Launch interview agent
 
-    subgraph OUTPUT["Generated infrastructure"]
-        SKILLS["Skills\npre-start + post-start"]
-        HOOKS["Hooks\ndrift · circuit-breaker\ncompaction · auto-format"]
-        AGENTS["Agents\ntest-runner · security\ndeps · auditor"]
-        OTHER["CI Playbook\nSettings · Rules\nSession config"]
-    end
+    C->>U: What's your stack?
+    U->>C: Spring Boot, Gradle, PostgreSQL
+    C->>U: How do you deploy?
+    U->>C: Kubernetes, GitHub Actions
+    C->>U: Quality bar?
+    U->>C: TDD, strict types, Biome lint
+    C->>U: Branch strategy?
+    U->>C: Feature branches, conventional commits
 
-    INPUT --> CLASSIFY
-    CLASSIFY --> OUTPUT
+    C->>G: Generate governance.md
+    C->>C: Generate hooks, agents, settings
+    C->>U: Done. Run /pre-start-context to verify.
 
-    style INPUT fill:#1a1a2e,stroke:#bb86fc,color:#eee
-    style CLASSIFY fill:#1a3a1a,stroke:#00ff88,color:#eee
-    style OUTPUT fill:#0f3460,stroke:#00d2ff,color:#eee
-    style D fill:#2d4a5a,stroke:#03dac6,color:#eee
-    style G fill:#3a2a1a,stroke:#ffbb33,color:#eee
+    Note over G: governance.md is the ONLY project-specific file
+    Note over G: Universal skills read it and adapt to any project
 ```
 
 ---
 
 ## The Session Loop
 
-Once generated, your Claude Code sessions follow this self-improving loop:
+Once scaffolded, every session self-improves:
 
 ```mermaid
 flowchart LR
-    subgraph PRE["Pre-start"]
+    subgraph PRE["Pre-start (universal)"]
         direction TB
-        P1["Hooks fire\ndrift detection"]
-        P2["MemStack loads\npast knowledge"]
-        P3["Adaptive depth\nskip unchanged modules"]
-        P4["CI health check"]
+        P1["Detect stack\nread build files"]
+        P2["Load memory\npast sessions"]
+        P3["Read governance\nyour rules"]
+        P4["Check CI\nrecent runs"]
         P1 --> P2 --> P3 --> P4
     end
 
-    TASK["Execute\ntask"]
+    TASK["Your\ntask"]
 
-    subgraph POST["Post-start"]
+    subgraph POST["Post-start (universal)"]
         direction TB
-        V1["Validate\nlint · types · build · tests"]
-        V2["Security review"]
-        V3["Capture knowledge\nto MemStack"]
-        V4["Self-update\nfix stale instructions"]
-        V5["Commit · Push\nVerify deploy"]
+        V1["Detect changes\ngit diff"]
+        V2["Run governance gates\nlint · types · build · test"]
+        V3["Security review"]
+        V4["Capture knowledge"]
+        V5["Commit · Deploy · Verify"]
         V1 --> V2 --> V3 --> V4 --> V5
     end
 
     PRE --> TASK --> POST
-    POST -.->|"Knowledge feeds\nnext session"| PRE
+    POST -.->|"knowledge compounds"| PRE
 
     style PRE fill:#1a2a3a,stroke:#03dac6,color:#eee
     style TASK fill:#2a1a3a,stroke:#bb86fc,color:#eee
     style POST fill:#1a3a2a,stroke:#00ff88,color:#eee
 ```
 
-**Each session reads less and knows more than the last.** Discovery instructions adapt to code changes. Knowledge insights are verified against source files. Stale instructions get corrected. The system compounds.
+The skills don't hardcode anything. They discover the project shape, read your governance rules, and apply them. Each session builds on the last.
 
 ---
 
-## The Core Idea: Discovery vs Governance
+## Quick Start
 
-The architectural principle that makes generated infrastructure self-maintaining.
+```bash
+# Install and run
+npx scaffold-cli init
 
-```mermaid
-flowchart LR
-    subgraph DISCOVERY["Discovery Instructions"]
-        D1["Read settings.gradle.kts\nto find subprojects"]
-        D2["Glob controller directory\nto count endpoints"]
-        D3["Read CI workflow file\nfor current pipeline stages"]
-    end
+# Or install globally
+npm install -g scaffold-cli
+scaffold init
 
-    subgraph GOVERNANCE["Governance Rules"]
-        G1["Every endpoint must\nhave rate limiting"]
-        G2["Gradle flags always:\n--console=plain -q --no-daemon"]
-        G3["Never commit as\nprimary author"]
-    end
-
-    CODE["Codebase changes\nnew controller added"] -.->|"Auto-discovered\nnext session"| DISCOVERY
-    HUMAN["Team decision\nnew security policy"] -.->|"Manually updated\nwhen you decide"| GOVERNANCE
-
-    S86["S8.6 Self-Update\nafter every task"] -->|"Updates facts"| DISCOVERY
-    S86 -->|"Never touches"| GOVERNANCE
-
-    style DISCOVERY fill:#2d4a5a,stroke:#03dac6,color:#eee
-    style GOVERNANCE fill:#3a2a1a,stroke:#ffbb33,color:#eee
-    style S86 fill:#2a1a3a,stroke:#bb86fc,color:#eee
+# Or from inside Claude Code
+/scaffold-project
 ```
 
-**Discovery** reads the filesystem at runtime:
-```markdown
-## 3. Architecture Map
-Read the controller directory and count them:
-Glob backend/src/main/java/com/example/controller/*
-```
-Add a controller → the agent discovers it naturally. No one updates the instruction.
+After the interview:
 
-**Governance** encodes your policies:
-```markdown
-## 5. Development Mentality
-Every endpoint must have rate limiting.
-Never commit as primary author — co-author only.
-```
-This only changes when you decide. The agent enforces it but never modifies it.
-
----
-
-## CLI Commands
-
-### `scaffold init`
-
-Launches the interactive interview and generates all infrastructure files.
-
-```
-$ scaffold init
-
-  Starting scaffold interview...
-
-  Claude Code will ask about your project.
-  Answer the questions — it generates your .claude/ infrastructure.
+```bash
+# Verify everything is in place
+scaffold check
 ```
 
-The interview covers 8 phases — identity, stack, architecture, deployment, quality, security, workflow, session management. Questions adapt based on your answers. "Spring Boot + Gradle" auto-infers Java, JUnit, and `./gradlew` without asking.
-
-### `scaffold check`
-
-Verifies all generated infrastructure files exist.
-
 ```
-$ scaffold check
+  Core:
+    ✓ Pre-start skill (universal)
+    ✓ Post-start skill (universal)
+    ✓ Governance rules
+    ✓ Drift detector hook
+    ✓ Circuit breaker hook
+    ✓ Test runner agent
+    ✓ Security reviewer agent
+    ✓ CI playbook
+    ✓ Settings with hooks
 
-  Checking scaffold infrastructure in /home/user/my-project
-
-  ✓ Pre-start skill (.claude/skills/pre-start-context/SKILL.md)
-  ✓ Post-start skill (.claude/skills/post-start-validation/SKILL.md)
-  ✓ Drift detector hook (.claude/hooks/drift-detector.sh)
-  ✓ Circuit breaker hook (.claude/hooks/circuit-breaker.sh)
-  ✓ Test runner agent (.claude/agents/test-runner.md)
-  ✓ Security reviewer agent (.claude/agents/security-reviewer.md)
-  ✓ CI playbook (.claude/ci-playbook.md)
-  ✓ Session name (.claude/.session-name)
-  ✓ Settings with hooks (.claude/settings.local.json)
-
-  9/9 files present.
+  9/9 core files present.
   Infrastructure complete.
 ```
 
-### `scaffold install`
+---
 
-Installs the scaffold agent globally so you can use `/scaffold-project` from any Claude Code session.
+## governance.md
 
+The only file you maintain. Everything else is universal or generated.
+
+```markdown
+# Governance — orderflow
+
+## Identity
+- Project: orderflow
+- Description: Enterprise order management system
+
+## Gates (run in order, stop on failure)
+### Frontend
+- npx biome check --diagnostic-level=error
+- npx tsc --noEmit
+- npm run build
+- npm test
+
+### Backend
+- ./gradlew test --console=plain -q --no-daemon --stacktrace
+- ./gradlew check --console=plain -q --no-daemon --stacktrace
+
+## Branch Strategy
+- Feature branches (feat/, fix/, refactor/, chore/)
+- Conventional commits
+- Auto-commit after all gates pass
+
+## Security
+- JWT with Spring Security (algorithm pinning)
+- Rate limiting on all public endpoints (Bucket4j)
+- No hardcoded secrets
+
+## Deployment
+- Kubernetes, GitHub Actions CI
+- Rolling update strategy
+- Verify: kubectl rollout status after push
 ```
-$ scaffold install
 
-  Installed scaffold-project agent to ~/.claude/agents/scaffold-project.md
-  You can now run /scaffold-project from any Claude Code session.
-```
+That's it. The universal skills read this and know exactly what to enforce, what to check, and how to deploy. Change a gate command — it takes effect next session. Add a security rule — enforced immediately.
 
 ---
 
-## What Gets Generated
+## What Ships vs What's Generated
 
-```
-.claude/
-├── skills/
-│   ├── pre-start-context/SKILL.md        # Context loading workflow
-│   └── post-start-validation/SKILL.md    # Validation + knowledge capture
-├── hooks/
-│   ├── drift-detector.sh                 # Checks if skill assumptions hold
-│   ├── circuit-breaker.sh                # Detects failure loops
-│   ├── pre-compact-snapshot.sh           # Saves state before compaction
-│   └── post-compact-recovery.sh          # Restores context after compaction
-├── agents/
-│   ├── test-runner.md                    # Parallel test execution (Sonnet)
-│   ├── security-reviewer.md             # Security audit (Opus, read-only)
-│   ├── dependency-scanner.md            # Vulnerability scanning
-│   └── skill-auditor.md                 # Workflow accuracy audit
-├── rules/                               # Cross-session memory (if enabled)
-│   ├── knowledge.md
-│   ├── diary.md
-│   └── echo.md
-├── ci-playbook.md                        # Known CI failure patterns
-├── .session-name                         # Notification routing
-└── settings.local.json                   # Hooks + permissions
-
-.agents/
-└── workflows/
-    ├── pre-start-context.md
-    └── post-start-validation.md
-```
-
-Every file is tailored to your answers. Spring Boot → Gradle gates. Next.js → Biome + TSC gates. Kubernetes → pod health verification. Docker Compose → blue-green checks. Nothing generic.
+| Component | Source | Maintains itself? |
+|-----------|--------|------------------|
+| Pre-start skill | **Ships universal** | Yes — discovers project at runtime |
+| Post-start skill | **Ships universal** | Yes — reads governance for gates |
+| `governance.md` | **Generated from interview** | No — you maintain it (20-30 lines) |
+| Hook scripts | **Generated for your tools** | Yes — drift detector adapts |
+| Agent definitions | **Generated for your stack** | Yes — read governance for commands |
+| Settings | **Generated** | Yes — RTK wildcards cover new tools |
+| CI playbook | **Generated template** | You add entries as failures are found |
 
 ---
 
-## The Interview
-
-| Phase | Questions | What it generates |
-|-------|-----------|------------------|
-| **Identity** | Name, description, purpose | Project IDs, session routing, skill headers |
-| **Tech Stack** | Languages, frameworks, databases, build tools | Gate commands, test commands, dependency scanning |
-| **Architecture** | Monolith/microservices, mono/multi-repo | Service discovery, cross-stack checks |
-| **Deployment** | CI/CD, infrastructure, deploy strategy | Commit/push/verify flow, CI monitoring |
-| **Quality** | Testing, linting, formatting, type checking | Validation gates, auto-format hooks |
-| **Security** | Auth, rate limiting, uploads, headers | Security review checklist |
-| **Workflow** | Branch strategy, commits, autonomy level | Execution policy, commit flow |
-| **Session** | Remote access, notifications, persistence | Hooks, notifications, resume aliases |
-
----
-
-## Why Not Templates?
-
-| | Templates | Collections | scaffold-cli |
-|---|---|---|---|
-| Adapts to your stack | No | Manual | **Yes** |
-| Self-maintaining | No | No | **Yes** |
-| Integrated components | Partially | No | **Fully** |
-| Classified instructions | No | No | **Yes** |
-| Self-correcting | No | No | **Yes** |
-| Time to setup | Hours | Days | **One session** |
-
----
-
-## Hooks Generated
-
-All hooks are **deterministic** (100% reliable) and **zero token cost** (run as shell commands, not LLM calls).
+## Why This Exists
 
 ```mermaid
 flowchart LR
-    subgraph SESSION["Hook Lifecycle"]
-        direction TB
-        H1["SessionStart\nDrift detector runs"]
-        H2["UserPromptSubmit\nBranch context injected"]
-        H3["PreToolUse\nDestructive command guard"]
-        H4["PostToolUse\nAuto-format after edits"]
-        H5["PostToolUseFailure\nCircuit breaker tracks"]
-        H6["PreCompact\nSnapshot state to memory"]
-        H7["PostCompact\nRestore context from memory"]
-        H1 --> H2 --> H3 --> H4 --> H5 --> H6 --> H7
+    subgraph OLD["Current ecosystem"]
+        T["Templates\nstatic · one-stack\nhardcoded facts\nrot over time"]
+        C["Collections\n220+ skills\nmanual assembly\nno integration"]
     end
 
-    style SESSION fill:#3a1a1a,stroke:#ff6b6b,color:#eee
+    subgraph NEW["scaffold-cli"]
+        U["Universal skills\nany stack · any framework\ndiscover at runtime"]
+        G["governance.md\n20-30 lines\nyour rules only"]
+    end
+
+    T -->|"rot"| STALE["Stale instructions\nlying to your agent"]
+    C -->|"drift"| CONFLICT["Conflicting configs\nmanual maintenance"]
+    U -->|"always current"| FRESH["Discovers reality\nevery session"]
+    G -->|"human-controlled"| STABLE["Your standards\nnever auto-changed"]
+
+    style OLD fill:#3a1a1a,stroke:#ff6b6b,color:#eee
+    style NEW fill:#1a3a1a,stroke:#00ff88,color:#eee
+    style STALE fill:#3a1a1a,stroke:#ff6b6b,color:#eee
+    style CONFLICT fill:#3a1a1a,stroke:#ff6b6b,color:#eee
+    style FRESH fill:#1a3a1a,stroke:#00ff88,color:#eee
+    style STABLE fill:#3a2a1a,stroke:#ffbb33,color:#eee
 ```
+
+Templates hardcode facts. Facts change. Templates rot.
+
+scaffold-cli discovers facts at runtime. The only thing hardcoded is your quality bar — and that changes only when you change it.
 
 ---
 
-## Architecture Principles
+## Hooks
 
-1. **Enforce, don't instruct.** Hooks are 100% reliable at zero cost. CLAUDE.md is ~80%. If it matters, make it a hook.
+All hooks are **deterministic** (100% reliable) and **zero token cost**.
 
-2. **Discover, don't hardcode.** Every codebase fact is read at runtime. Files get added, versions change, pipelines evolve. Discovery adapts.
+| Hook | Event | What it does |
+|------|-------|-------------|
+| Drift detector | SessionStart | Checks if key project files still exist |
+| Circuit breaker | PostToolUseFailure | Warns at 3 failures, alerts at 5 |
+| Pre-compact | PreCompact | Snapshots state to MemStack before compaction |
+| Post-compact | PostCompact | Restores context from MemStack after compaction |
+| Auto-format | PostToolUse | Runs your formatter after every edit |
 
-3. **Govern, don't hope.** Policies are enforced but never auto-modified. They change only when you change them.
+Compaction hooks are only generated if MemStack is enabled.
 
-4. **Compound, don't repeat.** Cross-session memory means each session builds on the last. Knowledge self-corrects over time.
+---
 
-5. **Survive, don't restart.** Compaction hooks save and restore state. Sessions reconnect. Context is never truly lost.
+## Agents
+
+All agents run in **isolated worktrees** (no edit conflicts).
+
+| Agent | Model | Purpose |
+|-------|-------|---------|
+| test-runner | Sonnet | Runs your test suite in background, reports failures |
+| security-reviewer | Opus | Reviews diffs for vulnerabilities (read-only) |
+| dependency-scanner | Sonnet | Checks for vulnerable/outdated packages |
+| skill-auditor | Sonnet | Verifies infrastructure files are intact |
 
 ---
 
 ## Roadmap
 
-- [x] Interview-driven scaffold agent
+- [x] Universal pre-start and post-start skills
+- [x] Interview-driven governance generation
 - [x] CLI (`scaffold init`, `scaffold check`, `scaffold install`)
-- [ ] Template fragments per stack (Spring Boot, Next.js, Django, Go, Rust, Rails)
-- [ ] `scaffold analyze` — reads existing project, generates infrastructure without interview
-- [ ] `scaffold diff` — compares generated vs current, suggests updates
-- [ ] `scaffold upgrade` — updates generated files when scaffold-cli adds new features
-- [ ] Published npm package (`npx scaffold-cli init`)
-- [ ] Test suite across sample projects
-- [ ] Multi-agent orchestration templates
+- [ ] `scaffold analyze` — reads existing project, generates governance without interview
+- [ ] `scaffold diff` — compares current governance against codebase reality
+- [ ] `scaffold upgrade` — updates universal skills when scaffold-cli releases new version
+- [ ] Published npm package
+- [ ] Test suite across sample projects (Spring Boot, Next.js, Python, Go, Rust)
 
 ---
 
@@ -329,4 +289,4 @@ MIT
 
 ---
 
-*Built by [WhitehatD](https://github.com/WhitehatD).*
+*Built by [WhitehatD](https://github.com/WhitehatD)*
