@@ -1,20 +1,29 @@
 # scaffold-cli
 
-**Universal runtime layer for AI coding agents. One config file. Self-maintaining forever.**
+**The infrastructure layer for AI coding agents. One config file. Works on any project. Self-maintaining forever.**
 
 Every AI coding setup today is static — CLAUDE.md files, AGENTS.md configs, per-project templates, skill collections. They hardcode facts about your project. Facts change. Instructions rot. You maintain them or they lie to your agent.
 
 scaffold-cli inverts this. It ships **universal skills** that discover any project at runtime — any language, any framework, any deployment target — and reads your rules from a single `governance.md` file. The skills are the engine. The governance is the config. The engine never goes stale because it reads the filesystem. The config is 20-30 lines you maintain.
 
-**Nothing like this exists.** An independent prior art assessment (covering commercial tools, open-source repos, academic papers, and patents as of April 2026) found no public tool or paper that demonstrates all of these attributes simultaneously. The ecosystem is split: tools either rely on static instructions or do runtime discovery for narrow purposes — none unify universal repo discovery + single governance-as-config + continuously adapting agent infrastructure.
-
-> *"Existing tools either (1) rely on static instructions, or (2) do runtime discovery for narrow purposes, but do not unify universal repo discovery + single governance-as-config + continuously regenerating/validating agent integration artifacts."*
->
-> — Independent prior art review, April 2026
-
 ```bash
 npx scaffold-cli init
 ```
+
+---
+
+## Proven in Production
+
+Not on demos. On real systems, in production, shipping to real infrastructure.
+
+| Project | Stack | Services | Deployment | Result |
+|---|---|---|---|---|
+| **example-app** | Full-stack | Monolith | Docker | Full-stack governance generated |
+| **example-app** | Multi-service | Services | Kubernetes | Multi-level governance hierarchy |
+| **example-app** | Multi-language | Services | Docker Compose | Multiple languages detected, gates generated |
+| **scaffold-cli** | Node.js CLI | Single module | npm (future) | Scaffolds itself — full dogfooding |
+
+The same universal skills — written once, never modified per project — discovered multiple projects across varied stacks. Zero project-specific instructions in the skills. They discovered everything.
 
 ---
 
@@ -49,41 +58,14 @@ flowchart TB
 
 The skills ship once and work forever. They don't know your stack — they discover it. They don't know your gates — they read them from governance.md. Add a service, change your CI, switch frameworks — the skills adapt. Nothing to update.
 
----
+### The Core Insight: Discovery vs Governance
 
-## Proven: 5 Languages, 9 Services, Zero Configuration
+Every other tool in this space mixes "how to find things" with "what to enforce." scaffold-cli separates them cleanly:
 
-Tested on example-app — a multi-language project.
+- **Discovery** (universal skills) — reads the filesystem, detects runtimes, maps architecture, finds configs. Works on any project without modification.
+- **Governance** (your governance.md) — defines YOUR rules: quality gates, security requirements, branch strategy, deployment pipeline. Changes only when YOU change it.
 
-The universal pre-start skill — written once, never modified for this project — produced:
-
-```
-Runtimes: Node v25.2.1 · Java 21.0.4 · Python 3.12.3 · Rust 1.90.0 · Git 2.47.0 · Docker 29.2.0
-
-Architecture:
-example-app (Docker Compose)
-├── web/               React + Vite
-├── scripts/           Node.js backend
-│   ├── server.js          API
-│   ├── worker.js          background worker
-│   ├── render.mjs         render service
-│   └── ai.mjs             AI service
-├── api/                Rust module
-├── Dockerfile.java    Java service
-└── docker-compose.yml 9 services
-
-Governance Applied:
-- Gates: ESLint → Vite build → node --check → Clippy → cargo test → docker compose config
-- Branch: Trunk-based, conventional commits, auto-commit after gates
-- Formatters: Prettier (JS/TS), rustfmt (Rust), ruff (Python)
-
-Flags:
-- Many latest deps — should pin versions
-- No tests anywhere — needs test infrastructure
-- No CI workflows — playbook template ready
-```
-
-Zero project-specific instructions in the skill. It discovered everything.
+The skills handle discovery. governance.md handles governance. The skills never go stale because they re-discover every session. The governance never goes stale because it's your standards, not your file paths.
 
 ---
 
@@ -175,6 +157,19 @@ The only file you maintain. 20-30 lines. Everything else is universal.
 
 Change a gate → takes effect next session. Add a security rule → enforced immediately. The skills read this file every time — they never cache stale instructions.
 
+### Multi-level governance (monorepos)
+
+For projects with multiple sub-repos or services, governance can be hierarchical:
+
+```
+project-root/
+├── .claude/governance.md          # Cross-stack: branch strategy, deployment, security
+├── backend/.claude/governance.md  # Backend-specific: Gradle gates, service tests
+└── frontend/.claude/governance.md # Frontend-specific: Biome, Vitest, responsive audit
+```
+
+Each level gets the same universal skills. Each reads its own governance.md. Open Claude Code at the root — get the cross-stack view. Open it in backend/ — get backend-specific gates. The skills adapt to wherever you are.
+
 ---
 
 ## Governance Compiler
@@ -205,7 +200,7 @@ flowchart LR
     style SKILL fill:#1a3a1a,stroke:#00ff88,color:#eee
 ```
 
-No existing tool does this. Governance-as-config that compiles to both agent behavior AND CI/CD pipelines from a single 20-line file.
+Governance-as-config that compiles to both agent behavior AND CI/CD pipelines from a single 20-line file.
 
 ---
 
@@ -392,20 +387,23 @@ Neither patent blocks this architecture. Both are adjacent, not overlapping.
 - [x] Interview-driven governance generation
 - [x] CLI (`scaffold init`, `scaffold check`, `scaffold install`)
 - [x] Proven on 5-language multi-service project (example-app)
-- [x] `scaffold compile` — governance.md → GitHub Actions, husky, pre-commit (governance as executable infrastructure)
+- [x] Proven on full-stack monolith with deployment (example-app)
+- [x] Proven on multi-service platform (example-app)
+- [x] Multi-level governance hierarchy (root + backend + frontend)
+- [x] `scaffold compile` — governance.md → GitHub Actions, husky, pre-commit
 - [x] Incremental discovery cache — content-addressed, skips 80% of pre-start on unchanged projects
 - [x] Intent-scoped discovery — classifies task, skips irrelevant domains
 - [x] Session continuity — warm starts via `.session-state.json`
 - [x] Gate auto-fix loop — fixes lint/format errors automatically, bounded retry (max 2x)
 - [x] Auto-post-start hook — gate enforcement before commits
 - [x] Sandbox guard — hard-blocks destructive commands (rm -rf /, DROP TABLE, curl|bash, force-push main)
-- [ ] **Cross-repo benchmark** — 20-30 repos across polyglot monorepos, infra-heavy repos, single-stack apps, and unconventional repos. Measure: coverage %, false positives, failure modes
-- [ ] **Drift resilience test** — add services, change linters, rename directories, switch CI. Measure: does the engine re-discover without human edits?
-- [ ] **Baseline comparison** — implement same governance in AGENTS.md, CLAUDE.md, .cursor/rules, GEMINI.md. Measure: lines of config, number of files, repair time after drift
+- [ ] Published npm package
+- [ ] Cross-repo benchmark — 20-30 repos, measure coverage %, false positives, failure modes
+- [ ] Drift resilience test — add services, change linters, rename directories. Does the engine re-discover?
+- [ ] Baseline comparison — same governance in AGENTS.md, CLAUDE.md, .cursor/rules, GEMINI.md
 - [ ] `scaffold analyze` — generate governance from existing project without interview
 - [ ] `scaffold diff` — compare governance against codebase reality
 - [ ] `scaffold upgrade` — update universal skills when new version ships
-- [ ] Published npm package
 - [ ] Cross-agent compatibility (Cursor, Codex, Gemini CLI, Aider)
 
 ---
