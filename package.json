@@ -1,0 +1,21 @@
+{
+  "name": "scaffold-cli",
+  "version": "0.1.0",
+  "description": "Meta-framework for Claude Code. Generates self-maintaining infrastructure from an interview.",
+  "bin": {
+    "scaffold": "./bin/scaffold.js"
+  },
+  "keywords": [
+    "claude-code",
+    "ai-agents",
+    "developer-tools",
+    "workflow-automation",
+    "meta-framework"
+  ],
+  "author": "WhitehatD",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WhitehatD/scaffold-cli.git"
+  }
+}
