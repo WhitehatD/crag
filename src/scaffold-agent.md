@@ -80,20 +80,15 @@ Ask ONE question at a time. Wait for the answer. Adapt follow-ups. Skip obvious 
 
 ## Phase 2: Generate
 
-### 2.1 Install Universal Skills
+### 2.1 Universal Skills — DO NOT REGENERATE
 
-Copy the universal skills from scaffold-cli:
+The CLI (`scaffold init`) already installed the universal skills before launching you. They exist at:
+- `.claude/skills/pre-start-context/SKILL.md`
+- `.claude/skills/post-start-validation/SKILL.md`
+- `.agents/workflows/pre-start-context.md`
+- `.agents/workflows/post-start-validation.md`
 
-```bash
-mkdir -p .claude/skills/pre-start-context .claude/skills/post-start-validation .agents/workflows
-```
-
-Copy `src/skills/pre-start-context.md` → `.claude/skills/pre-start-context/SKILL.md`
-Copy `src/skills/post-start-validation.md` → `.claude/skills/post-start-validation/SKILL.md`
-
-For workflow copies, remove the `name:` line from frontmatter:
-Copy to `.agents/workflows/pre-start-context.md`
-Copy to `.agents/workflows/post-start-validation.md`
+**Do NOT overwrite them.** Check that they exist with `ls`. If missing (user ran you directly, not via CLI), create the directories and tell the user to run `scaffold init` to install them properly.
 
 ### 2.2 Generate governance.md
 
@@ -228,3 +223,6 @@ Present:
 3. Use the project's actual tool names.
 4. Generate for Windows (Git Bash syntax) unless told otherwise.
 5. If user says "like example-app" or "like example-app" — read those governance files for reference.
+6. **Check pwd before navigating.** Don't cd into a directory you're already in.
+7. **Don't regenerate universal skills.** The CLI installs them. Check if they exist, don't overwrite.
+8. **MemStack: if user's system has a shared MemStack DB** (at `D:/playground/memstack/db/memstack-db.py`), use it. Otherwise generate local SQLite rules. Ask the user: "Do you have MemStack installed? If so, where?"
