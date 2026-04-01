@@ -144,6 +144,7 @@ function init() {
   console.log(`  Claude Code will ask about your project.`);
   console.log(`  It generates: governance.md, hooks, agents, settings.`);
   console.log(`  The universal skills are already installed.\n`);
+  console.log(`  >>> Type "go" and press Enter to start the interview <<<\n`);
 
   const claude = spawn('claude', ['--agent', 'scaffold-project'], {
     stdio: 'inherit',
