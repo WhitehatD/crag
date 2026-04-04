@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] — 2026-04-05
+
+### Security
+- **Shell injection in `pre-commit.js`** — `gate.path` and `gate.condition` from `governance.md` were interpolated into `cd "..."` and `[ -e "..." ]` without escaping. An adversarial governance file could break out of the shell context. Both values now go through `shellEscapeDoubleQuoted` (backslash-first escape order). The whole `bash -c '...'` body is wrapped with `shellEscapeSingleQuoted`.
+- **YAML injection in `github-actions.js`** — `gate.path` was concatenated into `working-directory:` and `gate.condition` into `hashFiles('...')` without escaping. Both now route through `yamlScalar()`. The `hashFiles` argument additionally has single-quote-doubling (`''`) for GHA expression syntax.
+- **Path traversal in governance annotations** — `parseGovernance()` now validates `path:` and `if:` annotation values via `isValidAnnotationPath()`. Rejects absolute POSIX paths, Windows drive-letter paths, UNC paths, `..` segments, newlines, and null bytes. Invalid values are dropped and a warning is recorded.
+- **Husky backslash-ordering fix** — `gate.path`/`gate.condition` in husky hooks are now escaped via `shellEscapeDoubleQuoted` which handles `\` before `"` so a trailing backslash cannot eat the closing quote.
+- **`atomicWrite` temp suffix is now crypto-random** — previously `${pid}.${Date.now()}` was predictable. Now uses `crypto.randomBytes(8).toString('hex')` + the `wx` open flag as a defense-in-depth against symlink races on shared tmpfs.
+- **Stricter `yamlScalar`** — also quotes strings beginning with YAML flow indicators (`[`, `]`, `{`, `}`, `,`), block-sequence markers (`- `), tag/complex-key markers (`?`, `!`), and control characters. Previously a classification-prefixed name like `[OPTIONAL] test` could have been interpreted as a flow sequence.
+- **`SECURITY.md`** — published threat model, supported versions, disclosure process.
+
+### Added
+- **`crag compile --dry-run`** — preview target output paths without writing files.
+- **`crag check --json`** — machine-readable infrastructure report.
+- **Test runner filter** — `node test/all.js parse diff` runs only matching files.
+- **Structured exit codes** — `src/cli-errors.js` exports `EXIT_USER=1` and `EXIT_INTERNAL=2`. Scripts can now distinguish user-recoverable errors from environmental failures. All commands route through `cliError()`.
+- **Windows shell handling in `init`** — `spawn('claude', ...)` now uses `shell: bash` on Windows instead of defaulting to `cmd.exe`, which could not always resolve the claude binary.
+- **`os.homedir()` fallback in `init`** — crash-hardens against containers/CI where both `HOME` and `USERPROFILE` are unset.
+- **`.gitattributes`** — pins shell scripts, hooks, and YAML to LF so Windows contributors cannot commit CRLF into generated artifacts.
+- **69 new tests** (159 → 228) covering: path-traversal annotation rejection (10), injection regression for pre-commit and github-actions (8), `isTrustedSource` symlink protection (7), `check` command logic (6), shared `yaml-run` helper (13), `resolveHomeDir`, `atomicWrite` edge cases (5), expanded `yamlScalar` rules (6), pre-commit + agents-md + cursor-rules + gemini-md compile targets (12).
+
+### Changed
+- **GitHub Actions generator** — the Python setup step now uses `shell: bash` explicitly so `2>/dev/null` redirects work on Windows runners (previously silently failed in `cmd.exe`).
+- **`extractRunCommands` / `isGateCommand`** — moved from duplicated copies in `analyze.js` and `diff.js` into a shared `src/governance/yaml-run.js`. Both commands import from the shared module; public exports remain for test compatibility.
+- **Error handling at file I/O boundaries** — `init`, `compile`, `diff`, `analyze` now wrap `fs.copyFileSync`, `fs.readFileSync`, and `fs.writeFileSync` with try/catch and emit actionable errors via `cliError` instead of raw Node stack traces.
+- **Parser warnings are surfaced** — `compile` and `diff` print `parsed.warnings` to stderr before proceeding, so invalid annotations are visible.
+- **Skill source_hash sync** — skill frontmatter `version:` fields updated to `0.2.2`.
+
 ## [0.2.2] — 2026-04-05
 
 ### Added
@@ -51,7 +79,7 @@ Renamed and expanded. First release under the `@whitehatd/crag` name.
   - AI agents (additional): `copilot`, `cline`, `continue`, `windsurf`, `zed`, `cody`
 - **Runtime version inference** — CI generator reads `package.json engines.node`, `pyproject.toml requires-python`, `build.gradle.kts` toolchain, `pom.xml maven.compiler.source`, `go.mod go X.Y` directive instead of hardcoding defaults.
 - **Auto-update system** — skills track version + SHA-256 source_hash in YAML frontmatter. CRLF normalization for Windows/Unix portability. Global cache at `~/.claude/crag/update-check.json` with 24h TTL. Graceful offline failure. Opt-out via `CRAG_NO_UPDATE_CHECK=1`.
-- **159 tests** across 11 test files (was 0). Zero dependencies. Run via `npm test` or `node test/all.js`.
+- **159 tests** across 12 test files (was 0). Zero dependencies. Run via `npm test` or `node test/all.js`.
 - **Atomicity** — all compile targets use `atomicWrite()` (temp file + rename). Partial failures leave old state intact.
 
 ### Changed
@@ -103,7 +131,8 @@ Initial release under the `scaffold-cli` name. Proven in production on:
 
 Initial capabilities: universal skills (pre-start-context, post-start-validation), interview-driven governance generation, 3 compile targets (github, husky, pre-commit), basic workspace support for monorepos via multi-level `governance.md`.
 
-[Unreleased]: https://github.com/WhitehatD/crag/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/WhitehatD/crag/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/WhitehatD/crag/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/WhitehatD/crag/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/WhitehatD/crag/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/WhitehatD/crag/releases/tag/v0.2.0

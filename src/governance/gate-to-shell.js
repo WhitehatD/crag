@@ -3,9 +3,19 @@
 /**
  * Escape a string for safe inclusion inside double quotes in a shell command.
  * Escapes: backslash, backtick, dollar sign, double quote.
+ * Backslash MUST be replaced first so its replacement isn't re-escaped.
  */
 function shellEscapeDoubleQuoted(s) {
   return String(s).replace(/[\\`"$]/g, '\\$&');
+}
+
+/**
+ * Escape a string for safe inclusion inside single quotes in a shell command.
+ * Single quotes cannot be escaped inside single quotes — the standard pattern
+ * is to close the quote, emit an escaped quote, and reopen: 'foo'\''bar'.
+ */
+function shellEscapeSingleQuoted(s) {
+  return String(s).replace(/'/g, "'\\''");
 }
 
 /**
@@ -25,4 +35,4 @@ function gateToShell(cmd) {
   return cmd;
 }
 
-module.exports = { gateToShell, shellEscapeDoubleQuoted };
+module.exports = { gateToShell, shellEscapeDoubleQuoted, shellEscapeSingleQuoted };

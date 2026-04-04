@@ -8,6 +8,7 @@ const { diff } = require('./commands/diff');
 const { upgrade } = require('./commands/upgrade');
 const { workspace } = require('./commands/workspace');
 const { checkOnce } = require('./update/version-check');
+const { EXIT_USER } = require('./cli-errors');
 
 function printUsage() {
   console.log(`
@@ -48,6 +49,13 @@ function printUsage() {
     crag analyze --workspace          Analyze all workspace members
     crag analyze --merge              Merge with existing governance
 
+  Check options:
+    crag check                        Human-readable infrastructure report
+    crag check --json                 Machine-readable JSON output
+
+  Compile options:
+    crag compile --target <t> --dry-run  Preview output paths without writing
+
   Upgrade options:
     crag upgrade --check              Show what would change
     crag upgrade --workspace          Update all workspace members
@@ -81,7 +89,7 @@ function run(args) {
   switch (command) {
     case 'init':      init(); break;
     case 'install':   install(); break;
-    case 'check':     check(); break;
+    case 'check':     check(args); break;
     case 'compile':   compile(args); break;
     case 'analyze':   analyze(args); break;
     case 'diff':      diff(args); break;
@@ -95,7 +103,7 @@ function run(args) {
     default:
       console.error(`  Unknown command: ${command}`);
       printUsage();
-      process.exit(1);
+      process.exit(EXIT_USER);
   }
 }
 

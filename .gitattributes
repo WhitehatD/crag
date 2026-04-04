@@ -1,0 +1,22 @@
+# Normalize line endings for all text files on checkout/commit so the
+# skill-hash integrity system (CRLF-normalized SHA-256) stays consistent
+# across Windows and Unix contributors.
+* text=auto eol=lf
+
+# Shell scripts and generated hook artifacts MUST be LF — they run under
+# sh/bash which does not accept CR in shebangs or conditionals.
+*.sh       text eol=lf
+.husky/*   text eol=lf
+.pre-commit-config.yaml text eol=lf
+
+# YAML and markdown sources are LF so generated output matches input.
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.md       text eol=lf
+
+# Binary or lockfile-style content should not be diffed.
+*.lock     binary
+*.png      binary
+*.jpg      binary
+*.gif      binary
+*.ico      binary

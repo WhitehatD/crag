@@ -15,6 +15,30 @@
 const MAX_CONTENT_SIZE = 256 * 1024; // 256 KB
 
 /**
+ * Validate an annotation path (used for `path:` and `if:` on gate sections).
+ *
+ * Rejects:
+ *   - Absolute paths (/, C:\, \\server\share)
+ *   - Parent traversal (..)
+ *   - Newlines or null bytes (defense against injection into generated YAML/shell)
+ *
+ * These paths are interpolated into shell commands and YAML scalars downstream
+ * (husky, pre-commit, github-actions), so the parser is the single chokepoint
+ * where untrusted path strings from governance.md become structured data.
+ */
+function isValidAnnotationPath(p) {
+  if (typeof p !== 'string' || p.length === 0) return false;
+  if (p.length > 512) return false;
+  if (/[\n\r\x00]/.test(p)) return false;
+  // POSIX absolute or Windows drive-letter / UNC
+  if (p.startsWith('/') || /^[A-Za-z]:[\\/]/.test(p) || p.startsWith('\\\\')) return false;
+  // Parent traversal (match as a path segment, not as substring of a name)
+  const segments = p.split(/[\\/]/);
+  if (segments.includes('..')) return false;
+  return true;
+}
+
+/**
  * Extract a markdown section body by heading name.
  * Starts after the first line matching `## <name>` (with optional trailing text),
  * ends at the next `## ` heading or EOF. Returns the body string, or null if not found.
@@ -90,8 +114,22 @@ function parseGovernance(content) {
       if (sub) {
         section = sub[1].trim().toLowerCase();
         sectionMeta = { path: null, condition: null };
-        if (sub[2] === 'path') sectionMeta.path = sub[3].trim();
-        if (sub[2] === 'if') sectionMeta.condition = sub[3].trim();
+        if (sub[2] === 'path') {
+          const raw = sub[3].trim();
+          if (isValidAnnotationPath(raw)) {
+            sectionMeta.path = raw;
+          } else {
+            result.warnings.push(`Invalid path annotation in section "${sub[1].trim()}": ${JSON.stringify(raw)} (must be a relative in-repo path without "..")`);
+          }
+        }
+        if (sub[2] === 'if') {
+          const raw = sub[3].trim();
+          if (isValidAnnotationPath(raw)) {
+            sectionMeta.condition = raw;
+          } else {
+            result.warnings.push(`Invalid if annotation in section "${sub[1].trim()}": ${JSON.stringify(raw)} (must be a relative in-repo path without "..")`);
+          }
+        }
         result.gates[section] = {
           commands: [],
           path: sectionMeta.path,
@@ -179,4 +217,4 @@ function flattenGatesRich(gates) {
   return out;
 }
 
-module.exports = { parseGovernance, flattenGates, flattenGatesRich, extractSection };
+module.exports = { parseGovernance, flattenGates, flattenGatesRich, extractSection, isValidAnnotationPath };

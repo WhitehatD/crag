@@ -47,8 +47,18 @@ function readFrontmatter(filePath) {
 }
 
 /**
- * Format a value for YAML frontmatter.
+ * Format a value for YAML frontmatter or YAML block scalars.
  * Quotes strings that contain special characters or could be ambiguous.
+ *
+ * Rules roughly follow YAML 1.2 plain-scalar constraints:
+ *   - Leading/trailing whitespace → must quote
+ *   - Special markers anywhere: : # & * ! | > ' " % @ `
+ *   - Leading flow indicators: [ ] { } , (would start a flow sequence/map)
+ *   - Leading dash + space looks like a block sequence entry
+ *   - Leading ? or ! looks like a YAML tag or complex-key marker
+ *   - Reserved words that coerce to other types: true/false/null/yes/no/~
+ *   - Number-like strings
+ *   - Empty string
  */
 function yamlScalar(value) {
   if (value == null) return '';
@@ -60,15 +70,18 @@ function yamlScalar(value) {
     return `|\n${indented}`;
   }
 
-  // Characters that require quoting in YAML plain scalar:
-  //   : leading/trailing or followed by space (key separator)
-  //   # comment marker
-  //   special markers: & * ! | > ' " % @ `
-  //   leading/trailing whitespace
-  //   strings that could be misread as other types: true, false, null, yes, no, numbers
+  // Control characters (tabs, etc.) must be quoted so they survive round-trip.
+  // eslint-disable-next-line no-control-regex
+  if (/[\x00-\x1f]/.test(str)) {
+    return `"${str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\t/g, '\\t').replace(/\r/g, '\\r')}"`;
+  }
+
   const needsQuoting =
     /^[\s]|[\s]$/.test(str) ||
     /[:#&*!|>'"%@`]/.test(str) ||
+    /^[\[\]{},]/.test(str) ||
+    /^- /.test(str) ||
+    /^[?!]/.test(str) ||
     /^(true|false|null|yes|no|~)$/i.test(str) ||
     /^-?\d+(\.\d+)?$/.test(str) ||
     str === '';

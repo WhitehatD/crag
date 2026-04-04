@@ -4,6 +4,8 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { parseGovernance, flattenGates } = require('../governance/parse');
+const { extractRunCommands, isGateCommand } = require('../governance/yaml-run');
+const { cliError, EXIT_USER, EXIT_INTERNAL, readFileOrExit } = require('../cli-errors');
 
 /**
  * crag diff — compare governance.md against codebase reality.
@@ -13,12 +15,14 @@ function diff(args) {
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
   if (!fs.existsSync(govPath)) {
-    console.error('  Error: No .claude/governance.md found. Run crag init or crag analyze first.');
-    process.exit(1);
+    cliError('no .claude/governance.md found. Run crag init or crag analyze first.', EXIT_USER);
   }
 
-  const content = fs.readFileSync(govPath, 'utf-8');
+  const content = readFileOrExit(fs, govPath, 'governance.md');
   const parsed = parseGovernance(content);
+  if (parsed.warnings && parsed.warnings.length > 0) {
+    for (const w of parsed.warnings) console.warn(`  \x1b[33m!\x1b[0m ${w}`);
+  }
   const flat = flattenGates(parsed.gates);
 
   console.log(`\n  Governance vs Reality — ${parsed.name || 'project'}\n`);
@@ -169,46 +173,8 @@ function extractCIGateCommands(cwd) {
   return gates;
 }
 
-/**
- * Extract commands from YAML `run:` steps, handling block scalars.
- */
-function extractRunCommands(content) {
-  const commands = [];
-  const lines = content.split(/\r?\n/);
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const m = line.match(/^(\s*)-?\s*run:\s*(.*)$/);
-    if (!m) continue;
-
-    const baseIndent = m[1].length;
-    const rest = m[2].trim();
-
-    if (/^[|>][+-]?\s*$/.test(rest)) {
-      // Block scalar
-      for (let j = i + 1; j < lines.length; j++) {
-        const ln = lines[j];
-        if (ln.trim() === '') continue;
-        const indentMatch = ln.match(/^(\s*)/);
-        if (indentMatch[1].length <= baseIndent) break;
-        const trimmed = ln.trim();
-        if (trimmed && !trimmed.startsWith('#')) commands.push(trimmed);
-      }
-    } else if (rest && !rest.startsWith('#')) {
-      commands.push(rest.replace(/^["']|["']$/g, ''));
-    }
-  }
-
-  return commands;
-}
-
-function isGateCommand(cmd) {
-  const patterns = [
-    /npm (run|test|ci)/, /npx /, /node /, /cargo /, /go (test|build|vet)/,
-    /pytest/, /ruff/, /mypy/, /eslint/, /biome/, /prettier/, /tsc/, /gradle/,
-  ];
-  return patterns.some(p => p.test(cmd));
-}
+// extractRunCommands and isGateCommand now live in src/governance/yaml-run.js
+// and are re-exported below for backward compatibility with existing tests.
 
 /**
  * Normalize commands to a canonical form for equality comparison.
@@ -287,3 +253,4 @@ function hasNpmScript(cwd, script) {
 }
 
 module.exports = { diff, normalizeCmd, extractRunCommands, isGateCommand };
+

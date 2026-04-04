@@ -15,6 +15,7 @@ const { generateContinue } = require('../compile/continue');
 const { generateWindsurf } = require('../compile/windsurf');
 const { generateZed } = require('../compile/zed');
 const { generateCody } = require('../compile/cody');
+const { cliError, readFileOrExit, EXIT_USER, EXIT_INTERNAL } = require('../cli-errors');
 
 // All supported compile targets in dispatch order.
 // Grouped: CI (3) + AI agent native (3) + AI agent extras (6)
@@ -36,16 +37,19 @@ const ALL_TARGETS = [
 function compile(args) {
   const targetIdx = args.indexOf('--target');
   const target = targetIdx !== -1 ? args[targetIdx + 1] : args[1];
+  const dryRun = args.includes('--dry-run');
   const cwd = process.cwd();
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
   if (!fs.existsSync(govPath)) {
-    console.error('  Error: No .claude/governance.md found. Run crag init first.');
-    process.exit(1);
+    cliError('no .claude/governance.md found. Run crag init or crag analyze first.', EXIT_USER);
   }
 
-  const content = fs.readFileSync(govPath, 'utf-8');
+  const content = readFileOrExit(fs, govPath, 'governance.md');
   const parsed = parseGovernance(content);
+  if (parsed.warnings && parsed.warnings.length > 0) {
+    for (const w of parsed.warnings) console.warn(`  \x1b[33m!\x1b[0m ${w}`);
+  }
   const flat = flattenGates(parsed.gates);
   const gateCount = Object.values(flat).flat().length;
 
@@ -68,37 +72,80 @@ function compile(args) {
     console.log('    crag compile --target zed          .zed/rules.md');
     console.log('    crag compile --target cody         .sourcegraph/cody-instructions.md\n');
     console.log('  Combined:');
-    console.log('    crag compile --target all          All 12 targets at once\n');
+    console.log('    crag compile --target all          All 12 targets at once');
+    console.log('    crag compile --target <t> --dry-run  Preview paths without writing\n');
     return;
   }
 
   const targets = target === 'all' ? ALL_TARGETS : [target];
 
   console.log(`\n  Compiling governance.md → ${targets.join(', ')}`);
-  console.log(`  ${gateCount} gates, ${parsed.runtimes.length} runtimes detected\n`);
+  console.log(`  ${gateCount} gates, ${parsed.runtimes.length} runtimes detected${dryRun ? ' (dry-run)' : ''}\n`);
 
-  for (const t of targets) {
-    switch (t) {
-      case 'github':     generateGitHubActions(cwd, parsed); break;
-      case 'husky':      generateHusky(cwd, parsed); break;
-      case 'pre-commit': generatePreCommitConfig(cwd, parsed); break;
-      case 'agents-md':  generateAgentsMd(cwd, parsed); break;
-      case 'cursor':     generateCursorRules(cwd, parsed); break;
-      case 'gemini':     generateGeminiMd(cwd, parsed); break;
-      case 'copilot':    generateCopilot(cwd, parsed); break;
-      case 'cline':      generateCline(cwd, parsed); break;
-      case 'continue':   generateContinue(cwd, parsed); break;
-      case 'windsurf':   generateWindsurf(cwd, parsed); break;
-      case 'zed':        generateZed(cwd, parsed); break;
-      case 'cody':       generateCody(cwd, parsed); break;
-      default:
+  // --dry-run: print the planned output paths without writing files.
+  if (dryRun) {
+    for (const t of targets) {
+      const outPath = planOutputPath(cwd, t);
+      if (outPath) {
+        console.log(`  \x1b[36mplan\x1b[0m ${path.relative(cwd, outPath)}`);
+      } else {
         console.error(`  Unknown target: ${t}`);
         console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
-        process.exit(1);
+        process.exit(EXIT_USER);
+      }
     }
+    console.log('\n  Dry-run complete — no files written.\n');
+    return;
+  }
+
+  try {
+    for (const t of targets) {
+      switch (t) {
+        case 'github':     generateGitHubActions(cwd, parsed); break;
+        case 'husky':      generateHusky(cwd, parsed); break;
+        case 'pre-commit': generatePreCommitConfig(cwd, parsed); break;
+        case 'agents-md':  generateAgentsMd(cwd, parsed); break;
+        case 'cursor':     generateCursorRules(cwd, parsed); break;
+        case 'gemini':     generateGeminiMd(cwd, parsed); break;
+        case 'copilot':    generateCopilot(cwd, parsed); break;
+        case 'cline':      generateCline(cwd, parsed); break;
+        case 'continue':   generateContinue(cwd, parsed); break;
+        case 'windsurf':   generateWindsurf(cwd, parsed); break;
+        case 'zed':        generateZed(cwd, parsed); break;
+        case 'cody':       generateCody(cwd, parsed); break;
+        default:
+          console.error(`  Unknown target: ${t}`);
+          console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
+          process.exit(EXIT_USER);
+      }
+    }
+  } catch (err) {
+    cliError(`compile failed: ${err.message}`, EXIT_INTERNAL);
   }
 
   console.log('\n  Done. Governance is now executable infrastructure.\n');
 }
 
-module.exports = { compile, ALL_TARGETS };
+/**
+ * Map a target name to its destination path relative to cwd.
+ * Used by --dry-run to show what would be written.
+ */
+function planOutputPath(cwd, target) {
+  const map = {
+    'github':     path.join(cwd, '.github', 'workflows', 'gates.yml'),
+    'husky':      path.join(cwd, '.husky', 'pre-commit'),
+    'pre-commit': path.join(cwd, '.pre-commit-config.yaml'),
+    'agents-md':  path.join(cwd, 'AGENTS.md'),
+    'cursor':     path.join(cwd, '.cursor', 'rules', 'governance.mdc'),
+    'gemini':     path.join(cwd, 'GEMINI.md'),
+    'copilot':    path.join(cwd, '.github', 'copilot-instructions.md'),
+    'cline':      path.join(cwd, '.clinerules'),
+    'continue':   path.join(cwd, '.continuerules'),
+    'windsurf':   path.join(cwd, '.windsurfrules'),
+    'zed':        path.join(cwd, '.zed', 'rules.md'),
+    'cody':       path.join(cwd, '.sourcegraph', 'cody-instructions.md'),
+  };
+  return map[target] || null;
+}
+
+module.exports = { compile, ALL_TARGETS, planOutputPath };

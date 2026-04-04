@@ -5,6 +5,7 @@ const path = require('path');
 const { gateToShell } = require('../governance/gate-to-shell');
 const { flattenGatesRich } = require('../governance/parse');
 const { atomicWrite } = require('./atomic-write');
+const { yamlScalar } = require('../update/integrity');
 
 /**
  * Extract the major Node version from package.json engines.node field.
@@ -95,7 +96,10 @@ function generateGitHubActions(cwd, parsed) {
     setupSteps += '      - name: Setup Python\n';
     setupSteps += '        uses: actions/setup-python@v5\n';
     setupSteps += `        with:\n          python-version: '${pythonVersion}'\n`;
-    setupSteps += '      - run: pip install -r requirements.txt 2>/dev/null || true\n';
+    // Explicit `shell: bash` so redirects work on Windows runners (which default to cmd.exe).
+    setupSteps += '      - name: Install Python deps (best-effort)\n';
+    setupSteps += '        shell: bash\n';
+    setupSteps += '        run: pip install -r requirements.txt 2>/dev/null || true\n';
   }
   if (parsed.runtimes.includes('java')) {
     setupSteps += '      - name: Setup Java\n';
@@ -108,13 +112,10 @@ function generateGitHubActions(cwd, parsed) {
     setupSteps += `        with:\n          go-version: '${goVersion}'\n`;
   }
 
-  // Escape for YAML double-quoted scalar: \, ", and control chars.
-  const yamlDqEscape = (s) => String(s)
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/\r/g, '\\r')
-    .replace(/\n/g, '\\n')
-    .replace(/\t/g, '\\t');
+  // GHA expression escape for strings inside hashFiles('...'):
+  // single quotes are doubled. The value is already validated to be a
+  // relative in-repo path by the parser, but we escape defensively.
+  const ghaExprEscape = (s) => String(s).replace(/'/g, "''");
 
   let gateSteps = '';
   for (const gate of flattenGatesRich(parsed.gates)) {
@@ -122,12 +123,17 @@ function generateGitHubActions(cwd, parsed) {
     const label = gate.cmd.length > 60 ? gate.cmd.substring(0, 57) + '...' : gate.cmd;
     const prefix = gate.classification !== 'MANDATORY' ? `[${gate.classification}] ` : '';
     const condExpr = gate.condition ? ` (if: ${gate.condition})` : '';
-    const workDir = gate.path ? `\n        working-directory: ${gate.path}` : '';
+    // Route gate.path through yamlScalar — it will quote if the path contains
+    // YAML-sensitive characters (colon, #, quotes, etc.).
+    const workDir = gate.path ? `\n        working-directory: ${yamlScalar(gate.path)}` : '';
     const contOnErr = (gate.classification === 'OPTIONAL' || gate.classification === 'ADVISORY')
       ? '\n        continue-on-error: true' : '';
     const ifGuard = gate.condition
-      ? `\n        if: hashFiles('${gate.condition}') != ''` : '';
-    gateSteps += `      - name: "${prefix}${yamlDqEscape(gate.section)}: ${yamlDqEscape(label)}${yamlDqEscape(condExpr)}"${ifGuard}${workDir}${contOnErr}\n`;
+      ? `\n        if: hashFiles('${ghaExprEscape(gate.condition)}') != ''` : '';
+    // Use yamlScalar for the name field so user input can never break the YAML
+    // structure even if it contains quotes, newlines, colons, or control chars.
+    const stepName = `${prefix}${gate.section}: ${label}${condExpr}`;
+    gateSteps += `      - name: ${yamlScalar(stepName)}${ifGuard}${workDir}${contOnErr}\n`;
     gateSteps += `        run: |\n          ${shell.replace(/\n/g, '\n          ')}\n`;
   }
 

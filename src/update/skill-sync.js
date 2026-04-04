@@ -113,4 +113,4 @@ function syncSkills(targetDir, options = {}) {
   return result;
 }
 
-module.exports = { syncSkills };
+module.exports = { syncSkills, isTrustedSource };

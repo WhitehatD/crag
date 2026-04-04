@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const { parseGovernance, flattenGates, flattenGatesRich, extractSection } = require('../src/governance/parse');
+const { parseGovernance, flattenGates, flattenGatesRich, extractSection, isValidAnnotationPath } = require('../src/governance/parse');
 
 function test(name, fn) {
   try {
@@ -183,4 +183,72 @@ test('parseGovernance handles non-string input', () => {
 test('parseGovernance handles empty string', () => {
   const result = parseGovernance('');
   assert.deepStrictEqual(result.gates, {});
+});
+
+// --- Path traversal defense in annotations ---
+
+test('isValidAnnotationPath accepts normal relative paths', () => {
+  assert.strictEqual(isValidAnnotationPath('frontend/'), true);
+  assert.strictEqual(isValidAnnotationPath('packages/web/src'), true);
+  assert.strictEqual(isValidAnnotationPath('tsconfig.json'), true);
+  assert.strictEqual(isValidAnnotationPath('.github/workflows/ci.yml'), true);
+});
+
+test('isValidAnnotationPath rejects absolute POSIX paths', () => {
+  assert.strictEqual(isValidAnnotationPath('/etc/passwd'), false);
+  assert.strictEqual(isValidAnnotationPath('/'), false);
+});
+
+test('isValidAnnotationPath rejects Windows absolute paths', () => {
+  assert.strictEqual(isValidAnnotationPath('C:\\Windows\\System32'), false);
+  assert.strictEqual(isValidAnnotationPath('C:/Users/foo'), false);
+  assert.strictEqual(isValidAnnotationPath('\\\\server\\share'), false);
+});
+
+test('isValidAnnotationPath rejects parent-traversal segments', () => {
+  assert.strictEqual(isValidAnnotationPath('..'), false);
+  assert.strictEqual(isValidAnnotationPath('../etc'), false);
+  assert.strictEqual(isValidAnnotationPath('foo/../bar'), false);
+  assert.strictEqual(isValidAnnotationPath('foo\\..\\bar'), false);
+});
+
+test('isValidAnnotationPath rejects embedded newlines and null bytes', () => {
+  assert.strictEqual(isValidAnnotationPath('foo\nbar'), false);
+  assert.strictEqual(isValidAnnotationPath('foo\rbar'), false);
+  assert.strictEqual(isValidAnnotationPath('foo\x00bar'), false);
+});
+
+test('isValidAnnotationPath rejects empty and non-strings', () => {
+  assert.strictEqual(isValidAnnotationPath(''), false);
+  assert.strictEqual(isValidAnnotationPath(null), false);
+  assert.strictEqual(isValidAnnotationPath(undefined), false);
+  assert.strictEqual(isValidAnnotationPath(42), false);
+});
+
+test('parseGovernance rejects absolute path annotation and warns', () => {
+  const md = `## Gates\n### Bad (path: /etc)\n- echo pwned\n`;
+  const result = parseGovernance(md);
+  assert.strictEqual(result.gates.bad.path, null);
+  assert.ok(result.warnings.some(w => w.includes('Invalid path')));
+});
+
+test('parseGovernance rejects parent-traversal path annotation and warns', () => {
+  const md = `## Gates\n### Bad (path: ../../etc)\n- echo pwned\n`;
+  const result = parseGovernance(md);
+  assert.strictEqual(result.gates.bad.path, null);
+  assert.ok(result.warnings.some(w => w.includes('Invalid path')));
+});
+
+test('parseGovernance rejects absolute if annotation and warns', () => {
+  const md = `## Gates\n### Bad (if: /etc/hostname)\n- echo pwned\n`;
+  const result = parseGovernance(md);
+  assert.strictEqual(result.gates.bad.condition, null);
+  assert.ok(result.warnings.some(w => w.includes('Invalid if')));
+});
+
+test('parseGovernance accepts normal path annotation', () => {
+  const md = `## Gates\n### Frontend (path: packages/web)\n- npm test\n`;
+  const result = parseGovernance(md);
+  assert.strictEqual(result.gates.frontend.path, 'packages/web');
+  assert.strictEqual(result.warnings.length, 0);
 });

@@ -84,6 +84,37 @@ test('yamlScalar escapes backslash and quote', () => {
   assert.strictEqual(yamlScalar('a\\b"c'), '"a\\\\b\\"c"');
 });
 
+test('yamlScalar quotes strings starting with YAML flow indicators', () => {
+  // [ { } , at the start would start a flow sequence / map / be a separator.
+  assert.ok(yamlScalar('[OPTIONAL] lint').startsWith('"'));
+  assert.ok(yamlScalar('{key}').startsWith('"'));
+  assert.ok(yamlScalar(',foo').startsWith('"'));
+  assert.ok(yamlScalar(']bar').startsWith('"'));
+});
+
+test('yamlScalar quotes strings starting with dash-space', () => {
+  // "- foo" would be interpreted as a block sequence entry.
+  assert.ok(yamlScalar('- foo').startsWith('"'));
+});
+
+test('yamlScalar quotes strings starting with ? or !', () => {
+  // ? marks a complex key; ! is a tag prefix.
+  assert.ok(yamlScalar('?question').startsWith('"'));
+  assert.ok(yamlScalar('!tag').startsWith('"'));
+});
+
+test('yamlScalar quotes strings with tab or control chars', () => {
+  const result = yamlScalar('col1\tcol2');
+  assert.ok(result.startsWith('"'));
+  assert.ok(result.includes('\\t'));
+});
+
+test('yamlScalar leaves safe leading chars bare (letters, digits, underscore)', () => {
+  assert.strictEqual(yamlScalar('foo'), 'foo');
+  assert.strictEqual(yamlScalar('_foo'), '_foo');
+  assert.strictEqual(yamlScalar('a-b-c'), 'a-b-c'); // dash in middle is fine
+});
+
 // --- readFrontmatter / writeFrontmatter round-trip ---
 
 test('readFrontmatter parses version and hash', () => {

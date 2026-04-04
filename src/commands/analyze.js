@@ -5,6 +5,8 @@ const fs = require('fs');
 const path = require('path');
 const { detectWorkspace } = require('../workspace/detect');
 const { enumerateMembers } = require('../workspace/enumerate');
+const { extractRunCommands, isGateCommand } = require('../governance/yaml-run');
+const { cliWarn, cliError, EXIT_INTERNAL } = require('../cli-errors');
 
 /**
  * crag analyze — generate governance.md from existing project without interview.
@@ -45,21 +47,30 @@ function analyze(args) {
 
   const govPath = path.join(cwd, '.claude', 'governance.md');
   const govDir = path.dirname(govPath);
-  if (!fs.existsSync(govDir)) fs.mkdirSync(govDir, { recursive: true });
+  try {
+    if (!fs.existsSync(govDir)) fs.mkdirSync(govDir, { recursive: true });
 
-  if (fs.existsSync(govPath) && !merge) {
-    const backupPath = govPath + '.bak.' + Date.now();
-    fs.copyFileSync(govPath, backupPath);
-    console.log(`  Backed up existing governance to ${path.basename(backupPath)}`);
-  }
+    if (fs.existsSync(govPath) && !merge) {
+      const backupPath = govPath + '.bak.' + Date.now();
+      try {
+        fs.copyFileSync(govPath, backupPath);
+        console.log(`  Backed up existing governance to ${path.basename(backupPath)}`);
+      } catch (err) {
+        // Backup failure shouldn't block the analyze, but warn loudly.
+        cliWarn(`could not create backup (continuing anyway): ${err.message}`);
+      }
+    }
 
-  if (merge && fs.existsSync(govPath)) {
-    console.log('  Merge mode: preserving existing governance, appending new gates');
-    const existing = fs.readFileSync(govPath, 'utf-8');
-    const mergedContent = mergeWithExisting(existing, governance);
-    fs.writeFileSync(govPath, mergedContent);
-  } else {
-    fs.writeFileSync(govPath, governance);
+    if (merge && fs.existsSync(govPath)) {
+      console.log('  Merge mode: preserving existing governance, appending new gates');
+      const existing = fs.readFileSync(govPath, 'utf-8');
+      const mergedContent = mergeWithExisting(existing, governance);
+      fs.writeFileSync(govPath, mergedContent);
+    } else {
+      fs.writeFileSync(govPath, governance);
+    }
+  } catch (err) {
+    cliError(`failed to write ${path.relative(cwd, govPath)}: ${err.message}`, EXIT_INTERNAL);
   }
 
   console.log(`  \x1b[32m✓\x1b[0m Generated ${path.relative(cwd, govPath)}`);
@@ -167,50 +178,7 @@ function extractCIGates(dir, result) {
   }
 }
 
-/**
- * Extract commands from YAML `run:` steps, handling both inline and block-scalar forms:
- *   run: npm test
- *   run: |
- *     npm test
- *     npm build
- *   run: >-
- *     npm test
- */
-function extractRunCommands(content) {
-  const commands = [];
-  const lines = content.split(/\r?\n/);
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const m = line.match(/^(\s*)-?\s*run:\s*(.*)$/);
-    if (!m) continue;
-
-    const baseIndent = m[1].length;
-    const rest = m[2].trim();
-
-    // Block scalar: | or |- or |+ or > or >- or >+
-    if (/^[|>][+-]?\s*$/.test(rest)) {
-      // Collect following lines with greater indent
-      const blockLines = [];
-      for (let j = i + 1; j < lines.length; j++) {
-        const ln = lines[j];
-        if (ln.trim() === '') { blockLines.push(''); continue; }
-        const indentMatch = ln.match(/^(\s*)/);
-        if (indentMatch[1].length <= baseIndent) break;
-        blockLines.push(ln.slice(baseIndent + 2));
-      }
-      for (const bl of blockLines) {
-        const trimmed = bl.trim();
-        if (trimmed && !trimmed.startsWith('#')) commands.push(trimmed);
-      }
-    } else if (rest && !rest.startsWith('#')) {
-      // Inline: remove surrounding quotes if any
-      commands.push(rest.replace(/^["']|["']$/g, ''));
-    }
-  }
-
-  return commands;
-}
+// extractRunCommands and isGateCommand now live in src/governance/yaml-run.js.
 
 function extractPackageScripts(dir, result) {
   const pkgPath = path.join(dir, 'package.json');
@@ -310,23 +278,16 @@ function inferGitPatterns(dir, result) {
     const branchList = branches.trim().split('\n');
     const featureBranches = branchList.filter(b => /^(feat|fix|docs|chore|feature|hotfix|release)\//.test(b));
     result.branchStrategy = featureBranches.length > 2 ? 'feature-branches' : 'trunk-based';
-  } catch {
+  } catch (err) {
+    // git may not be installed, or this may not be a git repo — non-fatal,
+    // just report and leave defaults. Matches the "best-effort" semantics of
+    // analyze (it infers what it can from whatever exists).
+    if (err && err.code !== 'ENOENT') {
+      cliWarn(`could not detect git patterns in ${path.basename(dir)}: ${err.message}`);
+    }
     result.branchStrategy = 'unknown';
     result.commitConvention = 'unknown';
   }
-}
-
-function isGateCommand(cmd) {
-  const gatePatterns = [
-    /npm (run |ci|test|install)/, /npx /, /node /,
-    /cargo (test|build|check|clippy)/, /rustfmt/,
-    /go (test|build|vet)/, /golangci-lint/,
-    /pytest/, /python -m/, /ruff/, /mypy/, /flake8/,
-    /gradle/, /mvn /, /maven/,
-    /eslint/, /biome/, /prettier/, /tsc/,
-    /docker (build|compose)/, /make /, /just /,
-  ];
-  return gatePatterns.some(p => p.test(cmd));
 }
 
 function generateGovernance(analysis, cwd) {

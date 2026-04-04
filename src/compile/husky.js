@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { gateToShell } = require('../governance/gate-to-shell');
+const { gateToShell, shellEscapeDoubleQuoted } = require('../governance/gate-to-shell');
 const { flattenGatesRich } = require('../governance/parse');
 const { atomicWrite } = require('./atomic-write');
 
@@ -22,9 +22,10 @@ function generateHusky(cwd, parsed) {
     body += `# ${section}\n`;
     for (const gate of gates) {
       const shell = gateToShell(gate.cmd);
-      // Quote path/condition for shell safety
-      const quotedPath = gate.path ? gate.path.replace(/"/g, '\\"') : null;
-      const quotedCond = gate.condition ? gate.condition.replace(/"/g, '\\"') : null;
+      // Escape path/condition for the double-quoted shell context.
+      // The escaper handles \ before " so the replacements don't overlap.
+      const quotedPath = gate.path ? shellEscapeDoubleQuoted(gate.path) : null;
+      const quotedCond = gate.condition ? shellEscapeDoubleQuoted(gate.condition) : null;
 
       // Build the core command (with cd if path-scoped)
       const coreCmd = quotedPath ? `(cd "${quotedPath}" && ${shell})` : shell;
@@ -32,7 +33,7 @@ function generateHusky(cwd, parsed) {
       // Build failure handler based on classification
       let onFail;
       if (gate.classification === 'OPTIONAL' || gate.classification === 'ADVISORY') {
-        const escLabel = shell.replace(/"/g, '\\"');
+        const escLabel = shellEscapeDoubleQuoted(shell);
         onFail = `echo "  [${gate.classification}] Gate failed: ${escLabel}"`;
       } else {
         onFail = 'exit 1';
