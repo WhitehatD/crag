@@ -1,0 +1,289 @@
+'use strict';
+
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const { parseGovernance, flattenGates } = require('../governance/parse');
+
+/**
+ * scaffold diff — compare governance.md against codebase reality.
+ */
+function diff(args) {
+  const cwd = process.cwd();
+  const govPath = path.join(cwd, '.claude', 'governance.md');
+
+  if (!fs.existsSync(govPath)) {
+    console.error('  Error: No .claude/governance.md found. Run scaffold init or scaffold analyze first.');
+    process.exit(1);
+  }
+
+  const content = fs.readFileSync(govPath, 'utf-8');
+  const parsed = parseGovernance(content);
+  const flat = flattenGates(parsed.gates);
+
+  console.log(`\n  Governance vs Reality — ${parsed.name || 'project'}\n`);
+
+  const results = { match: 0, drift: 0, missing: 0, extra: 0 };
+
+  // Check each gate command
+  for (const [section, cmds] of Object.entries(flat)) {
+    for (const cmd of cmds) {
+      const check = checkGateReality(cwd, cmd);
+      const icon = check.status === 'match' ? '\x1b[32mMATCH\x1b[0m'
+        : check.status === 'drift' ? '\x1b[33mDRIFT\x1b[0m'
+        : '\x1b[31mMISSING\x1b[0m';
+      console.log(`  ${icon}   ${cmd}`);
+      if (check.detail) console.log(`          ${check.detail}`);
+      results[check.status]++;
+    }
+  }
+
+  // Check for CI gates not in governance
+  const ciGates = extractCIGateCommands(cwd);
+  const govCommands = Object.values(flat).flat();
+  for (const ciGate of ciGates) {
+    if (!govCommands.some(g => normalizeCmd(g) === normalizeCmd(ciGate))) {
+      console.log(`  \x1b[36mEXTRA\x1b[0m   ${ciGate}`);
+      console.log(`          In CI workflow but not in governance`);
+      results.extra++;
+    }
+  }
+
+  // Check branch strategy
+  checkBranchStrategy(cwd, content, results);
+
+  // Check commit convention
+  checkCommitConvention(cwd, content, results);
+
+  // Summary
+  const total = results.match + results.drift + results.missing + results.extra;
+  console.log(`\n  ${results.match} match, ${results.drift} drift, ${results.missing} missing, ${results.extra} extra (${total} total)\n`);
+}
+
+function checkGateReality(cwd, cmd) {
+  // Check if the tool referenced in the command actually exists
+  const toolChecks = [
+    { pattern: /^npx\s+(\w+)/, check: (tool) => hasNpmDep(cwd, tool) || hasNpmBin(cwd, tool) },
+    { pattern: /^npm\s+run\s+(\w+)/, check: (script) => hasNpmScript(cwd, script) },
+    { pattern: /^node\s+--check\s+(.+)/, check: (file) => fs.existsSync(path.join(cwd, file.trim())) },
+    { pattern: /^node\s+(\S+)/, check: (file) => fs.existsSync(path.join(cwd, file.trim())) },
+    { pattern: /^cargo\s+/, check: () => fs.existsSync(path.join(cwd, 'Cargo.toml')) },
+    { pattern: /^go\s+/, check: () => fs.existsSync(path.join(cwd, 'go.mod')) },
+    { pattern: /^(\.\/)?gradlew\s+/, check: () => fs.existsSync(path.join(cwd, 'gradlew')) || fs.existsSync(path.join(cwd, 'gradlew.bat')) },
+    { pattern: /^pytest/, check: () => fs.existsSync(path.join(cwd, 'pyproject.toml')) || fs.existsSync(path.join(cwd, 'setup.py')) },
+    { pattern: /^ruff\s+/, check: () => fs.existsSync(path.join(cwd, 'ruff.toml')) || fs.existsSync(path.join(cwd, '.ruff.toml')) || fs.existsSync(path.join(cwd, 'pyproject.toml')) },
+    { pattern: /^docker\s+/, check: () => fs.existsSync(path.join(cwd, 'Dockerfile')) || fs.existsSync(path.join(cwd, 'docker-compose.yml')) },
+  ];
+
+  // Verify commands
+  const verifyMatch = cmd.match(/^Verify\s+(\S+)\s+contains\s+/i);
+  if (verifyMatch) {
+    const file = verifyMatch[1];
+    if (!fs.existsSync(path.join(cwd, file))) {
+      return { status: 'missing', detail: `File ${file} does not exist` };
+    }
+    return { status: 'match', detail: null };
+  }
+
+  for (const { pattern, check } of toolChecks) {
+    const m = cmd.match(pattern);
+    if (m) {
+      if (check(m[1])) return { status: 'match', detail: null };
+      return { status: 'drift', detail: `Tool or dependency not found for: ${cmd}` };
+    }
+  }
+
+  // Unknown command — assume match (can't verify)
+  return { status: 'match', detail: null };
+}
+
+function checkBranchStrategy(cwd, content, results) {
+  const govStrategy = content.includes('Feature branches') || content.includes('feature branches')
+    ? 'feature-branches' : content.includes('Trunk-based') || content.includes('trunk-based')
+    ? 'trunk-based' : null;
+
+  if (!govStrategy) return;
+
+  try {
+    const branches = execSync('git branch -a --format="%(refname:short)"', { cwd, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] });
+    const list = branches.trim().split('\n');
+    const featureBranches = list.filter(b => /^(feat|fix|docs|chore|feature|hotfix)\//.test(b));
+    const actual = featureBranches.length > 2 ? 'feature-branches' : 'trunk-based';
+
+    if (actual !== govStrategy) {
+      console.log(`  \x1b[33mDRIFT\x1b[0m   Branch strategy: governance says ${govStrategy}, git shows ${actual}`);
+      results.drift++;
+    } else {
+      results.match++;
+    }
+  } catch { /* skip */ }
+}
+
+function checkCommitConvention(cwd, content, results) {
+  const govConvention = content.includes('Conventional commits') || content.includes('conventional commits')
+    ? 'conventional' : content.includes('Free-form') || content.includes('free-form')
+    ? 'free-form' : null;
+
+  if (!govConvention) return;
+
+  try {
+    const log = execSync('git log --oneline -20', { cwd, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] });
+    const lines = log.trim().split('\n');
+    const conventional = lines.filter(l => /\b(feat|fix|docs|chore|style|refactor|test|build|ci|perf|revert)[\(:!]/.test(l));
+    const actual = conventional.length > lines.length * 0.3 ? 'conventional' : 'free-form';
+
+    if (actual !== govConvention) {
+      console.log(`  \x1b[33mDRIFT\x1b[0m   Commit convention: governance says ${govConvention}, git shows ${actual}`);
+      results.drift++;
+    } else {
+      results.match++;
+    }
+  } catch { /* skip */ }
+}
+
+function extractCIGateCommands(cwd) {
+  const gates = [];
+  const workflowDir = path.join(cwd, '.github', 'workflows');
+  if (!fs.existsSync(workflowDir)) return gates;
+
+  try {
+    // Walk recursively to catch nested workflow files
+    const walk = (d) => {
+      const out = [];
+      for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+        const full = path.join(d, entry.name);
+        if (entry.isDirectory()) out.push(...walk(full));
+        else if (entry.name.endsWith('.yml') || entry.name.endsWith('.yaml')) out.push(full);
+      }
+      return out;
+    };
+
+    for (const file of walk(workflowDir)) {
+      const content = fs.readFileSync(file, 'utf-8');
+      for (const cmd of extractRunCommands(content)) {
+        if (isGateCommand(cmd)) gates.push(cmd);
+      }
+    }
+  } catch { /* skip */ }
+
+  return gates;
+}
+
+/**
+ * Extract commands from YAML `run:` steps, handling block scalars.
+ */
+function extractRunCommands(content) {
+  const commands = [];
+  const lines = content.split(/\r?\n/);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const m = line.match(/^(\s*)-?\s*run:\s*(.*)$/);
+    if (!m) continue;
+
+    const baseIndent = m[1].length;
+    const rest = m[2].trim();
+
+    if (/^[|>][+-]?\s*$/.test(rest)) {
+      // Block scalar
+      for (let j = i + 1; j < lines.length; j++) {
+        const ln = lines[j];
+        if (ln.trim() === '') continue;
+        const indentMatch = ln.match(/^(\s*)/);
+        if (indentMatch[1].length <= baseIndent) break;
+        const trimmed = ln.trim();
+        if (trimmed && !trimmed.startsWith('#')) commands.push(trimmed);
+      }
+    } else if (rest && !rest.startsWith('#')) {
+      commands.push(rest.replace(/^["']|["']$/g, ''));
+    }
+  }
+
+  return commands;
+}
+
+function isGateCommand(cmd) {
+  const patterns = [
+    /npm (run|test|ci)/, /npx /, /node /, /cargo /, /go (test|build|vet)/,
+    /pytest/, /ruff/, /mypy/, /eslint/, /biome/, /prettier/, /tsc/, /gradle/,
+  ];
+  return patterns.some(p => p.test(cmd));
+}
+
+/**
+ * Normalize commands to a canonical form for equality comparison.
+ * Handles common aliases:
+ *   - `npm test` ⇔ `npm run test`
+ *   - `npm start` ⇔ `npm run start`
+ *   - `./gradlew x` ⇔ `gradlew x`
+ *   - `./mvnw x` ⇔ `mvnw x`
+ *   - quoted arguments ⇔ unquoted (lexical equality only for simple cases)
+ */
+function normalizeCmd(cmd) {
+  let c = String(cmd).replace(/\s+/g, ' ').trim().toLowerCase();
+
+  // npm lifecycle aliases: `npm <script>` → `npm run <script>` (except reserved verbs)
+  const npmReserved = new Set([
+    'test', 'start', 'stop', 'restart', 'install', 'uninstall', 'ci', 'publish',
+    'pack', 'audit', 'ls', 'list', 'run', 'exec', 'init', 'update', 'outdated',
+    'version', 'view', 'whoami', 'login', 'logout', 'link', 'unlink', 'config',
+    'cache', 'prune', 'dedupe', 'rebuild', 'shrinkwrap', 'help',
+  ]);
+  const npmMatch = c.match(/^npm\s+(\S+)(\s+.*)?$/);
+  if (npmMatch && (npmMatch[1] === 'test' || npmMatch[1] === 'start' || npmMatch[1] === 'stop' || npmMatch[1] === 'restart')) {
+    // npm test == npm run test
+    c = `npm run ${npmMatch[1]}${npmMatch[2] || ''}`;
+  }
+
+  // gradlew aliases: ./gradlew == gradlew
+  c = c.replace(/^\.\/gradlew/, 'gradlew');
+  c = c.replace(/^\.\/mvnw/, 'mvnw');
+  c = c.replace(/^\.\/(\S+)/, '$1'); // any other ./x
+
+  return c;
+}
+
+// Memoize package.json reads per cwd — diff runs many checks per call.
+const _pkgCache = new Map();
+function getPkg(cwd) {
+  if (_pkgCache.has(cwd)) return _pkgCache.get(cwd);
+  let pkg = null;
+  try {
+    pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf-8'));
+  } catch { /* missing or malformed */ }
+  _pkgCache.set(cwd, pkg);
+  return pkg;
+}
+
+// Memoize bin directory entries per cwd.
+const _binCache = new Map();
+function getBins(cwd) {
+  if (_binCache.has(cwd)) return _binCache.get(cwd);
+  const binDir = path.join(cwd, 'node_modules', '.bin');
+  let set;
+  try {
+    set = new Set(fs.readdirSync(binDir));
+  } catch {
+    set = new Set();
+  }
+  _binCache.set(cwd, set);
+  return set;
+}
+
+function hasNpmDep(cwd, dep) {
+  const pkg = getPkg(cwd);
+  if (!pkg) return false;
+  return !!(pkg.dependencies?.[dep] || pkg.devDependencies?.[dep] || pkg.peerDependencies?.[dep] || pkg.optionalDependencies?.[dep]);
+}
+
+function hasNpmBin(cwd, bin) {
+  const bins = getBins(cwd);
+  return bins.has(bin) || bins.has(bin + '.cmd') || bins.has(bin + '.exe');
+}
+
+function hasNpmScript(cwd, script) {
+  const pkg = getPkg(cwd);
+  return !!(pkg && pkg.scripts?.[script]);
+}
+
+module.exports = { diff };

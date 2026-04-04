@@ -1,5 +1,6 @@
 ---
-name: post-start-validation
+version: 0.2.1
+source_hash: 5a64dfe68b13577dff818fa63ddb6185be360c80b100f205bc586aac39e19e80
 description: Universal validation and knowledge capture. Detects what changed, runs governance gates, captures knowledge, verifies deployment. Works for any project.
 ---
 
@@ -43,7 +44,49 @@ Read .claude/governance.md
 
 ## 3. Run Gates
 
-Execute the gates defined in governance.md, in order. Stop at first failure.
+### 3.0. Workspace-aware gate execution
+
+If the discovery cache indicates a workspace:
+1. Read root governance gates (from workspace root `.claude/governance.md`)
+2. Identify which members have changes: check `git diff --name-only HEAD` paths
+3. For changed members with their own governance: read member governance, merge with root gates
+4. Execute merged gates in order: root cross-stack gates first, then member-specific gates
+
+### Gate annotations (v2 format)
+
+**Path-scoped sections:** `### Frontend (path: frontend/)`
+Before running any command in this section, `cd` into the specified directory. After the section completes, `cd` back to the project root. Example:
+```bash
+(cd frontend/ && npx biome check .) || exit 1
+```
+
+**Conditional sections:** `### TypeScript (if: tsconfig.json)`
+Skip the ENTIRE section if the referenced file does not exist at project root. Check before running any gate in the section:
+```bash
+[ -e tsconfig.json ] || echo "Skipping TypeScript gates (no tsconfig.json)"
+```
+
+**Gate classifications** (suffix on individual gate lines):
+- `# [MANDATORY]` (default) — stop execution on failure
+- `# [OPTIONAL]` — log failure, print warning, continue to next gate
+- `# [ADVISORY]` — always run, log result, never stop
+
+When an OPTIONAL gate fails:
+1. Print: `⚠ [OPTIONAL] <gate command> failed — continuing`
+2. Record in gate_results.failed but do NOT exit
+3. Proceed to the next gate in order
+
+When an ADVISORY gate fails:
+1. Print: `ℹ [ADVISORY] <gate command> failed (informational)`
+2. Record in gate_results.failed for session state
+3. Always proceed
+
+**Inheritance marker:** `## Gates (inherit: root)`
+When found in a member's governance.md, merge root gates first (prepend), then member gates (append). Execute in order.
+
+### Standard execution (no annotations)
+
+Execute the gates defined in governance.md, in order. Stop at first MANDATORY failure.
 
 **Common patterns** (the governance file will specify which apply):
 

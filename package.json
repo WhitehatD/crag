@@ -1,9 +1,12 @@
 {
   "name": "scaffold-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Meta-framework for Claude Code. Generates self-maintaining infrastructure from an interview.",
   "bin": {
     "scaffold": "./bin/scaffold.js"
+  },
+  "scripts": {
+    "test": "node test/all.js"
   },
   "keywords": [
     "claude-code",

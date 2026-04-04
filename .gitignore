@@ -1,0 +1,21 @@
+node_modules/
+*.log
+.DS_Store
+
+# Claude Code runtime state
+.claude/.discovery-cache.json
+.claude/.session-state.json
+.claude/.gates-passed
+.claude/.skill-update-check
+
+# scaffold-cli global cache (written elsewhere, but guard)
+.scaffold-cli/
+
+# Backup files created during upgrade --force
+*.bak.*
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

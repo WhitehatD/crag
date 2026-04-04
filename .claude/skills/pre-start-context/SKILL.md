@@ -1,5 +1,7 @@
 ---
 name: pre-start-context
+version: 0.2.0
+source_hash: 158297e598e1d104304eba48038ebccf703a5e27ef0e8b754fd2619ec6b99d35
 description: Universal context loader. Discovers any project's stack, architecture, and state at runtime. Reads governance.md for project-specific rules. Works for any language, framework, or deployment target.
 ---
 
@@ -47,6 +49,22 @@ All tools and subagents MUST operate within these limits:
 ### Shell Rule
 
 Detect OS and shell. Use appropriate syntax (Unix forward slashes if Git Bash on Windows).
+
+---
+
+## 0.05. Skill Currency Check
+
+Check installed skill version:
+
+```
+Read .claude/skills/pre-start-context/SKILL.md
+```
+
+If the file has a `version:` frontmatter field, compare it to the expected version (0.2.0). If outdated:
+- Report: `"Pre-start skill vX.Y.Z is outdated (v0.2.0 available). Run: scaffold upgrade"`
+- Continue with current version — never block startup.
+
+> This check costs one Read call. If skills are current, no action needed.
 
 ---
 
@@ -261,6 +279,63 @@ docker --version 2>/dev/null
 ```
 
 > Only relevant runtimes will return output. Note what's available.
+
+---
+
+## 1.5. Workspace Detection
+
+Check if this project is part of a larger workspace:
+
+### Workspace markers (check in order)
+
+```
+ls pnpm-workspace.yaml 2>/dev/null && echo "Workspace: pnpm"
+```
+
+```
+Read package.json
+```
+> Check for `"workspaces"` field. If present → npm/yarn workspace.
+
+```
+ls Cargo.toml 2>/dev/null
+```
+> Check for `[workspace]` section. If present → Cargo workspace.
+
+```
+ls go.work 2>/dev/null && echo "Workspace: Go"
+```
+
+```
+ls settings.gradle.kts settings.gradle 2>/dev/null && echo "Workspace: Gradle"
+```
+
+```
+ls nx.json turbo.json 2>/dev/null && echo "Workspace: Nx/Turbo"
+```
+
+```
+ls .gitmodules 2>/dev/null && echo "Workspace: git submodules"
+```
+
+If a workspace marker is found:
+1. Enumerate member packages/modules
+2. Check each member for `.claude/governance.md`
+3. Note the workspace type and member list in the discovery cache
+
+### Multi-level governance
+
+If members have their own governance files, load the hierarchy:
+- Root governance gates are mandatory for all members
+- Member governance gates are additive
+- When running gates (in post-start), merge root + member gates
+
+### Independent nested repos
+
+If no workspace marker found but multiple `.git` directories exist in child directories:
+- Classify as independent-repos workspace
+- Each child with `.git` is a member
+- Report: `"Workspace: independent repos (N members)"`
 
 ---
 

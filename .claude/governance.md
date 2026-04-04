@@ -16,6 +16,13 @@
 - node bin/scaffold.js help
 - node bin/scaffold.js version
 - node bin/scaffold.js check
+- node bin/scaffold.js analyze --dry-run
+- node bin/scaffold.js diff
+- node bin/scaffold.js upgrade --check
+- node bin/scaffold.js workspace --json
+
+### Tests
+- node test/all.js
 
 ### Validation
 - Verify src/skills/pre-start-context.md contains "discovers any project"
