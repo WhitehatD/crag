@@ -5,19 +5,19 @@ const fs = require('fs');
 const path = require('path');
 
 const SRC = path.join(__dirname, '..');
-const AGENT_SRC = path.join(SRC, 'scaffold-agent.md');
+const AGENT_SRC = path.join(SRC, 'crag-agent.md');
 const PRE_START_SRC = path.join(SRC, 'skills', 'pre-start-context.md');
 const POST_START_SRC = path.join(SRC, 'skills', 'post-start-validation.md');
 const GLOBAL_AGENT_DIR = path.join(process.env.HOME || process.env.USERPROFILE, '.claude', 'agents');
-const GLOBAL_AGENT_PATH = path.join(GLOBAL_AGENT_DIR, 'scaffold-project.md');
+const GLOBAL_AGENT_PATH = path.join(GLOBAL_AGENT_DIR, 'crag-project.md');
 
 function install() {
   if (!fs.existsSync(GLOBAL_AGENT_DIR)) {
     fs.mkdirSync(GLOBAL_AGENT_DIR, { recursive: true });
   }
   fs.copyFileSync(AGENT_SRC, GLOBAL_AGENT_PATH);
-  console.log(`  Installed scaffold-project agent to ${GLOBAL_AGENT_PATH}`);
-  console.log(`  Run /scaffold-project from any Claude Code session.`);
+  console.log(`  Installed crag-project agent to ${GLOBAL_AGENT_PATH}`);
+  console.log(`  Run /crag-project from any Claude Code session.`);
 }
 
 function installSkills(targetDir) {
@@ -59,7 +59,7 @@ function init() {
   // Pre-flight: warn if not a git repo (non-blocking, just informative)
   if (!fs.existsSync(path.join(cwd, '.git'))) {
     console.warn('  \x1b[33m!\x1b[0m Warning: not a git repository.');
-    console.warn('    scaffold-cli works best in git repos (branch inference, commit conventions,');
+    console.warn('    crag works best in git repos (branch inference, commit conventions,');
     console.warn('    discovery cache keyed by commit hash). Run: git init');
   }
 
@@ -68,7 +68,7 @@ function init() {
   if (fs.existsSync(existingGov)) {
     console.warn('  \x1b[33m!\x1b[0m Warning: .claude/governance.md already exists.');
     console.warn('    The interview will suggest changes; review before saving.');
-    console.warn('    To update skills only without interview, use: scaffold upgrade');
+    console.warn('    To update skills only without interview, use: crag upgrade');
   }
 
   // Install universal skills first
@@ -80,13 +80,13 @@ function init() {
     install();
   }
 
-  console.log(`\n  Starting scaffold interview...\n`);
+  console.log(`\n  Starting crag interview...\n`);
   console.log(`  Claude Code will ask about your project.`);
   console.log(`  It generates: governance.md, hooks, agents, settings.`);
   console.log(`  The universal skills are already installed.\n`);
   console.log(`  >>> Type "go" and press Enter to start the interview <<<\n`);
 
-  const claude = spawn('claude', ['--agent', 'scaffold-project'], {
+  const claude = spawn('claude', ['--agent', 'crag-project'], {
     stdio: 'inherit',
     shell: true,
   });
@@ -98,12 +98,12 @@ function init() {
 
   claude.on('exit', (code, signal) => {
     if (code === 0) {
-      console.log(`\n  Scaffold complete. Run 'scaffold check' to verify.`);
+      console.log(`\n  crag setup complete. Run 'crag check' to verify.`);
     } else if (signal) {
-      console.error(`\n  Scaffold interview terminated by signal: ${signal}`);
+      console.error(`\n  Interview terminated by signal: ${signal}`);
       process.exit(1);
     } else if (code !== null) {
-      console.error(`\n  Scaffold interview exited with code ${code}`);
+      console.error(`\n  Interview exited with code ${code}`);
       process.exit(code);
     }
   });

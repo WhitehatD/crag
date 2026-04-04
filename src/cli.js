@@ -11,50 +11,51 @@ const { checkOnce } = require('./update/version-check');
 
 function printUsage() {
   console.log(`
-  scaffold-cli — Self-maintaining Claude Code infrastructure
+  crag — the bedrock layer for AI coding agents
+  One governance.md. Any project. Never stale.
 
   Usage:
-    scaffold init         Interview → generate governance, hooks, agents
-    scaffold check        Verify infrastructure is complete
-    scaffold install      Install agent globally for /scaffold-project
-    scaffold compile      Compile governance.md → CI, hooks, AGENTS.md, Cursor, Gemini
-    scaffold analyze      Generate governance from existing project (no interview)
-    scaffold diff         Compare governance against codebase reality
-    scaffold upgrade      Update universal skills to latest version
-    scaffold workspace    Inspect detected workspace (type, members, governance hierarchy)
-    scaffold version      Show version
+    crag init         Interview → generate governance, hooks, agents
+    crag analyze      Generate governance from existing project (no interview)
+    crag check        Verify infrastructure is complete
+    crag compile      Compile governance.md → CI, hooks, AGENTS.md, Cursor, Gemini
+    crag diff         Compare governance against codebase reality
+    crag upgrade      Update universal skills to latest version
+    crag workspace    Inspect detected workspace (type, members, governance hierarchy)
+    crag install      Install agent globally for /crag-project
+    crag version      Show version
 
   Compile targets:
-    scaffold compile --target github      .github/workflows/gates.yml
-    scaffold compile --target husky       .husky/pre-commit
-    scaffold compile --target pre-commit  .pre-commit-config.yaml
-    scaffold compile --target agents-md   AGENTS.md
-    scaffold compile --target cursor      .cursor/rules/governance.mdc
-    scaffold compile --target gemini      GEMINI.md
-    scaffold compile --target all         All of the above
+    crag compile --target github      .github/workflows/gates.yml
+    crag compile --target husky       .husky/pre-commit
+    crag compile --target pre-commit  .pre-commit-config.yaml
+    crag compile --target agents-md   AGENTS.md
+    crag compile --target cursor      .cursor/rules/governance.mdc
+    crag compile --target gemini      GEMINI.md
+    crag compile --target all         All of the above
 
   Analyze options:
-    scaffold analyze --dry-run            Print inferred governance without writing
-    scaffold analyze --workspace          Analyze all workspace members
-    scaffold analyze --merge              Merge with existing governance
+    crag analyze --dry-run            Print inferred governance without writing
+    crag analyze --workspace          Analyze all workspace members
+    crag analyze --merge              Merge with existing governance
 
   Upgrade options:
-    scaffold upgrade --check              Show what would change
-    scaffold upgrade --workspace          Update all workspace members
-    scaffold upgrade --force              Overwrite modified skills (with backup)
+    crag upgrade --check              Show what would change
+    crag upgrade --workspace          Update all workspace members
+    crag upgrade --force              Overwrite modified skills (with backup)
 
   Workspace options:
-    scaffold workspace                    Human-readable workspace inspection
-    scaffold workspace --json             Machine-readable JSON output
+    crag workspace                    Human-readable workspace inspection
+    crag workspace --json             Machine-readable JSON output
 
   Architecture:
-    Universal skills (ship with scaffold-cli, same for every project):
+    Universal skills (ship with crag, same for every project):
       pre-start-context     discovers any project at runtime
       post-start-validation validates using governance gates
 
     Generated per-project (from your interview or analysis):
       governance.md         your rules, quality bar, policies
-      hooks/                drift detector, circuit breaker, compaction
+      hooks/                sandbox guard, drift detector, circuit breaker
       agents/               test-runner, security-reviewer, scanners
       settings.local.json   permissions + hook wiring
 
@@ -69,16 +70,16 @@ function run(args) {
   checkOnce();
 
   switch (command) {
-    case 'init':    init(); break;
-    case 'install': install(); break;
-    case 'check':   check(); break;
-    case 'compile': compile(args); break;
+    case 'init':      init(); break;
+    case 'install':   install(); break;
+    case 'check':     check(); break;
+    case 'compile':   compile(args); break;
     case 'analyze':   analyze(args); break;
     case 'diff':      diff(args); break;
     case 'upgrade':   upgrade(args); break;
     case 'workspace': workspace(args); break;
     case 'version': case '--version': case '-v':
-      console.log(`  scaffold-cli v${require('../package.json').version}`);
+      console.log(`  crag v${require('../package.json').version}`);
       break;
     case 'help': case '--help': case '-h': case undefined:
       printUsage(); break;

@@ -19,7 +19,7 @@ function test(name, fn) {
 }
 
 function withTempDir(fn) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'scaffold-compile-test-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-compile-test-'));
   // Silence console output from compile functions in tests
   const origLog = console.log;
   console.log = () => {};

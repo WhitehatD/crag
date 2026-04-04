@@ -6,7 +6,7 @@ const { detectWorkspace } = require('../workspace/detect');
 const { enumerateMembers } = require('../workspace/enumerate');
 
 /**
- * scaffold upgrade — update universal skills to latest version.
+ * crag upgrade — update universal skills to latest version.
  */
 function upgrade(args) {
   const checkOnly = args.includes('--check');
@@ -14,7 +14,7 @@ function upgrade(args) {
   const force = args.includes('--force');
   const cwd = process.cwd();
 
-  console.log(`\n  scaffold upgrade${checkOnly ? ' --check' : ''}${force ? ' --force' : ''}\n`);
+  console.log(`\n  crag upgrade${checkOnly ? ' --check' : ''}${force ? ' --force' : ''}\n`);
 
   // Upgrade current project
   const result = syncSkills(cwd, { force, dryRun: checkOnly });

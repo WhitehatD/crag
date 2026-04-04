@@ -38,7 +38,7 @@ function generateCursorRules(cwd, parsed) {
     '',
     `# Governance — ${parsed.name || 'Project'}`,
     '',
-    `> Generated from governance.md by scaffold-cli. Regenerate: \`scaffold compile --target cursor\``,
+    `> Generated from governance.md by crag. Regenerate: \`crag compile --target cursor\``,
     '',
     '## Quality Gates',
     '',

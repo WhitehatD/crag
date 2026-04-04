@@ -6,7 +6,7 @@ const path = require('path');
 const os = require('os');
 
 const HOME = process.env.HOME || process.env.USERPROFILE || os.tmpdir();
-const CACHE_DIR = path.join(HOME, '.claude', 'scaffold-cli');
+const CACHE_DIR = path.join(HOME, '.claude', 'crag');
 const CACHE_FILE = path.join(CACHE_DIR, 'update-check.json');
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const TIMEOUT_MS = 3000;
@@ -16,10 +16,10 @@ const TIMEOUT_MS = 3000;
  * Prints a one-line notice if a newer version is available.
  * Never blocks, never throws.
  *
- * Opt-out: set SCAFFOLD_NO_UPDATE_CHECK=1 in environment.
+ * Opt-out: set CRAG_NO_UPDATE_CHECK=1 in environment.
  */
 function checkOnce() {
-  if (process.env.SCAFFOLD_NO_UPDATE_CHECK === '1') return;
+  if (process.env.CRAG_NO_UPDATE_CHECK === '1') return;
 
   try {
     // Read cache
@@ -38,7 +38,7 @@ function checkOnce() {
         if (age < CACHE_TTL_MS) {
           if (cache.updateAvailable) {
             const current = require('../../package.json').version;
-            console.log(`  \x1b[33m↑\x1b[0m scaffold-cli v${cache.latestVersion} available (you have v${current}). Run: npm update -g scaffold-cli`);
+            console.log(`  \x1b[33m↑\x1b[0m crag v${cache.latestVersion} available (you have v${current}). Run: npm update -g crag`);
           }
           return;
         }
@@ -59,7 +59,7 @@ function checkOnce() {
 function checkRegistry() {
   const currentVersion = require('../../package.json').version;
 
-  const req = https.get('https://registry.npmjs.org/scaffold-cli/latest', { timeout: TIMEOUT_MS }, (res) => {
+  const req = https.get('https://registry.npmjs.org/crag/latest', { timeout: TIMEOUT_MS }, (res) => {
     // Abort if status is non-OK
     if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
       res.resume(); // Drain to allow cleanup
@@ -107,7 +107,7 @@ function checkRegistry() {
         }
 
         if (updateAvailable) {
-          console.log(`  \x1b[33m↑\x1b[0m scaffold-cli v${latest} available (you have v${currentVersion}). Run: npm update -g scaffold-cli`);
+          console.log(`  \x1b[33m↑\x1b[0m crag v${latest} available (you have v${currentVersion}). Run: npm update -g crag`);
         }
       } catch {
         // Malformed response — ignore

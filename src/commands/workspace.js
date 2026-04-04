@@ -7,7 +7,7 @@ const { enumerateMembers } = require('../workspace/enumerate');
 const { loadGovernanceHierarchy } = require('../workspace/governance');
 
 /**
- * scaffold workspace — inspect the detected workspace.
+ * crag workspace — inspect the detected workspace.
  * Prints workspace type, root, all members with their stacks and governance status.
  */
 function workspace(args) {
@@ -23,7 +23,7 @@ function workspace(args) {
     }
     console.log(`\n  No workspace detected.`);
     console.log(`  Root: ${ws.root}`);
-    console.log(`  scaffold-cli works fine without a workspace — it just won't enumerate members.\n`);
+    console.log(`  crag works fine without a workspace — it just won't enumerate members.\n`);
     return;
   }
 

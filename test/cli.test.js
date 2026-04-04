@@ -15,42 +15,42 @@ function test(name, fn) {
   }
 }
 
-const scaffold = path.join(__dirname, '..', 'bin', 'scaffold.js');
+const crag = path.join(__dirname, '..', 'bin', 'crag.js');
 
 function run(args, opts = {}) {
-  return execFileSync(process.execPath, [scaffold, ...args], {
+  return execFileSync(process.execPath, [crag, ...args], {
     encoding: 'utf-8',
     timeout: 10000,
     stdio: ['pipe', 'pipe', 'pipe'],
-    env: { ...process.env, SCAFFOLD_NO_UPDATE_CHECK: '1' },
+    env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
     ...opts,
   });
 }
 
 console.log('\n  CLI end-to-end');
 
-test('scaffold version prints version', () => {
+test('crag version prints version', () => {
   const out = run(['version']);
-  assert.ok(/scaffold-cli v\d+\.\d+\.\d+/.test(out));
+  assert.ok(/crag v\d+\.\d+\.\d+/.test(out));
 });
 
-test('scaffold help prints usage with all commands', () => {
+test('crag help prints usage with all commands', () => {
   const out = run(['help']);
-  assert.ok(out.includes('scaffold init'));
-  assert.ok(out.includes('scaffold check'));
-  assert.ok(out.includes('scaffold analyze'));
-  assert.ok(out.includes('scaffold diff'));
-  assert.ok(out.includes('scaffold upgrade'));
-  assert.ok(out.includes('scaffold workspace'));
-  assert.ok(out.includes('scaffold compile'));
+  assert.ok(out.includes('crag init'));
+  assert.ok(out.includes('crag check'));
+  assert.ok(out.includes('crag analyze'));
+  assert.ok(out.includes('crag diff'));
+  assert.ok(out.includes('crag upgrade'));
+  assert.ok(out.includes('crag workspace'));
+  assert.ok(out.includes('crag compile'));
 });
 
-test('scaffold with no args prints help', () => {
+test('crag with no args prints help', () => {
   const out = run([]);
   assert.ok(out.includes('Usage'));
 });
 
-test('scaffold workspace --json produces valid JSON', () => {
+test('crag workspace --json produces valid JSON', () => {
   const out = run(['workspace', '--json']);
   // Find the JSON block (output may have leading update notice)
   const jsonStart = out.indexOf('{');
@@ -60,20 +60,20 @@ test('scaffold workspace --json produces valid JSON', () => {
   assert.ok('root' in parsed);
 });
 
-test('scaffold analyze --dry-run does not write files', () => {
+test('crag analyze --dry-run does not write files', () => {
   // Just verify it runs without throwing — the file-writing behavior is covered
-  // by the flag semantics; a dry run in the scaffold-cli repo itself shouldn't
+  // by the flag semantics; a dry run in the crag repo itself shouldn't
   // modify .claude/governance.md (we verify no exception).
   const out = run(['analyze', '--dry-run']);
   assert.ok(out.includes('DRY RUN') || out.includes('Governance'));
 });
 
-test('scaffold upgrade --check does not write files', () => {
+test('crag upgrade --check does not write files', () => {
   const out = run(['upgrade', '--check']);
   assert.ok(out.includes('upgrade'));
 });
 
-test('scaffold unknown command exits with error', () => {
+test('crag unknown command exits with error', () => {
   try {
     run(['nonexistent-command']);
     assert.fail('Should have thrown');
@@ -83,7 +83,7 @@ test('scaffold unknown command exits with error', () => {
   }
 });
 
-test('SCAFFOLD_NO_UPDATE_CHECK suppresses update notice', () => {
+test('CRAG_NO_UPDATE_CHECK suppresses update notice', () => {
   const out = run(['version']);
   assert.ok(!out.includes('available'));
 });

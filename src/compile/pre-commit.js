@@ -33,8 +33,8 @@ function generatePreCommitConfig(cwd, parsed) {
   });
 
   const yaml = [
-    '# Generated from governance.md by scaffold-cli',
-    '# Regenerate: scaffold compile --target pre-commit',
+    '# Generated from governance.md by crag',
+    '# Regenerate: crag compile --target pre-commit',
     'repos:',
     '  - repo: local',
     '    hooks:',

@@ -8,8 +8,8 @@ node_modules/
 .claude/.gates-passed
 .claude/.skill-update-check
 
-# scaffold-cli global cache (written elsewhere, but guard)
-.scaffold-cli/
+# crag global cache (written elsewhere, but guard)
+.crag/
 
 # Backup files created during upgrade --force
 *.bak.*

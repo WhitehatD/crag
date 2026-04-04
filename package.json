@@ -1,9 +1,9 @@
 {
-  "name": "scaffold-cli",
+  "name": "crag",
   "version": "0.2.0",
-  "description": "Meta-framework for Claude Code. Generates self-maintaining infrastructure from an interview.",
+  "description": "The bedrock layer for AI coding agents. One governance.md. Any project. Never stale.",
   "bin": {
-    "scaffold": "./bin/scaffold.js"
+    "crag": "./bin/crag.js"
   },
   "scripts": {
     "test": "node test/all.js"
@@ -11,14 +11,34 @@
   "keywords": [
     "claude-code",
     "ai-agents",
+    "ai-coding",
+    "agent-governance",
     "developer-tools",
     "workflow-automation",
-    "meta-framework"
+    "meta-framework",
+    "monorepo",
+    "cursor",
+    "codex",
+    "aider",
+    "gemini-cli"
   ],
-  "author": "WhitehatD",
+  "author": "Alexandru Cioc (WhitehatD)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/WhitehatD/scaffold-cli.git"
+    "url": "https://github.com/WhitehatD/crag.git"
+  },
+  "homepage": "https://github.com/WhitehatD/crag",
+  "bugs": {
+    "url": "https://github.com/WhitehatD/crag/issues"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
   }
 }

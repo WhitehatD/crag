@@ -20,7 +20,7 @@ function generateGeminiMd(cwd, parsed) {
   const content = [
     '# GEMINI.md',
     '',
-    `> Generated from governance.md by scaffold-cli. Regenerate: \`scaffold compile --target gemini\``,
+    `> Generated from governance.md by crag. Regenerate: \`crag compile --target gemini\``,
     '',
     '## Project Context',
     '',

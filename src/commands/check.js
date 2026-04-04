@@ -26,7 +26,7 @@ function check() {
     ['.claude/rules/echo.md', 'MemStack echo rule'],
   ];
 
-  console.log(`\n  Checking scaffold infrastructure in ${cwd}\n`);
+  console.log(`\n  Checking crag infrastructure in ${cwd}\n`);
 
   console.log(`  Core:`);
   let missing = 0;
@@ -46,7 +46,7 @@ function check() {
 
   console.log(`\n  ${checks.length - missing}/${checks.length} core files present.`);
   if (missing > 0) {
-    console.log(`  Run 'scaffold init' to generate missing files.\n`);
+    console.log(`  Run 'crag init' to generate missing files.\n`);
   } else {
     console.log(`  Infrastructure complete.\n`);
   }

@@ -21,7 +21,7 @@ console.log('\n  workspace/detect.js');
 
 // Helper: make a temp workspace dir and clean it up
 function withTempDir(fn) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'scaffold-ws-test-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-ws-test-'));
   try { fn(dir); }
   finally {
     try { fs.rmSync(dir, { recursive: true, force: true }); }

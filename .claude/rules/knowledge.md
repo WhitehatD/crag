@@ -6,7 +6,7 @@
 ## When to Save
 After non-obvious decisions, patterns, or gotchas:
 ```bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py add-insight '{"project":"scaffold","type":"<type>","content":"<what>","source_file":"<file>","tags":"<tags>"}'
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py add-insight '{"project":"crag","type":"<type>","content":"<what>","source_file":"<file>","tags":"<tags>"}'
 ```
 
 ## Verification Protocol

@@ -6,14 +6,14 @@ const path = require('path');
 const { parseGovernance, flattenGates } = require('../governance/parse');
 
 /**
- * scaffold diff — compare governance.md against codebase reality.
+ * crag diff — compare governance.md against codebase reality.
  */
 function diff(args) {
   const cwd = process.cwd();
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
   if (!fs.existsSync(govPath)) {
-    console.error('  Error: No .claude/governance.md found. Run scaffold init or scaffold analyze first.');
+    console.error('  Error: No .claude/governance.md found. Run crag init or crag analyze first.');
     process.exit(1);
   }
 

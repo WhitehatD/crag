@@ -17,7 +17,7 @@ function compile(args) {
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
   if (!fs.existsSync(govPath)) {
-    console.error('  Error: No .claude/governance.md found. Run scaffold init first.');
+    console.error('  Error: No .claude/governance.md found. Run crag init first.');
     process.exit(1);
   }
 
@@ -30,13 +30,13 @@ function compile(args) {
     console.log(`\n  Governance compiler — ${parsed.name || 'unnamed project'}`);
     console.log(`  Found ${gateCount} gate(s) in ${Object.keys(parsed.gates).length} section(s)\n`);
     console.log('  Targets:');
-    console.log('    scaffold compile --target github      .github/workflows/gates.yml');
-    console.log('    scaffold compile --target husky       .husky/pre-commit');
-    console.log('    scaffold compile --target pre-commit  .pre-commit-config.yaml');
-    console.log('    scaffold compile --target agents-md   AGENTS.md');
-    console.log('    scaffold compile --target cursor      .cursor/rules/governance.mdc');
-    console.log('    scaffold compile --target gemini      GEMINI.md');
-    console.log('    scaffold compile --target all         All of the above\n');
+    console.log('    crag compile --target github      .github/workflows/gates.yml');
+    console.log('    crag compile --target husky       .husky/pre-commit');
+    console.log('    crag compile --target pre-commit  .pre-commit-config.yaml');
+    console.log('    crag compile --target agents-md   AGENTS.md');
+    console.log('    crag compile --target cursor      .cursor/rules/governance.mdc');
+    console.log('    crag compile --target gemini      GEMINI.md');
+    console.log('    crag compile --target all         All of the above\n');
     return;
   }
 

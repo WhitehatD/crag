@@ -50,8 +50,8 @@ function generateHusky(cwd, parsed) {
 
   const script = [
     '#!/bin/sh',
-    '# Generated from governance.md by scaffold-cli',
-    '# Regenerate: scaffold compile --target husky',
+    '# Generated from governance.md by crag',
+    '# Regenerate: crag compile --target husky',
     'set -e',
     '',
     body.trim(),

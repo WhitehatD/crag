@@ -132,8 +132,8 @@ function generateGitHubActions(cwd, parsed) {
   }
 
   const yaml = [
-    '# Generated from governance.md by scaffold-cli',
-    '# Regenerate: scaffold compile --target github',
+    '# Generated from governance.md by crag',
+    '# Regenerate: crag compile --target github',
     'name: Governance Gates',
     '',
     'on:',

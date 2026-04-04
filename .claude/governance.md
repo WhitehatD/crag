@@ -1,25 +1,26 @@
-# Governance — scaffold-cli
+# Governance — crag
 
 ## Identity
-- Project: scaffold-cli
-- Description: Meta-framework for AI coding agents. Universal runtime discovery engine + single governance config. Ships skills that discover any project, generates governance from an interview.
+- Project: crag
+- Description: The bedrock layer for AI coding agents. One governance.md. Any project. Never stale. Universal runtime discovery engine + single governance config. Compiles to CI, hooks, AGENTS.md, Cursor, and Gemini.
 
 ## Architecture
-- CLI entry point: bin/scaffold.js (Node.js, zero dependencies)
+- CLI entry point: bin/crag.js (Node.js, zero dependencies, ≥ Node 18)
 - Universal skills: src/skills/pre-start-context.md, src/skills/post-start-validation.md
-- Scaffold agent: src/scaffold-agent.md (also installed globally at ~/.claude/agents/)
+- Interview agent: src/crag-agent.md (also installed globally at ~/.claude/agents/crag-project.md)
+- 24 modules across 6 directories (commands/, governance/, workspace/, compile/, update/, cli.js)
 - No backend. No frontend. No build step. Pure Node.js + markdown.
 
 ## Gates (run in order, stop on failure)
 ### Code
-- node --check bin/scaffold.js
-- node bin/scaffold.js help
-- node bin/scaffold.js version
-- node bin/scaffold.js check
-- node bin/scaffold.js analyze --dry-run
-- node bin/scaffold.js diff
-- node bin/scaffold.js upgrade --check
-- node bin/scaffold.js workspace --json
+- node --check bin/crag.js
+- node bin/crag.js help
+- node bin/crag.js version
+- node bin/crag.js check
+- node bin/crag.js analyze --dry-run
+- node bin/crag.js diff
+- node bin/crag.js upgrade --check
+- node bin/crag.js workspace --json
 
 ### Tests
 - node test/all.js
@@ -27,7 +28,7 @@
 ### Validation
 - Verify src/skills/pre-start-context.md contains "discovers any project"
 - Verify src/skills/post-start-validation.md contains "governance gates"
-- Verify src/scaffold-agent.md contains "START IMMEDIATELY"
+- Verify src/crag-agent.md contains "START IMMEDIATELY"
 
 ## Branch Strategy
 - Feature branches (feat/, fix/, docs/)
@@ -36,7 +37,7 @@
 
 ## Security
 - No secrets, no auth, no API keys
-- The scaffold agent runs inside Claude Code's sandbox — no arbitrary code execution outside it
+- The crag interview agent runs inside Claude Code's sandbox — no arbitrary code execution outside it
 - governance.md files generated for users must never contain secrets
 
 ## Security Boundaries
@@ -50,7 +51,7 @@
 - Auto-commit after gates pass
 
 ## Deployment
-- Target: npm registry (future)
+- Target: npm registry (package name `crag`)
 - CI: GitHub Actions (future)
 - Currently: direct git push to GitHub
 
@@ -59,4 +60,4 @@
 - governance.md must be the ONLY project-specific file
 - Every instruction in skills must be classified as Discovery or Governance
 - README must always reflect current state — no aspirational claims without proof
-- Agent definition synced to ~/.claude/agents/scaffold-project.md after every change
+- Agent definition synced to ~/.claude/agents/crag-project.md after every change

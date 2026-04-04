@@ -1,20 +1,20 @@
-# CI Playbook — scaffold-cli
+# CI Playbook — crag
 
 ## Node.js Failures
 
-### node --check fails on scaffold.js
-- **Symptom:** Syntax error in bin/scaffold.js
+### node --check fails on crag.js
+- **Symptom:** Syntax error in bin/crag.js or any src/ module
 - **Fix:** Check recent edits for missing brackets, unclosed strings
 
-### scaffold check shows missing files
+### crag check shows missing files
 - **Symptom:** check reports files missing after code changes
-- **Fix:** Verify file paths in bin/scaffold.js check() match actual generated structure
+- **Fix:** Verify file paths in src/commands/check.js match actual generated structure
 
 ## Agent Failures
 
-### scaffold init hangs at prompt
+### crag init hangs at prompt
 - **Symptom:** Claude Code launches but agent doesn't start talking
-- **Fix:** Verify src/scaffold-agent.md contains "START IMMEDIATELY" instruction
+- **Fix:** Verify src/crag-agent.md contains "START IMMEDIATELY" instruction
 
 ### Agent regenerates universal skills
 - **Symptom:** Agent writes 257 lines to SKILL.md that CLI already installed
@@ -24,6 +24,16 @@
 
 ### Global agent out of sync
 - **Symptom:** drift-detector warns "Global agent out of sync"
-- **Fix:** cp src/scaffold-agent.md ~/.claude/agents/scaffold-project.md
+- **Fix:** cp src/crag-agent.md ~/.claude/agents/crag-project.md
+
+### Skill hash mismatch on Windows
+- **Symptom:** upgrade reports "locally modified" when file was not edited
+- **Fix:** Re-run — computeHash normalizes CRLF to LF, but if the file was rewritten with different line endings, the hash may differ temporarily
+
+## Tests Failures
+
+### Test fixtures fail with ENOENT on Windows
+- **Symptom:** `fs.mkdirSync(path.join(root, 'packages', 'a'))` fails
+- **Fix:** Add `{ recursive: true }` — intermediate directories don't exist
 
 *Add entries as failures are discovered.*

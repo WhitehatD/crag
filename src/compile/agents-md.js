@@ -23,7 +23,7 @@ function generateAgentsMd(cwd, parsed) {
   const content = [
     '# AGENTS.md',
     '',
-    `> Generated from governance.md by scaffold-cli. Regenerate: \`scaffold compile --target agents-md\``,
+    `> Generated from governance.md by crag. Regenerate: \`crag compile --target agents-md\``,
     '',
     `## Project: ${parsed.name || 'Unnamed'}`,
     '',

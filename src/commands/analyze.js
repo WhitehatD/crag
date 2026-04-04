@@ -7,7 +7,7 @@ const { detectWorkspace } = require('../workspace/detect');
 const { enumerateMembers } = require('../workspace/enumerate');
 
 /**
- * scaffold analyze — generate governance.md from existing project without interview.
+ * crag analyze — generate governance.md from existing project without interview.
  * Reads CI configs, package manifests, linter configs, git history.
  */
 function analyze(args) {
@@ -64,7 +64,7 @@ function analyze(args) {
 
   console.log(`  \x1b[32m✓\x1b[0m Generated ${path.relative(cwd, govPath)}`);
   console.log(`\n  Review the file — sections marked "# Inferred" should be verified.`);
-  console.log(`  Run 'scaffold check' to verify infrastructure.\n`);
+  console.log(`  Run 'crag check' to verify infrastructure.\n`);
 }
 
 function analyzeProject(dir) {
@@ -334,7 +334,7 @@ function generateGovernance(analysis, cwd) {
 
   // Identity
   sections.push(`# Governance — ${analysis.name}`);
-  sections.push(`# Inferred by scaffold analyze — review and adjust as needed\n`);
+  sections.push(`# Inferred by crag analyze — review and adjust as needed\n`);
   sections.push('## Identity');
   sections.push(`- Project: ${analysis.name}`);
   if (analysis.description) sections.push(`- Description: ${analysis.description}`);

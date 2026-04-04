@@ -87,7 +87,7 @@ test('yamlScalar escapes backslash and quote', () => {
 // --- readFrontmatter / writeFrontmatter round-trip ---
 
 test('readFrontmatter parses version and hash', () => {
-  const tmp = path.join(os.tmpdir(), `scaffold-test-${Date.now()}.md`);
+  const tmp = path.join(os.tmpdir(), `crag-test-${Date.now()}.md`);
   fs.writeFileSync(tmp, '---\nname: test\nversion: 1.2.3\nsource_hash: abc123\n---\n\nBody content\n');
   try {
     const fm = readFrontmatter(tmp);
@@ -105,7 +105,7 @@ test('readFrontmatter returns null for missing file', () => {
 });
 
 test('readFrontmatter handles file without frontmatter', () => {
-  const tmp = path.join(os.tmpdir(), `scaffold-test-nofm-${Date.now()}.md`);
+  const tmp = path.join(os.tmpdir(), `crag-test-nofm-${Date.now()}.md`);
   fs.writeFileSync(tmp, 'Just plain markdown\n');
   try {
     const fm = readFrontmatter(tmp);
@@ -117,7 +117,7 @@ test('readFrontmatter handles file without frontmatter', () => {
 });
 
 test('writeFrontmatter updates existing fields', () => {
-  const tmp = path.join(os.tmpdir(), `scaffold-test-wfm-${Date.now()}.md`);
+  const tmp = path.join(os.tmpdir(), `crag-test-wfm-${Date.now()}.md`);
   fs.writeFileSync(tmp, '---\nname: test\nversion: 0.1.0\n---\nBody\n');
   try {
     writeFrontmatter(tmp, { version: '0.2.0' });
@@ -130,7 +130,7 @@ test('writeFrontmatter updates existing fields', () => {
 });
 
 test('writeFrontmatter adds new fields', () => {
-  const tmp = path.join(os.tmpdir(), `scaffold-test-wfm-add-${Date.now()}.md`);
+  const tmp = path.join(os.tmpdir(), `crag-test-wfm-add-${Date.now()}.md`);
   fs.writeFileSync(tmp, '---\nname: test\n---\nBody\n');
   try {
     writeFrontmatter(tmp, { version: '0.1.0', source_hash: 'deadbeef' });
@@ -145,7 +145,7 @@ test('writeFrontmatter adds new fields', () => {
 // --- isModified ---
 
 test('isModified returns true when hash is missing (conservative)', () => {
-  const tmp = path.join(os.tmpdir(), `scaffold-test-nohash-${Date.now()}.md`);
+  const tmp = path.join(os.tmpdir(), `crag-test-nohash-${Date.now()}.md`);
   fs.writeFileSync(tmp, '---\nname: test\nversion: 0.1.0\n---\nBody\n');
   try {
     assert.strictEqual(isModified(tmp), true);
@@ -155,7 +155,7 @@ test('isModified returns true when hash is missing (conservative)', () => {
 });
 
 test('isModified returns false when hash matches body', () => {
-  const tmp = path.join(os.tmpdir(), `scaffold-test-hmatch-${Date.now()}.md`);
+  const tmp = path.join(os.tmpdir(), `crag-test-hmatch-${Date.now()}.md`);
   // The body as readFrontmatter parses it: everything after '---\n'
   const body = 'Body content\n';
   const hash = computeHash(body);
@@ -168,7 +168,7 @@ test('isModified returns false when hash matches body', () => {
 });
 
 test('isModified returns true when body was changed', () => {
-  const tmp = path.join(os.tmpdir(), `scaffold-test-hdiff-${Date.now()}.md`);
+  const tmp = path.join(os.tmpdir(), `crag-test-hdiff-${Date.now()}.md`);
   const origBody = 'Original\n';
   const origHash = computeHash(origBody);
   fs.writeFileSync(tmp, `---\nname: test\nsource_hash: ${origHash}\n---\nModified body\n`);

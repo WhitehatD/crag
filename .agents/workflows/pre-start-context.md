@@ -1,6 +1,6 @@
 ---
-version: 0.2.0
-source_hash: 1caa607576fe13f06d91fb4727b617d49ade21cfbdce36ffed4c64a72aa016c7
+version: 0.2.1
+source_hash: b7be8434b99d5b189c904263e783d573c82109218725cc31fbd4fa1bf81538b6
 description: Universal context loader. Discovers any project's stack, architecture, and state at runtime. Reads governance.md for project-specific rules. Works for any language, framework, or deployment target.
 ---
 
@@ -60,7 +60,7 @@ Read .claude/skills/pre-start-context/SKILL.md
 ```
 
 If the file has a `version:` frontmatter field, compare it to the expected version (0.2.0). If outdated:
-- Report: `"Pre-start skill vX.Y.Z is outdated (v0.2.0 available). Run: scaffold upgrade"`
+- Report: `"Pre-start skill vX.Y.Z is outdated (v0.2.0 available). Run: crag upgrade"`
 - Continue with current version — never block startup.
 
 > This check costs one Read call. If skills are current, no action needed.

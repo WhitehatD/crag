@@ -18,7 +18,7 @@ function test(name, fn) {
 }
 
 function withTempDir(fn) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'scaffold-enum-test-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-enum-test-'));
   try { fn(dir); }
   finally { try { fs.rmSync(dir, { recursive: true, force: true }); } catch {} }
 }

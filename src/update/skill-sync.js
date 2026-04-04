@@ -11,7 +11,7 @@ const SKILLS = [
 ];
 
 /**
- * Verify a source file is a regular file (not a symlink) inside the scaffold-cli package.
+ * Verify a source file is a regular file (not a symlink) inside the crag package.
  * Protects against symlink attacks where a malicious skill file could be redirected.
  */
 function isTrustedSource(srcPath) {

@@ -1,14 +1,20 @@
-# scaffold-cli
+# crag
 
-**The infrastructure layer for AI coding agents. One config file. Works on any project. Self-maintaining forever.**
+**The bedrock layer for AI coding agents. One `governance.md`. Any project. Never stale.**
 
 Every AI coding setup today is static — CLAUDE.md files, AGENTS.md configs, per-project templates, skill collections. They hardcode facts about your project. Facts change. Instructions rot. You maintain them or they lie to your agent.
 
-scaffold-cli inverts this. It ships **universal skills** that discover any project at runtime — any language, any framework, any deployment target — and reads your rules from a single `governance.md` file. The skills are the engine. The governance is the config. The engine never goes stale because it reads the filesystem. The config is 20-30 lines you maintain.
+crag inverts this. It ships **universal skills** that discover any project at runtime — any language, any framework, any deployment target — and reads your rules from a single `governance.md` file. The skills are the engine. The governance is the crag — the ancient landmark that doesn't drift while everything around it changes.
 
 ```bash
-npx scaffold-cli init
+npx crag init
 ```
+
+---
+
+## Why "crag"?
+
+A crag is a rocky outcrop — an unmoving landmark that stands while seasons, paths, and generations change around it. That's exactly what this tool is. Your skills discover. Your gates run. Your CI regenerates. But `governance.md` — the crag — doesn't move until you say so. Your AI agents anchor to it.
 
 ---
 
@@ -21,7 +27,7 @@ Not on demos. On real systems, in production, shipping to real infrastructure.
 | **example-app** | Full-stack | Monolith | Docker | Full-stack governance generated |
 | **example-app** | Multi-service | Services | Kubernetes | Multi-level governance hierarchy |
 | **example-app** | Multi-language | Services | Docker Compose | Multiple languages detected, gates generated |
-| **scaffold-cli** | Node.js CLI | Single module | npm (future) | Scaffolds itself — full dogfooding |
+| **crag** | Node.js CLI | Single module | npm | Scaffolds itself — full dogfooding, 117 tests |
 
 The same universal skills — written once, never modified per project — discovered multiple projects across varied stacks. Zero project-specific instructions in the skills. They discovered everything.
 
@@ -31,13 +37,13 @@ The same universal skills — written once, never modified per project — disco
 
 ```mermaid
 flowchart TB
-    subgraph SHIPPED["Ships with scaffold-cli (universal)"]
+    subgraph SHIPPED["Ships with crag (universal)"]
         direction LR
         PRE["pre-start skill\ndiscovers ANY project"]
         POST["post-start skill\nvalidates using YOUR gates"]
     end
 
-    subgraph GENERATED["Generated from interview (project-specific)"]
+    subgraph GENERATED["Generated from interview or analyze (project-specific)"]
         GOV["governance.md\n20-30 lines of YOUR rules"]
     end
 
@@ -60,64 +66,29 @@ The skills ship once and work forever. They don't know your stack — they disco
 
 ### The Core Insight: Discovery vs Governance
 
-Every other tool in this space mixes "how to find things" with "what to enforce." scaffold-cli separates them cleanly:
+Every other tool in this space mixes "how to find things" with "what to enforce." crag separates them cleanly:
 
 - **Discovery** (universal skills) — reads the filesystem, detects runtimes, maps architecture, finds configs. Works on any project without modification.
-- **Governance** (your governance.md) — defines YOUR rules: quality gates, security requirements, branch strategy, deployment pipeline. Changes only when YOU change it.
+- **Governance** (your `governance.md`) — defines YOUR rules: quality gates, security requirements, branch strategy, deployment pipeline. Changes only when YOU change it.
 
-The skills handle discovery. governance.md handles governance. The skills never go stale because they re-discover every session. The governance never goes stale because it's your standards, not your file paths.
-
----
-
-## How It Works
-
-```mermaid
-sequenceDiagram
-    participant U as You
-    participant S as scaffold init
-    participant C as Claude Code
-    participant G as governance.md
-
-    U->>S: npx scaffold-cli init
-    S->>S: Install universal skills (same for everyone)
-    S->>C: Launch interview agent
-
-    C->>U: What's your project name?
-    U->>C: example-app
-    C->>U: Stack?
-    U->>C: I don't remember
-    C->>C: Reads filesystem — detects Node, Rust, Python, Java, React, Docker
-    C->>U: Quality bar?
-    U->>C: Enterprise grade
-    C->>U: Remote access?
-    U->>C: Yes, MemStack yes
-
-    C->>G: Generate governance.md (20 lines)
-    C->>C: Generate hooks, agents, settings, CI playbook, MemStack rules
-    C->>U: Done. 19 files. Run /pre-start-context.
-
-    Note over G: governance.md is the ONLY file you maintain
-    Note over G: Universal skills read it and adapt to any project
-```
-
-The agent adapts to your answers. When you say "I don't remember" — it reads the filesystem and figures it out. When you say "enterprise grade" — it picks the strictest gates available for your stack.
+The skills handle discovery. `governance.md` handles governance. The skills never go stale because they re-discover every session. The governance never goes stale because it's your standards, not your file paths.
 
 ---
 
 ## Quick Start
 
 ```bash
-npx scaffold-cli init       # Interview → generate governance + hooks + agents
-npx scaffold-cli analyze    # Generate governance from existing project (no interview)
-npx scaffold-cli check      # Verify infrastructure
-npx scaffold-cli install    # Install agent globally for /scaffold-project
-npx scaffold-cli compile    # Compile governance → CI, hooks, AGENTS.md, Cursor, Gemini
-npx scaffold-cli diff       # Compare governance against codebase reality
-npx scaffold-cli upgrade    # Update universal skills to latest version
-npx scaffold-cli workspace  # Inspect detected workspace (type, members, governance)
+npx crag init       # Interview → generate governance + hooks + agents
+npx crag analyze    # Generate governance from existing project (no interview)
+npx crag check      # Verify infrastructure
+npx crag install    # Install interview agent globally for /crag-project
+npx crag compile    # Compile governance → CI, hooks, AGENTS.md, Cursor, Gemini
+npx crag diff       # Compare governance against codebase reality
+npx crag upgrade    # Update universal skills to latest version
+npx crag workspace  # Inspect detected workspace (monorepo, submodules, nested repos)
 ```
 
-After scaffolding, in any Claude Code session:
+After setup, in any Claude Code session:
 ```bash
 /pre-start-context           # Discovers project, loads governance, ready to work
 # ... do your task ...
@@ -130,44 +101,44 @@ After scaffolding, in any Claude Code session:
 
 ### Installation
 
-scaffold-cli is a zero-dependency Node.js CLI. You don't need to install it — run it via `npx`:
+crag is a zero-dependency Node.js CLI. You don't need to install it — run it via `npx`:
 
 ```bash
-npx scaffold-cli <command>
+npx crag <command>
 ```
 
-Or install globally (once published to npm):
+Or install globally:
 ```bash
-npm install -g scaffold-cli
-scaffold <command>
+npm install -g crag
+crag <command>
 ```
 
 **Requirements:**
 - Node.js 18+ (uses built-in `https`, `crypto`, `fs`, `child_process`)
 - Git (for branch strategy inference and discovery cache)
-- Claude Code CLI (`claude --version`) — only needed for `scaffold init`
+- Claude Code CLI (`claude --version`) — only needed for `crag init`
 
 ### Choosing Your Entry Point
 
-scaffold-cli has two ways to generate governance for a project:
+crag has two ways to generate governance for a project:
 
 | Situation | Command | What happens |
 |-----------|---------|--------------|
-| New project, unsure of standards | `scaffold init` | Interactive interview — agent asks about your stack, quality bar, security, deployment |
-| Existing project with CI/linters already configured | `scaffold analyze` | Zero-interview mode — reads your CI workflows, package.json scripts, linter configs, git history |
-| Want to see what would be generated | `scaffold analyze --dry-run` | Prints inferred governance without writing |
-| Already have governance, want to add inferred gates | `scaffold analyze --merge` | Preserves existing governance, appends inferred additions |
-| Monorepo with sub-projects | `scaffold analyze --workspace` | Analyzes root + every workspace member |
+| New project, unsure of standards | `crag init` | Interactive interview — agent asks about your stack, quality bar, security, deployment |
+| Existing project with CI/linters already configured | `crag analyze` | Zero-interview mode — reads your CI workflows, package.json scripts, linter configs, git history |
+| Want to see what would be generated | `crag analyze --dry-run` | Prints inferred governance without writing |
+| Already have governance, want to add inferred gates | `crag analyze --merge` | Preserves existing governance, appends inferred additions |
+| Monorepo with sub-projects | `crag analyze --workspace` | Analyzes root + every workspace member |
 
 ### Command Reference
 
-#### `scaffold init` — Interactive Setup
+#### `crag init` — Interactive Setup
 
 Runs an interview agent that asks about your project, then generates all infrastructure:
 
 ```bash
 cd your-project
-npx scaffold-cli init
+npx crag init
 ```
 
 **What gets generated:**
@@ -181,20 +152,20 @@ npx scaffold-cli init
 
 After init, the skills are ready to use in any Claude Code session via `/pre-start-context`.
 
-#### `scaffold analyze` — Zero-Interview Governance
+#### `crag analyze` — Zero-Interview Governance
 
-Generates governance.md from your existing project without asking questions:
+Generates `governance.md` from your existing project without asking questions:
 
 ```bash
-scaffold analyze              # Generate .claude/governance.md
-scaffold analyze --dry-run    # Preview without writing
-scaffold analyze --workspace  # Analyze all workspace members
-scaffold analyze --merge      # Merge with existing governance
+crag analyze              # Generate .claude/governance.md
+crag analyze --dry-run    # Preview without writing
+crag analyze --workspace  # Analyze all workspace members
+crag analyze --merge      # Merge with existing governance
 ```
 
 **What it detects:**
 - **Stack:** Node, Rust, Python, Java, Go, Docker (from manifests)
-- **Gates from CI:** parses `.github/workflows/*.yml` for `run:` steps
+- **Gates from CI:** parses `.github/workflows/*.yml` (recursively) for `run:` steps including multiline `run: |` blocks
 - **Gates from scripts:** `package.json` `test`, `lint`, `build`, `format`, `typecheck`
 - **Linters:** ESLint, Biome, Prettier, Ruff, Clippy, Rustfmt, Mypy, TypeScript
 - **Branch strategy:** feature branches vs trunk-based (from git history)
@@ -203,55 +174,48 @@ scaffold analyze --merge      # Merge with existing governance
 
 Output sections marked `# Inferred` should be reviewed.
 
-#### `scaffold check` — Verify Infrastructure
+#### `crag check` — Verify Infrastructure
 
 Lists all core and optional files, shows which are present:
 
 ```bash
-scaffold check
+crag check
 ```
 
-```
-  Core:
-    ✓ Pre-start skill (universal)
-    ✓ Post-start skill (universal)
-    ✓ Governance rules
-    ✓ Drift detector hook
-    ...
+Run this after `crag init` to verify everything was generated, or any time you're unsure if the setup is complete.
 
-  9/9 core files present.
-  Infrastructure complete.
-```
+#### `crag compile` — Export Governance (6 targets)
 
-Run this after `scaffold init` to verify everything was generated, or any time you're unsure if the setup is complete.
-
-#### `scaffold compile` — Export Governance
-
-Compiles your governance.md to multiple formats:
+Compiles your `governance.md` to multiple formats:
 
 ```bash
-scaffold compile --target github        # .github/workflows/gates.yml
-scaffold compile --target husky         # .husky/pre-commit
-scaffold compile --target pre-commit    # .pre-commit-config.yaml
-scaffold compile --target agents-md     # AGENTS.md (Codex, Cursor, Aider, Factory)
-scaffold compile --target cursor        # .cursor/rules/governance.mdc
-scaffold compile --target gemini        # GEMINI.md
-scaffold compile --target all           # All 6 targets
-scaffold compile                        # List available targets
+crag compile --target github        # .github/workflows/gates.yml
+crag compile --target husky         # .husky/pre-commit
+crag compile --target pre-commit    # .pre-commit-config.yaml
+crag compile --target agents-md     # AGENTS.md (Codex, Cursor, Aider, Factory)
+crag compile --target cursor        # .cursor/rules/governance.mdc
+crag compile --target gemini        # GEMINI.md
+crag compile --target all           # All 6 targets
+crag compile                        # List available targets
 ```
 
-**Why this matters:** one governance.md becomes your CI workflow, your git hooks, and configuration for every AI coding tool. Change a gate once, recompile, done.
+**Why this matters:** one `governance.md` becomes your CI workflow, your git hooks, and configuration for every AI coding tool. Change a gate once, recompile, done. The generator detects Node/Python/Java/Go versions from your project files (`package.json engines.node`, `pyproject.toml requires-python`, etc.) instead of hardcoding defaults.
 
-#### `scaffold diff` — Governance Drift Detection
+Gate classifications control behavior per target:
+- `# [MANDATORY]` (default) — stop on failure
+- `# [OPTIONAL]` — warn via `continue-on-error: true` (GitHub) or wrapper (husky/pre-commit)
+- `# [ADVISORY]` — log result, never block
 
-Compares governance.md against codebase reality:
+#### `crag diff` — Governance Drift Detection
+
+Compares `governance.md` against codebase reality:
 
 ```bash
-scaffold diff
+crag diff
 ```
 
 ```
-  MATCH   node --check bin/scaffold.js
+  MATCH   node --check bin/crag.js
   DRIFT   ESLint referenced but biome.json found
   MISSING CI gate: cargo test              (in governance, not in CI)
   EXTRA   docker build                     (in CI, not in governance)
@@ -259,32 +223,34 @@ scaffold diff
   3 match, 1 drift, 1 missing, 1 extra
 ```
 
-Use this to catch governance drift before CI fails. Run before every PR, or in CI to enforce governance matches reality.
+Command alias normalization means `npm test` and `npm run test` are treated as equivalent, as are `./gradlew` and `gradlew`.
 
-#### `scaffold upgrade` — Update Skills
+#### `crag upgrade` — Update Skills
 
 Updates universal skills in the current project to the latest version:
 
 ```bash
-scaffold upgrade                # Update skills in current project
-scaffold upgrade --check        # Dry run — show what would change
-scaffold upgrade --workspace    # Update all workspace members
-scaffold upgrade --force        # Overwrite locally modified skills (creates backup)
+crag upgrade                # Update skills in current project
+crag upgrade --check        # Dry run — show what would change
+crag upgrade --workspace    # Update all workspace members
+crag upgrade --force        # Overwrite locally modified skills (creates backup)
 ```
 
 **How it works:**
-- Skills track their version in YAML frontmatter (`version: 0.2.0`)
-- A `source_hash` (SHA-256) detects local modifications
+- Skills track their version in YAML frontmatter (`version: 0.2.1`)
+- A `source_hash` (SHA-256, CRLF-normalized) detects local modifications
 - If you modified a skill locally, upgrade won't overwrite it without `--force`
 - When force-overwriting, a timestamped backup is created (`SKILL.md.bak.1712252400`)
+- Global 24-hour cache at `~/.claude/crag/update-check.json`
+- Opt-out: `CRAG_NO_UPDATE_CHECK=1`
 
-#### `scaffold workspace` — Inspect Workspace
+#### `crag workspace` — Inspect Workspace
 
 Shows the detected workspace, all members, their tech stacks, and governance hierarchy:
 
 ```bash
-scaffold workspace              # Human-readable
-scaffold workspace --json       # Machine-readable JSON (for CI/scripting)
+crag workspace              # Human-readable
+crag workspace --json       # Machine-readable JSON (for CI/scripting)
 ```
 
 Example output:
@@ -306,24 +272,24 @@ Example output:
 
 Use this to debug workspace detection or understand governance inheritance in monorepos.
 
-#### `scaffold install` — Install Global Agent
+#### `crag install` — Install Global Agent
 
-Installs the scaffold-project agent to `~/.claude/agents/` so you can invoke it with `/scaffold-project` from any Claude Code session:
+Installs the `crag-project` interview agent to `~/.claude/agents/` so you can invoke it with `/crag-project` from any Claude Code session:
 
 ```bash
-scaffold install
+crag install
 ```
 
-#### `scaffold version` / `scaffold help`
+#### `crag version` / `crag help`
 
 ```bash
-scaffold version              # Print version
-scaffold help                 # Print usage
+crag version              # Print version
+crag help                 # Print usage
 ```
 
 ### The Session Loop
 
-Once scaffold-cli is set up, your workflow in any Claude Code session becomes:
+Once crag is set up, your workflow in any Claude Code session becomes:
 
 ```
 1. /pre-start-context       → Discovers project, loads governance, checks skill currency
@@ -335,12 +301,12 @@ Once scaffold-cli is set up, your workflow in any Claude Code session becomes:
 - Detects workspace type (pnpm, Cargo, Go, Gradle, Maven, Nx, Turbo, Bazel, submodules, nested repos)
 - Enumerates members and checks for multi-level governance
 - Detects runtime versions (Node, Java, Python, Go, Rust, Docker)
-- Reads governance.md and applies rules for the session
+- Reads `governance.md` and applies rules for the session
 - Loads cross-session memory (if MemStack enabled)
-- Checks skill currency — notifies if `scaffold upgrade` available
+- Checks skill currency — notifies if `crag upgrade` available
 
 **Post-start does:**
-- Runs governance gates in order (stops on failure)
+- Runs governance gates in order (stops on MANDATORY failure; logs OPTIONAL/ADVISORY)
 - Auto-fixes mechanical errors (lint, format) with bounded retry
 - Runs security review (grep for secrets, check new endpoints)
 - Captures knowledge (insights, sessions) if MemStack enabled
@@ -349,13 +315,13 @@ Once scaffold-cli is set up, your workflow in any Claude Code session becomes:
 
 ### Common Workflows
 
-**Workflow 1: Add scaffold-cli to an existing project**
+**Workflow 1: Add crag to an existing project**
 ```bash
 cd my-existing-project
-npx scaffold-cli analyze --dry-run    # Preview what it would generate
-npx scaffold-cli analyze              # Write .claude/governance.md
+npx crag analyze --dry-run    # Preview what it would generate
+npx crag analyze              # Write .claude/governance.md
 # Review the generated file, adjust as needed
-npx scaffold-cli check                # Verify infrastructure
+npx crag check                # Verify infrastructure
 # Use /pre-start-context in Claude Code
 ```
 
@@ -363,58 +329,56 @@ npx scaffold-cli check                # Verify infrastructure
 ```bash
 mkdir my-new-project && cd my-new-project
 git init
-npx scaffold-cli init                 # Interactive interview
+npx crag init                 # Interactive interview
 # Follow the prompts — agent asks ~20 questions
 # Skills + hooks + agents are all generated
-npx scaffold-cli check
+npx crag check
 ```
 
 **Workflow 3: Monorepo with per-service governance**
 ```bash
 cd my-monorepo
-npx scaffold-cli init                  # Root-level governance
+npx crag workspace            # See detected type + members
+npx crag init                 # Root-level governance
 cd packages/backend
-npx scaffold-cli analyze --merge       # Add backend-specific gates
+npx crag analyze --merge      # Add backend-specific gates
 cd ../../packages/frontend
-npx scaffold-cli analyze --merge       # Add frontend-specific gates
+npx crag analyze --merge      # Add frontend-specific gates
 # Now each package has its own governance.md, and root has cross-cutting rules
 ```
 
 **Workflow 4: Keep everything current**
 ```bash
-npx scaffold-cli upgrade --check       # See what would update
-npx scaffold-cli upgrade               # Apply updates (preserves local changes)
-npx scaffold-cli diff                  # Check governance hasn't drifted
-npx scaffold-cli compile --target all  # Regenerate CI workflows, hooks, cross-agent files
+npx crag upgrade --check       # See what would update
+npx crag upgrade               # Apply updates (preserves local changes)
+npx crag diff                  # Check governance hasn't drifted
+npx crag compile --target all  # Regenerate CI workflows, hooks, cross-agent files
 ```
 
 **Workflow 5: Switch AI tools (Claude → Cursor → Gemini)**
 ```bash
-npx scaffold-cli compile --target agents-md    # Generate AGENTS.md
-npx scaffold-cli compile --target cursor       # Generate .cursor/rules/
-npx scaffold-cli compile --target gemini       # Generate GEMINI.md
+npx crag compile --target agents-md    # Generate AGENTS.md
+npx crag compile --target cursor       # Generate .cursor/rules/
+npx crag compile --target gemini       # Generate GEMINI.md
 # Same governance rules now work in Codex, Cursor, Gemini CLI, Aider, Factory
 ```
 
 ### Troubleshooting
 
-**Q: `scaffold init` says "Claude Code CLI not found"**
+**Q: `crag init` says "Claude Code CLI not found"**
 A: Install Claude Code from https://claude.com/claude-code. Only `init` needs it; other commands don't.
 
-**Q: `scaffold upgrade` shows "locally modified" and won't update**
-A: You edited a skill file. Either (1) accept that your edits are preserved and stay on the old version, or (2) run `scaffold upgrade --force` to overwrite (backup is created).
+**Q: `crag upgrade` shows "locally modified" and won't update**
+A: You edited a skill file. Either (1) accept that your edits are preserved and stay on the old version, or (2) run `crag upgrade --force` to overwrite (backup is created).
 
-**Q: `scaffold analyze` generates nothing useful**
-A: It needs signals — CI configs, package.json scripts, linter configs. For greenfield projects, use `scaffold init` for the interview flow instead.
+**Q: `crag analyze` generates nothing useful**
+A: It needs signals — CI configs, `package.json` scripts, linter configs. For greenfield projects, use `crag init` for the interview flow instead.
 
-**Q: `scaffold diff` reports drift but my CI is working**
-A: Drift means governance.md says one thing and the codebase uses another. Either update governance.md to match reality, or update the codebase to match governance. Both are valid.
-
-**Q: Update checker shows "v1.0.0 available" but I have the dev version**
-A: Another package named `scaffold-cli` exists on npm. Once this is published under a scoped name, the checker will target the correct package. For now, the notice is cosmetic.
+**Q: `crag diff` reports drift but my CI is working**
+A: Drift means `governance.md` says one thing and the codebase uses another. Either update `governance.md` to match reality, or update the codebase to match governance. Both are valid.
 
 **Q: Skills don't auto-update when I run `/pre-start-context`**
-A: Auto-update runs via the CLI commands, not the skill itself. Run `scaffold upgrade` from your terminal. The skill reports skill version on pre-start so you know when to run upgrade.
+A: Auto-update runs via the CLI commands, not the skill itself. Run `crag upgrade` from your terminal. The skill reports skill version on pre-start so you know when to run upgrade.
 
 **Q: Multi-level governance not merging correctly**
 A: Check that member governance files use `## Gates (inherit: root)` to opt in to inheritance. Without this marker, member governance replaces root.
@@ -469,10 +433,13 @@ Gate sections support optional annotations for workspace-aware execution:
 ### TypeScript (if: tsconfig.json)       # skip section if file doesn't exist
 - npx tsc --noEmit
 
+### Audit
+- npm audit                             # [ADVISORY] — informational only
+
 ## Gates (inherit: root)                 # merge with root governance
 ```
 
-All annotations are optional. Existing governance files work unchanged.
+All annotations are optional. Existing governance files work unchanged. Classifications are honored by all compile targets (GitHub Actions `continue-on-error`, husky/pre-commit wrapper scripts).
 
 ### Multi-level governance (monorepos)
 
@@ -485,88 +452,13 @@ project-root/
 └── frontend/.claude/governance.md # Frontend-specific: Biome, Vitest, responsive audit
 ```
 
-Each level gets the same universal skills. Each reads its own governance.md. Open Claude Code at the root — get the cross-stack view. Open it in backend/ — get backend-specific gates. The skills adapt to wherever you are.
-
----
-
-## Governance Compiler
-
-governance.md is agent-readable. But the gates in it are just shell commands — they can also drive your CI pipeline and git hooks. One source of truth, multiple outputs:
-
-```bash
-scaffold compile --target github      # .github/workflows/gates.yml
-scaffold compile --target husky       # .husky/pre-commit
-scaffold compile --target pre-commit  # .pre-commit-config.yaml
-scaffold compile --target agents-md   # AGENTS.md (Codex, Cursor, Aider, Factory)
-scaffold compile --target cursor      # .cursor/rules/governance.mdc
-scaffold compile --target gemini      # GEMINI.md
-scaffold compile --target all         # All of the above
-```
-
-The compiler parses your gates, auto-detects runtimes from the commands (Node, Rust, Python, Java, Go, Docker), and generates the right setup steps. Human-readable "Verify X contains Y" gates are compiled to `grep` commands automatically. Cross-agent targets (AGENTS.md, Cursor, Gemini) let you use the same governance across any AI coding tool.
-
-```mermaid
-flowchart LR
-    GOV["governance.md\n(your gates)"]
-    GOV -->|"scaffold compile"| GH[".github/workflows/gates.yml"]
-    GOV -->|"scaffold compile"| HK[".husky/pre-commit"]
-    GOV -->|"scaffold compile"| PC[".pre-commit-config.yaml"]
-    GOV -->|"scaffold compile"| AM["AGENTS.md"]
-    GOV -->|"scaffold compile"| CR[".cursor/rules/governance.mdc"]
-    GOV -->|"scaffold compile"| GM["GEMINI.md"]
-    GOV -->|"read at runtime"| SKILL["Universal skills\n(agent enforcement)"]
-
-    style GOV fill:#3a2a1a,stroke:#ffbb33,color:#eee
-    style GH fill:#0f3460,stroke:#00d2ff,color:#eee
-    style HK fill:#0f3460,stroke:#00d2ff,color:#eee
-    style PC fill:#0f3460,stroke:#00d2ff,color:#eee
-    style AM fill:#0f3460,stroke:#00d2ff,color:#eee
-    style CR fill:#0f3460,stroke:#00d2ff,color:#eee
-    style GM fill:#0f3460,stroke:#00d2ff,color:#eee
-    style SKILL fill:#1a3a1a,stroke:#00ff88,color:#eee
-```
-
-Governance-as-config that compiles to agent behavior, CI/CD pipelines, and cross-agent configs from a single 20-line file.
-
----
-
-## Zero-Interview Mode
-
-Don't want an interview? `scaffold analyze` generates governance from your existing project:
-
-```bash
-scaffold analyze              # Infer governance from codebase + CI
-scaffold analyze --dry-run    # Preview without writing
-scaffold analyze --workspace  # Analyze all workspace members
-scaffold analyze --merge      # Merge with existing governance
-```
-
-It reads your CI workflows, package.json scripts, linter configs, git history, and deployment configs. Outputs governance.md with `# Inferred` markers so you know what to verify.
-
----
-
-## Governance Drift Detection
-
-`scaffold diff` compares your governance.md against codebase reality:
-
-```bash
-scaffold diff
-```
-
-```
-  MATCH   node --check bin/scaffold.js     (tool exists)
-  DRIFT   ESLint referenced but biome.json found
-  MISSING CI gate: cargo test              (in governance, not in CI)
-  EXTRA   CI step: docker build            (in CI, not in governance)
-
-  3 match, 1 drift, 1 missing, 1 extra
-```
+Each level gets the same universal skills. Each reads its own `governance.md`. Open Claude Code at the root — get the cross-stack view. Open it in `backend/` — get backend-specific gates. The skills adapt to wherever you are.
 
 ---
 
 ## Workspace Detection
 
-scaffold-cli auto-detects 11+ workspace types:
+crag auto-detects 11+ workspace types:
 
 | Marker | Workspace Type |
 |--------|----------------|
@@ -586,18 +478,93 @@ Workspace members are enumerated, checked for their own `.claude/governance.md`,
 
 ---
 
-## Auto-Update
+## Governance Compiler — 6 Targets
 
-Skills track their version in YAML frontmatter. When you run any scaffold command, it checks for updates:
+`governance.md` is agent-readable. But the gates in it are just shell commands — they can also drive your CI pipeline, git hooks, and configuration for every other AI coding tool. One source of truth, six outputs:
 
 ```bash
-scaffold upgrade              # Update skills in current project
-scaffold upgrade --workspace  # Update all workspace members
-scaffold upgrade --check      # Dry run — show what would change
-scaffold upgrade --force      # Overwrite locally modified skills (with backup)
+crag compile --target github        # .github/workflows/gates.yml
+crag compile --target husky         # .husky/pre-commit
+crag compile --target pre-commit    # .pre-commit-config.yaml
+crag compile --target agents-md     # AGENTS.md (Codex, Cursor, Aider, Factory)
+crag compile --target cursor        # .cursor/rules/governance.mdc
+crag compile --target gemini        # GEMINI.md
+crag compile --target all           # All of the above
 ```
 
-The update checker queries the npm registry (cached for 24 hours, 3s timeout, graceful failure offline). Skills are only overwritten if the user hasn't modified them — local modifications are detected via content hash and preserved unless `--force` is used.
+The compiler parses your gates, auto-detects runtimes from the commands (Node, Rust, Python, Java, Go, Docker), and generates the right setup steps with proper version inference. Human-readable `Verify X contains Y` gates are compiled to `grep` commands automatically (with shell-injection-safe escaping).
+
+```mermaid
+flowchart LR
+    GOV["governance.md\n(your gates)"]
+    GOV -->|"crag compile"| GH[".github/workflows/gates.yml"]
+    GOV -->|"crag compile"| HK[".husky/pre-commit"]
+    GOV -->|"crag compile"| PC[".pre-commit-config.yaml"]
+    GOV -->|"crag compile"| AM["AGENTS.md"]
+    GOV -->|"crag compile"| CR[".cursor/rules/governance.mdc"]
+    GOV -->|"crag compile"| GM["GEMINI.md"]
+    GOV -->|"read at runtime"| SKILL["Universal skills\n(agent enforcement)"]
+
+    style GOV fill:#3a2a1a,stroke:#ffbb33,color:#eee
+    style GH fill:#0f3460,stroke:#00d2ff,color:#eee
+    style HK fill:#0f3460,stroke:#00d2ff,color:#eee
+    style PC fill:#0f3460,stroke:#00d2ff,color:#eee
+    style AM fill:#0f3460,stroke:#00d2ff,color:#eee
+    style CR fill:#0f3460,stroke:#00d2ff,color:#eee
+    style GM fill:#0f3460,stroke:#00d2ff,color:#eee
+    style SKILL fill:#1a3a1a,stroke:#00ff88,color:#eee
+```
+
+Governance-as-config that compiles to agent behavior, CI/CD pipelines, and cross-agent configs from a single 20-line file.
+
+---
+
+## Zero-Interview Mode
+
+Don't want an interview? `crag analyze` generates governance from your existing project:
+
+```bash
+crag analyze              # Infer governance from codebase + CI
+crag analyze --dry-run    # Preview without writing
+crag analyze --workspace  # Analyze all workspace members
+crag analyze --merge      # Merge with existing governance
+```
+
+It reads your CI workflows (recursively, handling `run: |` multiline blocks), `package.json` scripts, linter configs, git history, and deployment configs. Outputs `governance.md` with `# Inferred` markers so you know what to verify.
+
+---
+
+## Governance Drift Detection
+
+`crag diff` compares your `governance.md` against codebase reality:
+
+```bash
+crag diff
+```
+
+```
+  MATCH   node --check bin/crag.js     (tool exists)
+  DRIFT   ESLint referenced but biome.json found
+  MISSING CI gate: cargo test          (in governance, not in CI)
+  EXTRA   CI step: docker build        (in CI, not in governance)
+
+  3 match, 1 drift, 1 missing, 1 extra
+```
+
+---
+
+## Auto-Update
+
+Skills track their version in YAML frontmatter. When you run any crag command, it checks for updates:
+
+```bash
+crag upgrade              # Update skills in current project
+crag upgrade --workspace  # Update all workspace members
+crag upgrade --check      # Dry run — show what would change
+crag upgrade --force      # Overwrite locally modified skills (with backup)
+```
+
+The update checker queries the npm registry (cached for 24 hours, 3s timeout, graceful failure offline). Skills are only overwritten if the user hasn't modified them — local modifications are detected via SHA-256 content hash (CRLF-normalized for cross-platform consistency) and preserved unless `--force` is used.
 
 ---
 
@@ -612,7 +579,7 @@ The update checker queries the npm registry (cached for 24 hours, 3s timeout, gr
 | Agents | **Generated for your stack** | Yes — read governance for commands |
 | Settings | **Generated** | Yes — RTK wildcards cover new tools |
 | CI playbook | **Generated template** | You add entries as failures are found |
-| Compile targets | **Generated on demand** | `scaffold compile` regenerates from governance (6 targets) |
+| Compile targets | **Generated on demand** | `crag compile` regenerates from governance (6 targets) |
 | Workspace detection | **Ships universal** | Yes — detects 11+ workspace types at runtime |
 | Governance diff | **Ships universal** | Yes — compares governance vs codebase reality |
 
@@ -628,7 +595,7 @@ flowchart LR
         I["Templates\nOne stack per template\nCopy and modify\nNo runtime discovery"]
     end
 
-    subgraph RUNTIME["scaffold-cli"]
+    subgraph RUNTIME["crag"]
         U["Universal skills\nDiscover at runtime\nWork for any stack\nNever go stale"]
         G["governance.md\n20-30 lines\nYour rules only\nHuman-controlled"]
     end
@@ -699,7 +666,7 @@ flowchart LR
 | **Sandbox guard** | Hard-blocks destructive commands at hook level | Security at system level, not instruction level |
 | **Workspace detection** | Detects 11+ workspace types, enumerates members | Automatic monorepo/polyrepo awareness |
 | **Auto-update** | Version-tracked skills with hash-based conflict detection | Skills stay current across all projects |
-| **Governance diff** | Compares governance.md against actual codebase | Catches drift before it causes failures |
+| **Governance diff** | Compares `governance.md` against actual codebase | Catches drift before it causes failures |
 
 No agent framework does all of these. Most re-discover cold every session, require manual validation, and trust instructions for safety.
 
@@ -715,23 +682,23 @@ No agent framework does all of these. Most re-discover cold every session, requi
 │   └── post-start-validation/SKILL.md    # Universal validator
 ├── hooks/
 │   ├── sandbox-guard.sh                  # Hard-blocks destructive commands
-│   ├── auto-post-start.sh               # Gate enforcement before commits
+│   ├── auto-post-start.sh                # Gate enforcement before commits
 │   ├── drift-detector.sh                 # Checks key files exist
 │   ├── circuit-breaker.sh                # Failure loop detection
 │   ├── pre-compact-snapshot.sh           # Memory before compaction
 │   └── post-compact-recovery.sh          # Memory after compaction
 ├── agents/
 │   ├── test-runner.md                    # Parallel tests (Sonnet)
-│   ├── security-reviewer.md             # Security audit (Opus)
-│   ├── dependency-scanner.md            # Vulnerability scan
-│   └── skill-auditor.md                 # Infrastructure audit
-├── rules/                               # Cross-session memory
-├── ci-playbook.md                       # Known CI failures
-├── .session-name                        # Notification routing
-├── .discovery-cache.json                 # Cached discovery (auto-generated)
-├── .session-state.json                   # Session continuity (auto-generated)
-├── .gates-passed                         # Gate sentinel (auto-generated)
-└── settings.local.json                  # Hooks + permissions
+│   ├── security-reviewer.md              # Security audit (Opus)
+│   ├── dependency-scanner.md             # Vulnerability scan
+│   └── skill-auditor.md                  # Infrastructure audit
+├── rules/                                # Cross-session memory
+├── ci-playbook.md                        # Known CI failures
+├── .session-name                         # Notification routing
+├── .discovery-cache.json                  # Cached discovery (auto-generated)
+├── .session-state.json                    # Session continuity (auto-generated)
+├── .gates-passed                          # Gate sentinel (auto-generated)
+└── settings.local.json                   # Hooks + permissions
 ```
 
 ---
@@ -740,9 +707,9 @@ No agent framework does all of these. Most re-discover cold every session, requi
 
 1. **Discover, don't hardcode.** Every fact about the codebase is read at runtime. The skills never say "22 controllers" — they say "read the controller directory."
 
-2. **Govern, don't hope.** Your quality bar lives in governance.md. The skills enforce it but never modify it. It changes only when you change it.
+2. **Govern, don't hope.** Your quality bar lives in `governance.md`. The skills enforce it but never modify it. It changes only when you change it.
 
-3. **Ship the engine, generate the config.** Universal skills ship once. governance.md is generated per-project. The engine works forever. The config is 20 lines.
+3. **Ship the engine, generate the config.** Universal skills ship once. `governance.md` is generated per-project. The engine works forever. The config is 20 lines.
 
 4. **Enforce, don't instruct.** Hooks are 100% reliable at zero token cost. CLAUDE.md rules are ~80% compliance. Critical behavior goes in hooks.
 
@@ -787,31 +754,32 @@ Neither patent blocks this architecture. Both are adjacent, not overlapping.
 
 - [x] Universal pre-start and post-start skills
 - [x] Interview-driven governance generation
-- [x] CLI (`scaffold init`, `scaffold check`, `scaffold install`)
+- [x] CLI (`crag init`, `crag check`, `crag install`)
 - [x] Proven on 5-language multi-service project (example-app)
 - [x] Proven on full-stack monolith with deployment (example-app)
 - [x] Proven on multi-service platform (example-app)
 - [x] Multi-level governance hierarchy (root + backend + frontend)
-- [x] `scaffold compile` — governance.md → GitHub Actions, husky, pre-commit, AGENTS.md, Cursor, Gemini
+- [x] `crag compile` — governance.md → GitHub Actions, husky, pre-commit, AGENTS.md, Cursor, Gemini
 - [x] Incremental discovery cache — content-addressed, skips 80% of pre-start on unchanged projects
 - [x] Intent-scoped discovery — classifies task, skips irrelevant domains
 - [x] Session continuity — warm starts via `.session-state.json`
 - [x] Gate auto-fix loop — fixes lint/format errors automatically, bounded retry (max 2x)
 - [x] Auto-post-start hook — gate enforcement before commits
 - [x] Sandbox guard — hard-blocks destructive commands (rm -rf /, DROP TABLE, curl|bash, force-push main)
-- [x] `scaffold analyze` — generate governance from existing project without interview
-- [x] `scaffold diff` — compare governance against codebase reality
-- [x] `scaffold upgrade` — update universal skills when new version ships
+- [x] `crag analyze` — generate governance from existing project without interview
+- [x] `crag diff` — compare governance against codebase reality
+- [x] `crag upgrade` — update universal skills when new version ships
+- [x] `crag workspace` — inspect detected workspace type and members
 - [x] Workspace detection — 11+ types (pnpm, npm, Cargo, Go, Gradle, Maven, Nx, Turbo, Bazel, submodules, nested repos)
-- [x] Governance v2 format — path-scoped gates, conditional sections, mandatory/optional classification
+- [x] Governance v2 format — path-scoped gates, conditional sections, mandatory/optional/advisory classification
 - [x] Auto-update — version tracking, npm registry check, content-hash conflict detection
 - [x] Cross-agent compilation — AGENTS.md, .cursor/rules, GEMINI.md from single governance file
-- [x] Modular architecture — 20 modules across 6 directories (zero dependencies)
-- [ ] Published npm package
+- [x] Modular architecture — 24 modules across 6 directories (zero dependencies)
+- [x] Test suite — 117 tests covering parse, integrity, detect, enumerate, merge, compile, version, shell, CLI
+- [ ] Published npm package (name reserved)
 - [ ] Cross-repo benchmark — 20-30 repos, measure coverage %, false positives, failure modes
 - [ ] Drift resilience test — add services, change linters, rename directories. Does the engine re-discover?
 - [ ] Baseline comparison — same governance in AGENTS.md, CLAUDE.md, .cursor/rules, GEMINI.md
-- [ ] Cross-agent compatibility (Cursor, Codex, Gemini CLI, Aider)
 
 ---
 
@@ -821,4 +789,4 @@ MIT
 
 ---
 
-*Built by [WhitehatD](https://github.com/WhitehatD)*
+*Built by [Alexandru Cioc (WhitehatD)](https://github.com/WhitehatD)*
