@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-04-05
+
+### Added
+- **Fully automated release pipeline** (`.github/workflows/release.yml`). Triggers on every push to `master`. Runs all gates + 159 tests + compile-all smoke test, detects whether the `package.json` version is new, and if so publishes to npm with SLSA provenance, creates the git tag, and creates a GitHub release with notes auto-extracted from `CHANGELOG.md`. Zero manual steps between commit and package-on-npm.
+- **Auto skill-hash sync workflow** (`.github/workflows/sync-hashes.yml`). Recomputes `source_hash` frontmatter whenever `src/skills/*.md` content changes. Commits updates as `github-actions[bot]` with `[skip ci]` to avoid loops. Contributors never manually track hashes.
+- **Version bump helper** (`scripts/bump-version.js`). One-command semver bump via `npm run release:patch | :minor | :major`. Updates `package.json` and converts the `[Unreleased]` CHANGELOG header into a dated version section. Accepts explicit versions too.
+- **Skill hash sync script** (`scripts/sync-skill-hashes.js`). Reusable CLI: `npm run sync-hashes`. Reads every skill, computes SHA-256 of body with CRLF normalization, updates frontmatter if drifted.
+- **Maintainer workflow docs** in `CONTRIBUTING.md` covering the three-command release flow and troubleshooting.
+
+### Changed
+- **Removed** `.github/workflows/publish.yml` (the old manual-trigger release workflow). `release.yml` replaces it with full push-driven automation.
+
+### Fixed
+- `bump-version.js` now inserts a blank line between version sections and uses the maintainer's local date (not UTC date).
+- `circuit-breaker.sh` counter now lives under `.claude/.tmp/` instead of `/tmp/` — avoids stale-state issues on Windows + Git Bash where `/tmp` persists across sessions.
+
 ## [0.2.1] — 2026-04-05
 
 ### Fixed
@@ -87,6 +103,8 @@ Initial release under the `scaffold-cli` name. Proven in production on:
 
 Initial capabilities: universal skills (pre-start-context, post-start-validation), interview-driven governance generation, 3 compile targets (github, husky, pre-commit), basic workspace support for monorepos via multi-level `governance.md`.
 
-[Unreleased]: https://github.com/WhitehatD/crag/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/WhitehatD/crag/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/WhitehatD/crag/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/WhitehatD/crag/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/WhitehatD/crag/releases/tag/v0.2.0
 [0.1.0]: https://github.com/WhitehatD/crag/releases/tag/v0.1.0

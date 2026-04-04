@@ -67,9 +67,12 @@ function bumpChangelog(newVersion) {
   }
 
   const raw = fs.readFileSync(clPath, 'utf-8');
-  const today = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD
+  // Use local date (not UTC) so the entry matches the maintainer's wall-clock day
+  const d = new Date();
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-  // Find the [Unreleased] section and convert it to the new version
+  // Find the [Unreleased] section and convert it to the new version.
+  // Insert a trailing blank line so the new section is separated from the next one.
   const unreleasedRe = /^## \[Unreleased\]\s*$/m;
   if (!unreleasedRe.test(raw)) {
     console.warn('  warning: no "## [Unreleased]" section in CHANGELOG.md');
@@ -77,7 +80,7 @@ function bumpChangelog(newVersion) {
     return false;
   }
 
-  const replacement = `## [Unreleased]\n\n## [${newVersion}] — ${today}`;
+  const replacement = `## [Unreleased]\n\n## [${newVersion}] — ${today}\n`;
   const updated = raw.replace(unreleasedRe, replacement);
 
   // Also update the compare links at the bottom (if present)

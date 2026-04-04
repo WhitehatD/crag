@@ -1,5 +1,9 @@
 #!/bin/bash
-COUNTER_FILE="/tmp/claude-failures-${CLAUDE_SESSION_ID:-$$}"
+# Counter lives inside .claude/.tmp/ (project-local, sandbox-safe,
+# avoids stale state from /tmp persistence on Windows+Git Bash).
+TMPDIR="${CLAUDE_PROJECT_DIR:-.}/.claude/.tmp"
+mkdir -p "$TMPDIR" 2>/dev/null
+COUNTER_FILE="$TMPDIR/claude-failures-${CLAUDE_SESSION_ID:-$$}"
 COUNT=$(cat "$COUNTER_FILE" 2>/dev/null || echo 0)
 COUNT=$((COUNT + 1))
 echo "$COUNT" > "$COUNTER_FILE"
