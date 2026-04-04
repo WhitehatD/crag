@@ -109,9 +109,11 @@ npx crag <command>
 
 Or install globally:
 ```bash
-npm install -g crag
+npm install -g @whitehatd/crag
 crag <command>
 ```
+
+The package is published under a scope (`@whitehatd/crag`) but the binary name remains `crag`, so after installation all commands work as `crag init`, `crag analyze`, etc.
 
 **Requirements:**
 - Node.js 18+ (uses built-in `https`, `crypto`, `fs`, `child_process`)

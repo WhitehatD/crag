@@ -38,7 +38,7 @@ function checkOnce() {
         if (age < CACHE_TTL_MS) {
           if (cache.updateAvailable) {
             const current = require('../../package.json').version;
-            console.log(`  \x1b[33m↑\x1b[0m crag v${cache.latestVersion} available (you have v${current}). Run: npm update -g crag`);
+            console.log(`  \x1b[33m↑\x1b[0m crag v${cache.latestVersion} available (you have v${current}). Run: npm update -g @whitehatd/crag`);
           }
           return;
         }
@@ -59,7 +59,7 @@ function checkOnce() {
 function checkRegistry() {
   const currentVersion = require('../../package.json').version;
 
-  const req = https.get('https://registry.npmjs.org/crag/latest', { timeout: TIMEOUT_MS }, (res) => {
+  const req = https.get('https://registry.npmjs.org/@whitehatd%2Fcrag/latest', { timeout: TIMEOUT_MS }, (res) => {
     // Abort if status is non-OK
     if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
       res.resume(); // Drain to allow cleanup
@@ -107,7 +107,7 @@ function checkRegistry() {
         }
 
         if (updateAvailable) {
-          console.log(`  \x1b[33m↑\x1b[0m crag v${latest} available (you have v${currentVersion}). Run: npm update -g crag`);
+          console.log(`  \x1b[33m↑\x1b[0m crag v${latest} available (you have v${currentVersion}). Run: npm update -g @whitehatd/crag`);
         }
       } catch {
         // Malformed response — ignore
