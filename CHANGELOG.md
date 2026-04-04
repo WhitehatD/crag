@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-04-05
+
+### Fixed
+- **README rendering on npm.** Replaced 4 mermaid diagrams with ASCII art / markdown tables. npm's markdown renderer doesn't support mermaid, so the diagrams were showing as raw YAML text on the package page. GitHub still renders mermaid natively, but the canonical README is now cross-platform (GitHub, npm, text readers, terminals).
+
 ## [0.2.0] — 2026-04-05
 
 Renamed and expanded. First release under the `@whitehatd/crag` name.

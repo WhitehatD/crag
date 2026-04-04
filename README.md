@@ -72,31 +72,28 @@ The same universal skills — written once, never modified per project — disco
 
 ## The Architecture
 
-```mermaid
-flowchart TB
-    subgraph SHIPPED["Ships with crag (universal)"]
-        direction LR
-        PRE["pre-start skill\ndiscovers ANY project"]
-        POST["post-start skill\nvalidates using YOUR gates"]
-    end
-
-    subgraph GENERATED["Generated from interview or analyze (project-specific)"]
-        GOV["governance.md\n20-30 lines of YOUR rules"]
-    end
-
-    subgraph ALSO["Also generated"]
-        HOOKS["hooks/"]
-        AGENTS["agents/"]
-        SETTINGS["settings"]
-    end
-
-    PRE -->|"reads at runtime"| GOV
-    POST -->|"reads at runtime"| GOV
-
-    style SHIPPED fill:#1a3a1a,stroke:#00ff88,color:#eee
-    style GENERATED fill:#3a2a1a,stroke:#ffbb33,color:#eee
-    style GOV fill:#3a2a1a,stroke:#ffbb33,color:#eee
-    style ALSO fill:#0f3460,stroke:#00d2ff,color:#eee
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Ships with crag (universal — same for every project)       │
+│                                                              │
+│  ┌──────────────────────┐        ┌──────────────────────┐   │
+│  │  pre-start skill     │        │  post-start skill    │   │
+│  │  discovers ANY       │        │  validates using     │   │
+│  │  project             │        │  YOUR gates          │   │
+│  └──────────┬───────────┘        └──────────┬───────────┘   │
+└─────────────┼───────────────────────────────┼───────────────┘
+              │                               │
+              │  reads at runtime             │  reads at runtime
+              ▼                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│  Generated from interview or analyze (project-specific)     │
+│                                                              │
+│      ┌────────────────────────────────────────────┐          │
+│      │  governance.md — 20-30 lines of YOUR rules │          │
+│      └────────────────────────────────────────────┘          │
+│                                                              │
+│  Also generated:  hooks/    agents/    settings              │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 The skills ship once and work forever. They don't know your stack — they discover it. They don't know your gates — they read them from governance.md. Add a service, change your CI, switch frameworks — the skills adapt. Nothing to update.
@@ -565,41 +562,31 @@ crag compile                        # Or list targets interactively
 
 The compiler parses your gates, auto-detects runtimes from the commands (Node, Rust, Python, Java, Go, Docker), and generates the right setup steps with proper version inference from your project files (not hardcoded defaults). Human-readable `Verify X contains Y` gates are compiled to `grep` commands automatically (with shell-injection-safe escaping). All 12 targets write atomically (temp file + rename) so partial failures leave the old state intact.
 
-```mermaid
-flowchart LR
-    GOV["governance.md\n(one file)"]
+```
+                      ┌────────────────────┐
+                      │   governance.md    │
+                      │     (one file)     │
+                      └──────────┬─────────┘
+                                 │
+                        crag compile --target all
+                                 │
+       ┌─────────────────────────┼─────────────────────────┐
+       │                         │                         │
+       ▼                         ▼                         ▼
+┌─────────────┐          ┌─────────────┐          ┌─────────────┐
+│ CI / hooks  │          │  AI native  │          │  AI extras  │
+├─────────────┤          ├─────────────┤          ├─────────────┤
+│ gates.yml   │          │ AGENTS.md   │          │ Copilot     │
+│ husky       │          │ Cursor MDC  │          │ Cline       │
+│ pre-commit  │          │ GEMINI.md   │          │ Continue    │
+└─────────────┘          └─────────────┘          │ Windsurf    │
+                                                  │ Zed         │
+                                                  │ Cody        │
+                                                  └─────────────┘
 
-    subgraph CI["CI / git hooks"]
-        GH["gates.yml"]
-        HK["husky"]
-        PC["pre-commit"]
-    end
-
-    subgraph NATIVE["AI native"]
-        AM["AGENTS.md"]
-        CR["Cursor MDC"]
-        GM["GEMINI.md"]
-    end
-
-    subgraph EXTRAS["AI extras"]
-        CO["Copilot"]
-        CL["Cline"]
-        CN["Continue"]
-        WS["Windsurf"]
-        ZE["Zed"]
-        CY["Cody"]
-    end
-
-    GOV --> CI
-    GOV --> NATIVE
-    GOV --> EXTRAS
-    GOV -->|"read at runtime"| SKILL["Universal skills"]
-
-    style GOV fill:#3a2a1a,stroke:#ffbb33,color:#eee
-    style CI fill:#0f3460,stroke:#00d2ff,color:#eee
-    style NATIVE fill:#1a3a1a,stroke:#00ff88,color:#eee
-    style EXTRAS fill:#2a1a3a,stroke:#bb86fc,color:#eee
-    style SKILL fill:#1a3a1a,stroke:#00ff88,color:#eee
+                                 + read at runtime by
+                                   universal skills
+                                   (pre-start / post-start)
 ```
 
 Governance-as-config that compiles to agent behavior, CI/CD pipelines, and **9 different AI coding tool configs** from a single 20-line file.
@@ -674,71 +661,58 @@ The update checker queries the npm registry (cached for 24 hours, 3s timeout, gr
 
 ## Why Everything Else Is Static
 
-```mermaid
-flowchart LR
-    subgraph STATIC["Current ecosystem"]
-        T["CLAUDE.md / AGENTS.md\nStatic config files\nHardcode project facts\nRot when project changes"]
-        C["Skill collections\n1,234+ skills\nPick per project\nManual assembly"]
-        I["Templates\nOne stack per template\nCopy and modify\nNo runtime discovery"]
-    end
+| Current ecosystem                         | Why it rots                          | crag's approach                                |
+|-------------------------------------------|--------------------------------------|------------------------------------------------|
+| **CLAUDE.md / AGENTS.md** static files    | Hardcode project facts; manual edits | **Universal skills** read filesystem every session — always current |
+| **Skill collections** (1,234+ skills)     | Pick-per-project; stack mismatch     | **One engine** that works for any stack        |
+| **Per-framework templates**               | One stack per template; rot on change | **`governance.md`** — 20–30 lines of YOUR rules only, human-controlled |
 
-    subgraph RUNTIME["crag"]
-        U["Universal skills\nDiscover at runtime\nWork for any stack\nNever go stale"]
-        G["governance.md\n20-30 lines\nYour rules only\nHuman-controlled"]
-    end
-
-    T -->|"manual updates required"| STALE["Stale instructions"]
-    C -->|"wrong skill for new stack"| MISMATCH["Stack mismatch"]
-    I -->|"facts change"| ROT["Template rot"]
-    U -->|"reads filesystem every session"| FRESH["Always current"]
-    G -->|"changes only when you decide"| STABLE["Your standards"]
-
-    style STATIC fill:#3a1a1a,stroke:#ff6b6b,color:#eee
-    style RUNTIME fill:#1a3a1a,stroke:#00ff88,color:#eee
-    style STALE fill:#3a1a1a,stroke:#ff6b6b,color:#eee
-    style MISMATCH fill:#3a1a1a,stroke:#ff6b6b,color:#eee
-    style ROT fill:#3a1a1a,stroke:#ff6b6b,color:#eee
-    style FRESH fill:#1a3a1a,stroke:#00ff88,color:#eee
-    style STABLE fill:#3a2a1a,stroke:#ffbb33,color:#eee
-```
+**The difference:** everything else tries to pack facts INTO config files. crag reads facts FROM the filesystem at runtime. The skills don't know your stack — they discover it. The governance doesn't know your paths — it holds your rules.
 
 ---
 
 ## The Session Loop
 
-```mermaid
-flowchart LR
-    subgraph PRE["Pre-start (universal)"]
-        direction TB
-        W["Warm start?\n.session-state.json"]
-        IC["Classify intent\nscope discovery"]
-        CC["Cache valid?\n.discovery-cache.json"]
-        W --> IC --> CC
-        CC -->|"hit"| FAST["Fast path\nskip 80% of discovery"]
-        CC -->|"miss"| FULL["Full discovery\ndetect stack · load memory"]
-        FAST --> GOV["Read governance"]
-        FULL --> GOV
-    end
-
-    TASK["Your task"]
-
-    subgraph POST["Post-start (universal)"]
-        direction TB
-        V1["Detect changes"]
-        V2["Run governance gates"]
-        V2 -->|"fail"| FIX["Auto-fix\n(bounded retry)"]
-        FIX --> V2
-        V2 -->|"pass"| V3["Security review"]
-        V3 --> V4["Capture knowledge"]
-        V4 --> V5["Write session state\nCommit · Deploy"]
-    end
-
-    PRE --> TASK --> POST
-    POST -.->|"cache + state + knowledge"| PRE
-
-    style PRE fill:#1a2a3a,stroke:#03dac6,color:#eee
-    style TASK fill:#2a1a3a,stroke:#bb86fc,color:#eee
-    style POST fill:#1a3a2a,stroke:#00ff88,color:#eee
+```
+┌────────────────────────────────────────────────────────────────┐
+│  PRE-START (universal skill — runs before every task)          │
+│                                                                │
+│  Warm start?         Intent?          Cache valid?             │
+│  .session-state.json → classify  →   .discovery-cache.json     │
+│       │                │                  │                   │
+│       │                │          ┌───────┴───────┐            │
+│       │                │          ▼               ▼            │
+│       │                │      Fast path      Full discovery    │
+│       │                │      (skip 80%)     (detect stack,    │
+│       │                │          │           load memory)     │
+│       └────────────────┴──────────┴───────────────┘            │
+│                                │                               │
+│                                ▼                               │
+│                        Read governance.md                      │
+└───────────────────────────────┬────────────────────────────────┘
+                                │
+                                ▼
+                      ┌──────────────────┐
+                      │    YOUR TASK     │
+                      │   (code changes) │
+                      └────────┬─────────┘
+                               │
+                               ▼
+┌────────────────────────────────────────────────────────────────┐
+│  POST-START (universal skill — runs after every task)          │
+│                                                                │
+│  Detect changes → Run gates → (fail?) → Auto-fix → retry       │
+│                                  │                             │
+│                                 pass                           │
+│                                  ▼                             │
+│                       Security review → Capture knowledge      │
+│                                               │                │
+│                                               ▼                │
+│                                Write session state · Commit    │
+└────────────────────────────────┬───────────────────────────────┘
+                                 │
+                                 │ cache + state + knowledge
+                                 └─────► feeds next session
 ```
 
 ### What makes this loop tight
