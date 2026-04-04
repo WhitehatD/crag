@@ -25,14 +25,23 @@ function printUsage() {
     crag install      Install agent globally for /crag-project
     crag version      Show version
 
-  Compile targets:
-    crag compile --target github      .github/workflows/gates.yml
-    crag compile --target husky       .husky/pre-commit
-    crag compile --target pre-commit  .pre-commit-config.yaml
-    crag compile --target agents-md   AGENTS.md
-    crag compile --target cursor      .cursor/rules/governance.mdc
-    crag compile --target gemini      GEMINI.md
-    crag compile --target all         All of the above
+  Compile targets (12):
+    CI / git hooks:
+      crag compile --target github       .github/workflows/gates.yml
+      crag compile --target husky        .husky/pre-commit
+      crag compile --target pre-commit   .pre-commit-config.yaml
+    AI agents — native:
+      crag compile --target agents-md    AGENTS.md (Codex, Aider, Factory)
+      crag compile --target cursor       .cursor/rules/governance.mdc
+      crag compile --target gemini       GEMINI.md
+    AI agents — additional:
+      crag compile --target copilot      .github/copilot-instructions.md
+      crag compile --target cline        .clinerules
+      crag compile --target continue     .continuerules
+      crag compile --target windsurf     .windsurfrules
+      crag compile --target zed          .zed/rules.md
+      crag compile --target cody         .sourcegraph/cody-instructions.md
+    crag compile --target all            All 12 targets at once
 
   Analyze options:
     crag analyze --dry-run            Print inferred governance without writing

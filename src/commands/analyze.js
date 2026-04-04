@@ -473,24 +473,41 @@ function mergeWithExisting(existing, generated) {
     existingSections.add(match[1].trim().toLowerCase());
   }
 
-  const newLines = [];
-  let skip = false;
-  for (const line of generated.split('\n')) {
+  // Walk the generated file and collect new sections in their original order.
+  // Each new section becomes a self-contained block: the heading line plus all
+  // following lines until the next heading or EOF.
+  const newBlocks = [];
+  const genLines = generated.split('\n');
+  let currentBlock = null;
+  let blockIsNew = false;
+
+  for (const line of genLines) {
     const sectionMatch = line.match(/^## (.+)$/);
     if (sectionMatch) {
+      // Flush previous block if it was new
+      if (currentBlock && blockIsNew) {
+        newBlocks.push(currentBlock.trimEnd());
+      }
+      // Start new block
       const section = sectionMatch[1].trim().toLowerCase();
-      skip = existingSections.has(section);
-      if (!skip) newLines.push(line);
-    } else if (!skip) {
-      newLines.push(line);
+      blockIsNew = !existingSections.has(section);
+      currentBlock = blockIsNew ? line + '\n' : null;
+    } else if (blockIsNew && currentBlock !== null) {
+      currentBlock += line + '\n';
     }
   }
+  // Flush final block
+  if (currentBlock && blockIsNew) {
+    newBlocks.push(currentBlock.trimEnd());
+  }
 
-  const additions = newLines.filter(l => l.trim()).join('\n');
-  if (additions) {
-    return existing.trimEnd() + '\n\n# --- Inferred additions (review) ---\n\n' + additions + '\n';
+  if (newBlocks.length > 0) {
+    return existing.trimEnd() +
+      '\n\n# --- Inferred additions (review) ---\n\n' +
+      newBlocks.join('\n\n') +
+      '\n';
   }
   return existing;
 }
 
-module.exports = { analyze, analyzeProject };
+module.exports = { analyze, analyzeProject, isGateCommand, mergeWithExisting };

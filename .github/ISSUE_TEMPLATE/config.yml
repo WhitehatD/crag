@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: crag documentation
+    url: https://github.com/WhitehatD/crag#readme
+    about: Full user guide, command reference, troubleshooting, workflows
+  - name: crag discussions
+    url: https://github.com/WhitehatD/crag/discussions
+    about: Ask questions, share governance templates, discuss ideas

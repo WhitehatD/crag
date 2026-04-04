@@ -1,14 +1,51 @@
 # crag
 
+[![npm version](https://img.shields.io/npm/v/%40whitehatd%2Fcrag?color=%23e8bb3a&label=npm&logo=npm)](https://www.npmjs.com/package/@whitehatd/crag)
+[![Test](https://github.com/WhitehatD/crag/actions/workflows/test.yml/badge.svg)](https://github.com/WhitehatD/crag/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
+[![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
+[![159 tests](https://img.shields.io/badge/tests-159%20passing-brightgreen)](./test)
+
 **The bedrock layer for AI coding agents. One `governance.md`. Any project. Never stale.**
 
-Every AI coding setup today is static — CLAUDE.md files, AGENTS.md configs, per-project templates, skill collections. They hardcode facts about your project. Facts change. Instructions rot. You maintain them or they lie to your agent.
-
-crag inverts this. It ships **universal skills** that discover any project at runtime — any language, any framework, any deployment target — and reads your rules from a single `governance.md` file. The skills are the engine. The governance is the crag — the ancient landmark that doesn't drift while everything around it changes.
+Write your AI agent rules once. Enforce them in **Claude Code, Cursor, Copilot, Codex, Gemini, Aider, Cline, Continue, Windsurf, Zed, and Sourcegraph Cody** — plus your CI pipeline and git hooks. From a single 20-line file.
 
 ```bash
-npx crag init
+npx @whitehatd/crag init        # Interview → generate governance
+npx @whitehatd/crag analyze     # Or skip the interview: infer from existing project
+npx @whitehatd/crag compile --target all   # Output for 12 downstream tools
 ```
+
+> **The one-sentence pitch:** Every other AI coding tool ships static config files that hardcode your project's current shape. They rot. crag ships a runtime discovery engine plus a single governance file — the engine reads the filesystem every session so it never goes stale, and the governance is your rules, not your paths.
+
+---
+
+## The 12-target pitch, visually
+
+```
+                     ┌──────────────────┐
+                     │  governance.md   │    ← you maintain this (20-30 lines)
+                     │  one file        │
+                     └────────┬─────────┘
+                              │
+                      crag compile
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        │                     │                     │
+  ┌─────┴──────┐        ┌─────┴──────┐        ┌─────┴──────┐
+  │ CI / hooks │        │ AI native  │        │ AI extras  │
+  ├────────────┤        ├────────────┤        ├────────────┤
+  │ GitHub CI  │        │ AGENTS.md  │        │ Copilot    │
+  │ husky      │        │ Cursor     │        │ Cline      │
+  │ pre-commit │        │ Gemini     │        │ Continue   │
+  └────────────┘        └────────────┘        │ Windsurf   │
+                                              │ Zed        │
+                                              │ Cody       │
+                                              └────────────┘
+```
+
+Change one line in `governance.md`, re-run `crag compile --target all`, and 12 downstream configs regenerate. Your rules, your CI, your git hooks, and 9 different AI coding agents all stay in lock-step from a single source.
 
 ---
 
@@ -27,7 +64,7 @@ Not on demos. On real systems, in production, shipping to real infrastructure.
 | **example-app** | Full-stack | Monolith | Docker | Full-stack governance generated |
 | **example-app** | Multi-service | Services | Kubernetes | Multi-level governance hierarchy |
 | **example-app** | Multi-language | Services | Docker Compose | Multiple languages detected, gates generated |
-| **crag** | Node.js CLI | Single module | npm | Scaffolds itself — full dogfooding, 117 tests |
+| **crag** | Node.js CLI | Single module | npm | Scaffolds itself — full dogfooding, 159 tests, zero deps |
 
 The same universal skills — written once, never modified per project — discovered multiple projects across varied stacks. Zero project-specific instructions in the skills. They discovered everything.
 
@@ -78,14 +115,21 @@ The skills handle discovery. `governance.md` handles governance. The skills neve
 ## Quick Start
 
 ```bash
-npx crag init       # Interview → generate governance + hooks + agents
-npx crag analyze    # Generate governance from existing project (no interview)
-npx crag check      # Verify infrastructure
-npx crag install    # Install interview agent globally for /crag-project
-npx crag compile    # Compile governance → CI, hooks, AGENTS.md, Cursor, Gemini
-npx crag diff       # Compare governance against codebase reality
-npx crag upgrade    # Update universal skills to latest version
-npx crag workspace  # Inspect detected workspace (monorepo, submodules, nested repos)
+# Install once globally (the package is scoped; the binary name is `crag`)
+npm install -g @whitehatd/crag
+
+# Or use via npx (no install)
+npx @whitehatd/crag init
+
+# After install, all commands use the plain `crag` binary
+crag init            # Interview → generate governance + hooks + agents
+crag analyze         # Zero-interview: infer governance from existing project
+crag check           # Verify infrastructure
+crag diff            # Compare governance against codebase reality
+crag upgrade         # Update universal skills (with hash-based conflict detection)
+crag workspace       # Inspect detected workspace
+crag compile --target all   # Compile governance → CI, hooks, and 9 AI agent configs
+crag install         # Install interview agent globally for /crag-project
 ```
 
 After setup, in any Claude Code session:
@@ -186,22 +230,34 @@ crag check
 
 Run this after `crag init` to verify everything was generated, or any time you're unsure if the setup is complete.
 
-#### `crag compile` — Export Governance (6 targets)
+#### `crag compile` — Export Governance (12 targets)
 
 Compiles your `governance.md` to multiple formats:
 
 ```bash
+# CI / git hooks
 crag compile --target github        # .github/workflows/gates.yml
 crag compile --target husky         # .husky/pre-commit
 crag compile --target pre-commit    # .pre-commit-config.yaml
-crag compile --target agents-md     # AGENTS.md (Codex, Cursor, Aider, Factory)
+
+# AI coding agents — native formats
+crag compile --target agents-md     # AGENTS.md (Codex, Aider, Factory)
 crag compile --target cursor        # .cursor/rules/governance.mdc
 crag compile --target gemini        # GEMINI.md
-crag compile --target all           # All 6 targets
+
+# AI coding agents — additional formats
+crag compile --target copilot       # .github/copilot-instructions.md
+crag compile --target cline         # .clinerules
+crag compile --target continue      # .continuerules
+crag compile --target windsurf      # .windsurfrules
+crag compile --target zed           # .zed/rules.md
+crag compile --target cody          # .sourcegraph/cody-instructions.md
+
+crag compile --target all           # All 12 targets at once
 crag compile                        # List available targets
 ```
 
-**Why this matters:** one `governance.md` becomes your CI workflow, your git hooks, and configuration for every AI coding tool. Change a gate once, recompile, done. The generator detects Node/Python/Java/Go versions from your project files (`package.json engines.node`, `pyproject.toml requires-python`, etc.) instead of hardcoding defaults.
+**Why this matters:** one `governance.md` becomes your CI workflow, your git hooks, and configuration for **9 different AI coding agents**. Change a gate once, recompile, and every downstream tool sees the update. The generator detects Node/Python/Java/Go versions from your project files (`package.json engines.node`, `pyproject.toml requires-python`, `build.gradle.kts` toolchain, `go.mod` directive) instead of hardcoding defaults.
 
 Gate classifications control behavior per target:
 - `# [MANDATORY]` (default) — stop on failure
@@ -480,44 +536,73 @@ Workspace members are enumerated, checked for their own `.claude/governance.md`,
 
 ---
 
-## Governance Compiler — 6 Targets
+## Governance Compiler — 12 Targets
 
-`governance.md` is agent-readable. But the gates in it are just shell commands — they can also drive your CI pipeline, git hooks, and configuration for every other AI coding tool. One source of truth, six outputs:
+`governance.md` is agent-readable. But the gates in it are just shell commands — they can also drive your CI pipeline, git hooks, and configuration for **9 different AI coding agents**. One source of truth, twelve outputs:
+
+### Full target list
+
+| Group | Target | Output path | Consumed by |
+|---|---|---|---|
+| **CI** | `github` | `.github/workflows/gates.yml` | GitHub Actions |
+| **CI** | `husky` | `.husky/pre-commit` | husky pre-commit framework |
+| **CI** | `pre-commit` | `.pre-commit-config.yaml` | pre-commit.com framework |
+| **AI native** | `agents-md` | `AGENTS.md` | Codex, Aider, Factory, and any tool reading `AGENTS.md` |
+| **AI native** | `cursor` | `.cursor/rules/governance.mdc` | Cursor |
+| **AI native** | `gemini` | `GEMINI.md` | Google Gemini CLI |
+| **AI extras** | `copilot` | `.github/copilot-instructions.md` | GitHub Copilot (VS Code, JetBrains, Visual Studio, Copilot Workspace) |
+| **AI extras** | `cline` | `.clinerules` | Cline (VS Code extension) |
+| **AI extras** | `continue` | `.continuerules` | Continue.dev |
+| **AI extras** | `windsurf` | `.windsurfrules` | Windsurf IDE (Codeium) |
+| **AI extras** | `zed` | `.zed/rules.md` | Zed Editor AI assistant |
+| **AI extras** | `cody` | `.sourcegraph/cody-instructions.md` | Sourcegraph Cody |
 
 ```bash
-crag compile --target github        # .github/workflows/gates.yml
-crag compile --target husky         # .husky/pre-commit
-crag compile --target pre-commit    # .pre-commit-config.yaml
-crag compile --target agents-md     # AGENTS.md (Codex, Cursor, Aider, Factory)
-crag compile --target cursor        # .cursor/rules/governance.mdc
-crag compile --target gemini        # GEMINI.md
-crag compile --target all           # All of the above
+crag compile --target all           # Generate all 12 at once
+crag compile --target github        # Or pick one
+crag compile                        # Or list targets interactively
 ```
 
-The compiler parses your gates, auto-detects runtimes from the commands (Node, Rust, Python, Java, Go, Docker), and generates the right setup steps with proper version inference. Human-readable `Verify X contains Y` gates are compiled to `grep` commands automatically (with shell-injection-safe escaping).
+The compiler parses your gates, auto-detects runtimes from the commands (Node, Rust, Python, Java, Go, Docker), and generates the right setup steps with proper version inference from your project files (not hardcoded defaults). Human-readable `Verify X contains Y` gates are compiled to `grep` commands automatically (with shell-injection-safe escaping). All 12 targets write atomically (temp file + rename) so partial failures leave the old state intact.
 
 ```mermaid
 flowchart LR
-    GOV["governance.md\n(your gates)"]
-    GOV -->|"crag compile"| GH[".github/workflows/gates.yml"]
-    GOV -->|"crag compile"| HK[".husky/pre-commit"]
-    GOV -->|"crag compile"| PC[".pre-commit-config.yaml"]
-    GOV -->|"crag compile"| AM["AGENTS.md"]
-    GOV -->|"crag compile"| CR[".cursor/rules/governance.mdc"]
-    GOV -->|"crag compile"| GM["GEMINI.md"]
-    GOV -->|"read at runtime"| SKILL["Universal skills\n(agent enforcement)"]
+    GOV["governance.md\n(one file)"]
+
+    subgraph CI["CI / git hooks"]
+        GH["gates.yml"]
+        HK["husky"]
+        PC["pre-commit"]
+    end
+
+    subgraph NATIVE["AI native"]
+        AM["AGENTS.md"]
+        CR["Cursor MDC"]
+        GM["GEMINI.md"]
+    end
+
+    subgraph EXTRAS["AI extras"]
+        CO["Copilot"]
+        CL["Cline"]
+        CN["Continue"]
+        WS["Windsurf"]
+        ZE["Zed"]
+        CY["Cody"]
+    end
+
+    GOV --> CI
+    GOV --> NATIVE
+    GOV --> EXTRAS
+    GOV -->|"read at runtime"| SKILL["Universal skills"]
 
     style GOV fill:#3a2a1a,stroke:#ffbb33,color:#eee
-    style GH fill:#0f3460,stroke:#00d2ff,color:#eee
-    style HK fill:#0f3460,stroke:#00d2ff,color:#eee
-    style PC fill:#0f3460,stroke:#00d2ff,color:#eee
-    style AM fill:#0f3460,stroke:#00d2ff,color:#eee
-    style CR fill:#0f3460,stroke:#00d2ff,color:#eee
-    style GM fill:#0f3460,stroke:#00d2ff,color:#eee
+    style CI fill:#0f3460,stroke:#00d2ff,color:#eee
+    style NATIVE fill:#1a3a1a,stroke:#00ff88,color:#eee
+    style EXTRAS fill:#2a1a3a,stroke:#bb86fc,color:#eee
     style SKILL fill:#1a3a1a,stroke:#00ff88,color:#eee
 ```
 
-Governance-as-config that compiles to agent behavior, CI/CD pipelines, and cross-agent configs from a single 20-line file.
+Governance-as-config that compiles to agent behavior, CI/CD pipelines, and **9 different AI coding tool configs** from a single 20-line file.
 
 ---
 
@@ -581,7 +666,7 @@ The update checker queries the npm registry (cached for 24 hours, 3s timeout, gr
 | Agents | **Generated for your stack** | Yes — read governance for commands |
 | Settings | **Generated** | Yes — RTK wildcards cover new tools |
 | CI playbook | **Generated template** | You add entries as failures are found |
-| Compile targets | **Generated on demand** | `crag compile` regenerates from governance (6 targets) |
+| Compile targets | **Generated on demand** | `crag compile` regenerates from governance (12 targets) |
 | Workspace detection | **Ships universal** | Yes — detects 11+ workspace types at runtime |
 | Governance diff | **Ships universal** | Yes — compares governance vs codebase reality |
 
@@ -775,13 +860,15 @@ Neither patent blocks this architecture. Both are adjacent, not overlapping.
 - [x] Workspace detection — 11+ types (pnpm, npm, Cargo, Go, Gradle, Maven, Nx, Turbo, Bazel, submodules, nested repos)
 - [x] Governance v2 format — path-scoped gates, conditional sections, mandatory/optional/advisory classification
 - [x] Auto-update — version tracking, npm registry check, content-hash conflict detection
-- [x] Cross-agent compilation — AGENTS.md, .cursor/rules, GEMINI.md from single governance file
+- [x] Cross-agent compilation — **12 targets** (GitHub Actions, husky, pre-commit, AGENTS.md, Cursor, Gemini, Copilot, Cline, Continue, Windsurf, Zed, Sourcegraph Cody)
 - [x] Modular architecture — 24 modules across 6 directories (zero dependencies)
-- [x] Test suite — 117 tests covering parse, integrity, detect, enumerate, merge, compile, version, shell, CLI
-- [ ] Published npm package (name reserved)
+- [x] Test suite — 159 tests covering parse, integrity, detect, enumerate, merge, compile, version, shell, CLI, 6 new compile targets, analyze internals, diff internals
+- [x] Published on npm as `@whitehatd/crag`
+- [x] GitHub Actions CI/CD — multi-OS (Ubuntu/macOS/Windows) × multi-Node (18/20/22) test matrix, automated npm publish with SLSA provenance, stale issue cleanup
 - [ ] Cross-repo benchmark — 20-30 repos, measure coverage %, false positives, failure modes
 - [ ] Drift resilience test — add services, change linters, rename directories. Does the engine re-discover?
 - [ ] Baseline comparison — same governance in AGENTS.md, CLAUDE.md, .cursor/rules, GEMINI.md
+- [ ] crag Cloud (paid tier) — hosted governance registry, cross-repo dashboard, team library, compliance templates, drift alerts
 
 ---
 

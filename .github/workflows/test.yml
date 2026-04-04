@@ -1,0 +1,109 @@
+name: Test
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    name: Governance gates + tests (Node ${{ matrix.node }} on ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['18', '20', '22']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Syntax check CLI entry
+        run: node --check bin/crag.js
+
+      - name: Syntax check all modules
+        shell: bash
+        run: |
+          set -e
+          for f in bin/crag.js src/cli.js src/commands/*.js src/workspace/*.js src/governance/*.js src/compile/*.js src/update/*.js; do
+            node --check "$f"
+          done
+          echo "All modules parse successfully."
+
+      - name: crag help
+        run: node bin/crag.js help
+
+      - name: crag version
+        run: node bin/crag.js version
+
+      - name: crag check
+        run: node bin/crag.js check
+
+      - name: crag analyze --dry-run
+        run: node bin/crag.js analyze --dry-run
+
+      - name: crag diff
+        run: node bin/crag.js diff
+
+      - name: crag upgrade --check
+        run: node bin/crag.js upgrade --check
+        env:
+          CRAG_NO_UPDATE_CHECK: '1'
+
+      - name: crag workspace --json
+        run: node bin/crag.js workspace --json
+
+      - name: Run test suite
+        run: node test/all.js
+
+      - name: Verify pre-start skill content
+        shell: bash
+        run: grep -qi "discovers any project" src/skills/pre-start-context.md
+
+      - name: Verify post-start skill content
+        shell: bash
+        run: grep -qi "governance gates" src/skills/post-start-validation.md
+
+      - name: Verify agent content
+        shell: bash
+        run: grep -qi "START IMMEDIATELY" src/crag-agent.md
+
+      - name: Compile all targets (smoke test)
+        shell: bash
+        run: |
+          node bin/crag.js compile --target all
+          # Verify every expected artifact exists
+          test -f .github/workflows/gates.yml
+          test -f .husky/pre-commit
+          test -f .pre-commit-config.yaml
+          test -f AGENTS.md
+          test -f .cursor/rules/governance.mdc
+          test -f GEMINI.md
+          test -f .github/copilot-instructions.md
+          test -f .clinerules
+          test -f .continuerules
+          test -f .windsurfrules
+          test -f .zed/rules.md
+          test -f .sourcegraph/cody-instructions.md
+          echo "All 12 compile targets produced artifacts."
+          # Clean up so the checkout stays clean
+          rm -f AGENTS.md GEMINI.md .clinerules .continuerules .windsurfrules .pre-commit-config.yaml
+          rm -rf .cursor .husky .zed .sourcegraph
+          # Keep .github/copilot-instructions.md removal safe (it's in a dir we need)
+          rm -f .github/copilot-instructions.md

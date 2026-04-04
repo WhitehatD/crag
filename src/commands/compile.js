@@ -9,6 +9,29 @@ const { generatePreCommitConfig } = require('../compile/pre-commit');
 const { generateAgentsMd } = require('../compile/agents-md');
 const { generateCursorRules } = require('../compile/cursor-rules');
 const { generateGeminiMd } = require('../compile/gemini-md');
+const { generateCopilot } = require('../compile/copilot');
+const { generateCline } = require('../compile/cline');
+const { generateContinue } = require('../compile/continue');
+const { generateWindsurf } = require('../compile/windsurf');
+const { generateZed } = require('../compile/zed');
+const { generateCody } = require('../compile/cody');
+
+// All supported compile targets in dispatch order.
+// Grouped: CI (3) + AI agent native (3) + AI agent extras (6)
+const ALL_TARGETS = [
+  'github',
+  'husky',
+  'pre-commit',
+  'agents-md',
+  'cursor',
+  'gemini',
+  'copilot',
+  'cline',
+  'continue',
+  'windsurf',
+  'zed',
+  'cody',
+];
 
 function compile(args) {
   const targetIdx = args.indexOf('--target');
@@ -27,36 +50,50 @@ function compile(args) {
   const gateCount = Object.values(flat).flat().length;
 
   if (!target || target === 'list') {
-    console.log(`\n  Governance compiler — ${parsed.name || 'unnamed project'}`);
-    console.log(`  Found ${gateCount} gate(s) in ${Object.keys(parsed.gates).length} section(s)\n`);
-    console.log('  Targets:');
-    console.log('    crag compile --target github      .github/workflows/gates.yml');
-    console.log('    crag compile --target husky       .husky/pre-commit');
-    console.log('    crag compile --target pre-commit  .pre-commit-config.yaml');
-    console.log('    crag compile --target agents-md   AGENTS.md');
-    console.log('    crag compile --target cursor      .cursor/rules/governance.mdc');
-    console.log('    crag compile --target gemini      GEMINI.md');
-    console.log('    crag compile --target all         All of the above\n');
+    console.log(`\n  crag compile — ${parsed.name || 'unnamed project'}`);
+    console.log(`  ${gateCount} gate(s) in ${Object.keys(parsed.gates).length} section(s), ${parsed.runtimes.length} runtime(s) detected\n`);
+    console.log('  CI / git hooks:');
+    console.log('    crag compile --target github       .github/workflows/gates.yml');
+    console.log('    crag compile --target husky        .husky/pre-commit');
+    console.log('    crag compile --target pre-commit   .pre-commit-config.yaml\n');
+    console.log('  AI coding agents — native formats:');
+    console.log('    crag compile --target agents-md    AGENTS.md (Codex, Aider, Factory)');
+    console.log('    crag compile --target cursor       .cursor/rules/governance.mdc');
+    console.log('    crag compile --target gemini       GEMINI.md\n');
+    console.log('  AI coding agents — additional formats:');
+    console.log('    crag compile --target copilot      .github/copilot-instructions.md');
+    console.log('    crag compile --target cline        .clinerules');
+    console.log('    crag compile --target continue     .continuerules');
+    console.log('    crag compile --target windsurf     .windsurfrules');
+    console.log('    crag compile --target zed          .zed/rules.md');
+    console.log('    crag compile --target cody         .sourcegraph/cody-instructions.md\n');
+    console.log('  Combined:');
+    console.log('    crag compile --target all          All 12 targets at once\n');
     return;
   }
 
-  const allTargets = ['github', 'husky', 'pre-commit', 'agents-md', 'cursor', 'gemini'];
-  const targets = target === 'all' ? allTargets : [target];
+  const targets = target === 'all' ? ALL_TARGETS : [target];
 
   console.log(`\n  Compiling governance.md → ${targets.join(', ')}`);
   console.log(`  ${gateCount} gates, ${parsed.runtimes.length} runtimes detected\n`);
 
   for (const t of targets) {
     switch (t) {
-      case 'github': generateGitHubActions(cwd, parsed); break;
-      case 'husky': generateHusky(cwd, parsed); break;
+      case 'github':     generateGitHubActions(cwd, parsed); break;
+      case 'husky':      generateHusky(cwd, parsed); break;
       case 'pre-commit': generatePreCommitConfig(cwd, parsed); break;
-      case 'agents-md': generateAgentsMd(cwd, parsed); break;
-      case 'cursor': generateCursorRules(cwd, parsed); break;
-      case 'gemini': generateGeminiMd(cwd, parsed); break;
+      case 'agents-md':  generateAgentsMd(cwd, parsed); break;
+      case 'cursor':     generateCursorRules(cwd, parsed); break;
+      case 'gemini':     generateGeminiMd(cwd, parsed); break;
+      case 'copilot':    generateCopilot(cwd, parsed); break;
+      case 'cline':      generateCline(cwd, parsed); break;
+      case 'continue':   generateContinue(cwd, parsed); break;
+      case 'windsurf':   generateWindsurf(cwd, parsed); break;
+      case 'zed':        generateZed(cwd, parsed); break;
+      case 'cody':       generateCody(cwd, parsed); break;
       default:
         console.error(`  Unknown target: ${t}`);
-        console.error(`  Valid targets: ${allTargets.join(', ')}, all`);
+        console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
         process.exit(1);
     }
   }
@@ -64,4 +101,4 @@ function compile(args) {
   console.log('\n  Done. Governance is now executable infrastructure.\n');
 }
 
-module.exports = { compile };
+module.exports = { compile, ALL_TARGETS };

@@ -1,0 +1,83 @@
+'use strict';
+
+const path = require('path');
+const { flattenGatesRich } = require('../governance/parse');
+const { atomicWrite } = require('./atomic-write');
+
+/**
+ * Compile governance.md to Cline rules.
+ * Output: .clinerules
+ *
+ * Cline is a VS Code extension that runs agentic coding loops locally.
+ * It reads `.clinerules` at the workspace root automatically.
+ *
+ * Reference:
+ *   https://docs.cline.bot/features/cline-rules
+ */
+function generateCline(cwd, parsed) {
+  const gates = flattenGatesRich(parsed.gates);
+
+  const gatesList = gates.length === 0
+    ? '- (none defined)'
+    : gates
+        .map((g) => {
+          const tags = [];
+          if (g.classification !== 'MANDATORY') tags.push(g.classification);
+          if (g.path) tags.push(`path=${g.path}`);
+          if (g.condition) tags.push(`if=${g.condition}`);
+          const tagStr = tags.length > 0 ? ` [${tags.join(', ')}]` : '';
+          return `- ${g.cmd}${tagStr}`;
+        })
+        .join('\n');
+
+  const content = `# Cline Rules — ${parsed.name || 'project'}
+
+Generated from governance.md by crag. Regenerate with: \`crag compile --target cline\`
+
+## About this project
+
+${parsed.description || '(No description)'}
+
+Runtimes: ${parsed.runtimes.join(', ') || 'auto-detected'}
+
+## Mandatory behavior
+
+1. Read this file at the start of every session. Read \`governance.md\` for full context.
+2. Run all mandatory quality gates before proposing a commit.
+3. If a gate fails, attempt an automatic fix (lint/format) with bounded retry (max 2 attempts). If it still fails, escalate to the user.
+4. Never modify files outside this repository.
+5. Never run destructive system commands (rm -rf /, DROP TABLE, force-push to main, curl|bash).
+6. Use conventional commits.
+
+## Quality gates
+
+Run these in order, stop on first MANDATORY failure:
+
+${gatesList}
+
+## Security
+
+- Never commit hardcoded secrets (grep for sk_live, sk_test, AKIA, password=)
+- Validate all user input at system boundaries
+- Use parameterized queries for database access
+
+## Workflow
+
+For every task:
+1. Read the governance.md file first
+2. Understand which files need to change
+3. Make minimal, focused changes
+4. Run all mandatory gates
+5. Commit with a conventional commit message
+
+## Tool context
+
+This project uses **crag** — the bedrock layer for AI coding agents. https://www.npmjs.com/package/@whitehatd/crag
+`;
+
+  const outPath = path.join(cwd, '.clinerules');
+  atomicWrite(outPath, content);
+  console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
+}
+
+module.exports = { generateCline };

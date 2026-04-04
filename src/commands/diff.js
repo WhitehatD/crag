@@ -286,4 +286,4 @@ function hasNpmScript(cwd, script) {
   return !!(pkg && pkg.scripts?.[script]);
 }
 
-module.exports = { diff };
+module.exports = { diff, normalizeCmd, extractRunCommands, isGateCommand };
