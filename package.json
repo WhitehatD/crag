@@ -6,7 +6,11 @@
     "crag": "bin/crag.js"
   },
   "scripts": {
-    "test": "node test/all.js"
+    "test": "node test/all.js",
+    "sync-hashes": "node scripts/sync-skill-hashes.js",
+    "release:patch": "node scripts/bump-version.js patch",
+    "release:minor": "node scripts/bump-version.js minor",
+    "release:major": "node scripts/bump-version.js major"
   },
   "keywords": [
     "claude-code",

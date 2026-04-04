@@ -80,6 +80,50 @@ node test/all.js
 - **`src/update/`** — version check, skill sync, integrity (hash/frontmatter).
 - **`src/skills/`** — universal skills shipped as markdown. Read at runtime by the AI agent. Any change requires bumping `version:` in the frontmatter and recomputing `source_hash:`.
 
+## Release process (maintainers)
+
+Releases are fully automated. The maintainer workflow is:
+
+```bash
+# 1. Make your changes, add to CHANGELOG.md under ## [Unreleased]
+# 2. When ready to release, bump the version:
+npm run release:patch    # 0.2.1 → 0.2.2 (bug fixes)
+npm run release:minor    # 0.2.1 → 0.3.0 (new features)
+npm run release:major    # 0.2.1 → 1.0.0 (breaking changes)
+
+# 3. Review the diff (package.json + CHANGELOG.md updated)
+git diff
+
+# 4. Commit and push — everything else is automatic:
+git add -A
+git commit -m "release: v0.2.2"
+git push
+```
+
+That's it. The `release.yml` workflow will:
+1. Run all 12 gates + 159 tests + compile-all smoke test
+2. Detect that the version in `package.json` is new
+3. Publish to npm with SLSA provenance
+4. Create the `v0.2.2` git tag
+5. Create a GitHub release with notes extracted from `CHANGELOG.md`
+6. Verify the package appears on the registry
+
+If the version hasn't changed, the workflow runs tests and exits without publishing. This means every regular commit still goes through CI but only version-bump commits trigger a release.
+
+**Requirements for the maintainer:**
+- `NPM_TOKEN` secret must be set in GitHub repo settings (granular access token with "bypass 2FA" enabled for `@whitehatd/crag`)
+- `GITHUB_TOKEN` is provided automatically
+- No manual `npm publish` or `gh release create` commands needed
+
+**Troubleshooting:**
+- If the workflow fails on the publish step, the package version may already exist. Bump again.
+- If the release fails after publish (rare), the npm publish stands — manually create the GitHub release from the CHANGELOG entry.
+- To force a re-publish of an existing version (e.g. to fix a corrupt release), use the `workflow_dispatch` trigger with `force_publish=true`. Note: npm does not allow overwriting published versions, so you'll need a version bump anyway.
+
+## Skill hash auto-sync
+
+Whenever `src/skills/*.md` content changes on master, a separate workflow (`sync-hashes.yml`) automatically recomputes the `source_hash` frontmatter and commits the update as the `github-actions` bot with `[skip ci]`. Contributors don't need to manage hashes manually — just edit the skill content and push.
+
 ## Security
 
 If you find a security issue, **do not open a public issue**. Email alexc.forbusiness@gmail.com instead.

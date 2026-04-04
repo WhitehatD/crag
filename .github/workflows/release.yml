@@ -1,0 +1,290 @@
+name: Release
+
+# Fully automated release pipeline.
+#
+# Trigger: every push to master.
+# Behavior:
+#   1. Run all gates + 159 tests on Ubuntu (fast path)
+#   2. Read package.json version
+#   3. Ask the npm registry if that version is already published
+#   4. If already published → exit 0 (no-op, this was a code-only push)
+#   5. If version is new:
+#      a. Publish to npm with SLSA provenance
+#      b. Create annotated git tag vX.Y.Z
+#      c. Create GitHub release with notes auto-extracted from CHANGELOG.md
+#
+# Secrets required:
+#   NPM_TOKEN — granular access token with bypass-2FA, published to `@whitehatd/crag`
+#
+# User workflow:
+#   1. `npm run release:patch` (or :minor / :major)
+#   2. `git add -A && git commit -m "..."`
+#   3. `git push`
+#   4. Wait ~2 minutes → package is live on npm + GitHub release is up
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+    inputs:
+      force_publish:
+        description: 'Force publish even if version appears already published (use carefully)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write    # create git tags + GitHub releases
+  id-token: write    # npm provenance (SLSA attestation via GitHub OIDC)
+  packages: write    # (future: GitHub Packages publish)
+
+jobs:
+  gates:
+    name: Run gates + tests
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.pkg.outputs.version }}
+      should_publish: ${{ steps.check.outputs.should_publish }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Run syntax checks
+        shell: bash
+        run: |
+          set -e
+          for f in bin/crag.js src/cli.js src/commands/*.js src/workspace/*.js src/governance/*.js src/compile/*.js src/update/*.js; do
+            node --check "$f"
+          done
+
+      - name: Run CLI gates
+        env:
+          CRAG_NO_UPDATE_CHECK: '1'
+        run: |
+          node bin/crag.js help > /dev/null
+          node bin/crag.js version
+          node bin/crag.js check
+          node bin/crag.js analyze --dry-run > /dev/null
+          node bin/crag.js diff > /dev/null
+          node bin/crag.js upgrade --check > /dev/null
+          node bin/crag.js workspace --json > /dev/null
+
+      - name: Run test suite
+        run: node test/all.js
+
+      - name: Verify skill content
+        shell: bash
+        run: |
+          grep -qi "discovers any project" src/skills/pre-start-context.md
+          grep -qi "governance gates" src/skills/post-start-validation.md
+          grep -qi "START IMMEDIATELY" src/crag-agent.md
+
+      - name: Smoke test compile --target all
+        shell: bash
+        run: |
+          node bin/crag.js compile --target all
+          # Every expected artifact must exist
+          test -f .github/workflows/gates.yml
+          test -f .husky/pre-commit
+          test -f .pre-commit-config.yaml
+          test -f AGENTS.md
+          test -f .cursor/rules/governance.mdc
+          test -f GEMINI.md
+          test -f .github/copilot-instructions.md
+          test -f .clinerules
+          test -f .continuerules
+          test -f .windsurfrules
+          test -f .zed/rules.md
+          test -f .sourcegraph/cody-instructions.md
+          echo "All 12 compile targets produced artifacts."
+          # Revert the compile noise so the working tree stays clean
+          git checkout -- .github/workflows/ 2>/dev/null || true
+          rm -rf .husky .cursor .zed .sourcegraph
+          rm -f .pre-commit-config.yaml AGENTS.md GEMINI.md .clinerules .continuerules .windsurfrules
+          rm -f .github/copilot-instructions.md
+
+      - name: Read package.json version
+        id: pkg
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "package version: $VERSION"
+
+      - name: Check if version is already published
+        id: check
+        shell: bash
+        run: |
+          VERSION="${{ steps.pkg.outputs.version }}"
+          PKG_NAME=$(node -p "require('./package.json').name")
+          echo "Checking if $PKG_NAME@$VERSION is already on npm..."
+
+          # Query the registry. npm view exits 0 if found, non-zero if not found.
+          if npm view "$PKG_NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "Version $VERSION is already published."
+            if [ "${{ github.event.inputs.force_publish }}" = "true" ]; then
+              echo "force_publish=true — proceeding anyway (note: npm will reject duplicate publishes)"
+              echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "Skipping publish — this push did not bump the version."
+              echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "Version $VERSION is NEW — will publish."
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish:
+    name: Publish to npm + create tag + GitHub release
+    needs: gates
+    if: needs.gates.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: npm-publish
+      url: https://www.npmjs.com/package/@whitehatd/crag
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Use a token that can push tags (default GITHUB_TOKEN can with permissions: contents: write)
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Verify NPM_TOKEN is set
+        shell: bash
+        run: |
+          if [ -z "${NPM_TOKEN}" ]; then
+            echo "::error::NPM_TOKEN secret is not set. Add it at https://github.com/${{ github.repository }}/settings/secrets/actions"
+            echo "::error::Generate a granular token at https://www.npmjs.com/settings/whitehatd/tokens with 'bypass 2FA' enabled for @whitehatd/crag."
+            exit 1
+          fi
+          echo "NPM_TOKEN is configured."
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Inspect tarball before publishing
+        run: npm pack --dry-run
+
+      - name: Publish to npm with SLSA provenance
+        run: npm publish --access=public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify publish succeeded on registry
+        shell: bash
+        run: |
+          VERSION="${{ needs.gates.outputs.version }}"
+          PKG_NAME=$(node -p "require('./package.json').name")
+          # Registry indexing can take 5–60 seconds
+          for i in 1 2 3 4 5 6; do
+            if npm view "$PKG_NAME@$VERSION" version >/dev/null 2>&1; then
+              echo "::notice::$PKG_NAME@$VERSION is live on https://www.npmjs.com/package/$PKG_NAME"
+              exit 0
+            fi
+            echo "Not indexed yet, waiting 15s..."
+            sleep 15
+          done
+          echo "::warning::Registry did not confirm within 90s. The publish likely succeeded; verify manually."
+
+      - name: Configure git identity
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create annotated git tag
+        shell: bash
+        run: |
+          VERSION="${{ needs.gates.outputs.version }}"
+          TAG="v$VERSION"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists locally — skipping tag creation."
+          else
+            git tag -a "$TAG" -m "Release $TAG
+
+          Auto-released by .github/workflows/release.yml on push to master.
+          See CHANGELOG.md for changes."
+            git push origin "$TAG"
+            echo "Tag $TAG pushed."
+          fi
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        shell: bash
+        run: |
+          VERSION="${{ needs.gates.outputs.version }}"
+          # Extract the section for this version from CHANGELOG.md.
+          # Format: ## [X.Y.Z] — date ... until the next ## [ heading.
+          if [ ! -f CHANGELOG.md ]; then
+            echo "No CHANGELOG.md found — using default notes"
+            echo "notes<<EOF" >> "$GITHUB_OUTPUT"
+            echo "Release $VERSION" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          NOTES=$(awk -v ver="$VERSION" '
+            /^## \[/ {
+              if (found) exit
+              if ($0 ~ "\\[" ver "\\]") { found=1; next }
+            }
+            found { print }
+          ' CHANGELOG.md)
+
+          if [ -z "$NOTES" ]; then
+            NOTES="Release $VERSION (no CHANGELOG entry found — update CHANGELOG.md for richer release notes)"
+          fi
+
+          {
+            echo "notes<<CRAGEOF"
+            echo "$NOTES"
+            echo ""
+            echo "---"
+            echo ""
+            echo "**Install:** \`npm install -g @whitehatd/crag@$VERSION\`"
+            echo ""
+            echo "**Package:** https://www.npmjs.com/package/@whitehatd/crag/v/$VERSION"
+            echo ""
+            echo "CRAGEOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.gates.outputs.version }}
+          name: crag v${{ needs.gates.outputs.version }}
+          body: ${{ steps.notes.outputs.notes }}
+          draft: false
+          prerelease: ${{ contains(needs.gates.outputs.version, '-') }}
+          make_latest: ${{ !contains(needs.gates.outputs.version, '-') }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        shell: bash
+        run: |
+          VERSION="${{ needs.gates.outputs.version }}"
+          echo "## 🚀 Released crag v$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **npm:** https://www.npmjs.com/package/@whitehatd/crag/v/$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **GitHub release:** https://github.com/${{ github.repository }}/releases/tag/v$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Install:** \`npm install -g @whitehatd/crag@$VERSION\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Published via fully automated pipeline on push to \`master\`." >> "$GITHUB_STEP_SUMMARY"

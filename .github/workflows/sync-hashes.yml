@@ -1,0 +1,86 @@
+name: Sync skill hashes
+
+# Auto-updates src/skills/*.md `source_hash` frontmatter whenever skill
+# content changes. Runs on push to master when any skill file is touched.
+#
+# If the script updates any hashes, commits them back to master as the
+# github-actions bot with [skip ci] to prevent the release.yml workflow
+# from re-running.
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'src/skills/**'
+      - 'scripts/sync-skill-hashes.js'
+      - 'src/update/integrity.js'
+  workflow_dispatch:
+
+concurrency:
+  group: sync-hashes-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Recompute and commit skill hashes
+    runs-on: ubuntu-latest
+    # Skip if the commit message already says [skip ci] or is the bot itself
+    if: |
+      !contains(github.event.head_commit.message, '[skip ci]') &&
+      github.event.head_commit.author.email != '41898282+github-actions[bot]@users.noreply.github.com'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run hash sync
+        id: sync
+        run: npm run sync-hashes
+
+      - name: Check for changes
+        id: diff
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain src/skills/)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Skill hashes were updated:"
+            git diff src/skills/
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No hash updates needed."
+          fi
+
+      - name: Commit updated hashes
+        if: steps.diff.outputs.changed == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/skills/
+          git commit -m "chore(auto): sync skill source_hash values [skip ci]
+
+          Automatically updated by .github/workflows/sync-hashes.yml
+          because src/skills/ content changed. Recomputed hashes keep
+          the auto-update system's integrity check consistent."
+          git push origin HEAD:${{ github.ref_name }}
+
+      - name: Summary
+        shell: bash
+        run: |
+          if [ "${{ steps.diff.outputs.changed }}" = "true" ]; then
+            echo "## ✓ Skill hashes synced" >> "$GITHUB_STEP_SUMMARY"
+            echo "Committed updated source_hash values to \`src/skills/\`." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## ○ No hash updates needed" >> "$GITHUB_STEP_SUMMARY"
+            echo "All skill files already have correct source_hash values." >> "$GITHUB_STEP_SUMMARY"
+          fi
