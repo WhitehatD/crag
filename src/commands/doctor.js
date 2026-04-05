@@ -1,0 +1,551 @@
+'use strict';
+
+/**
+ * crag doctor — deep diagnostic command.
+ *
+ * Where `crag check` verifies file presence, `crag doctor` validates
+ * content, governance integrity, skill currency, hook validity, drift,
+ * and environment. It's the command you run when something feels off
+ * and you need a second opinion about your crag setup.
+ *
+ * Each check returns one of three statuses:
+ *   pass  (green ✓)  — everything is correct
+ *   warn  (yellow !) — advisory, non-blocking
+ *   fail  (red ✗)    — blocks a clean crag setup, needs fixing
+ *
+ * Exit codes:
+ *   0 — no failures (warnings allowed)
+ *   1 — one or more failures
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+const { parseGovernance, flattenGates } = require('../governance/parse');
+const { isModified, readFrontmatter } = require('../update/integrity');
+const { EXIT_USER, EXIT_INTERNAL } = require('../cli-errors');
+
+const GREEN = '\x1b[32m';
+const YELLOW = '\x1b[33m';
+const RED = '\x1b[31m';
+const DIM = '\x1b[2m';
+const BOLD = '\x1b[1m';
+const RESET = '\x1b[0m';
+
+const ICON_PASS = `${GREEN}✓${RESET}`;
+const ICON_WARN = `${YELLOW}!${RESET}`;
+const ICON_FAIL = `${RED}✗${RESET}`;
+
+/**
+ * CLI entry point.
+ */
+function doctor(args) {
+  const cwd = process.cwd();
+  const jsonOutput = args.includes('--json');
+
+  const report = runDiagnostics(cwd);
+
+  if (jsonOutput) {
+    console.log(JSON.stringify(report, null, 2));
+    process.exit(report.fail > 0 ? 1 : 0);
+  }
+
+  printReport(report);
+  process.exit(report.fail > 0 ? 1 : 0);
+}
+
+/**
+ * Run all diagnostics and return a structured report.
+ * Exported for testing.
+ */
+function runDiagnostics(cwd) {
+  const sections = [
+    diagnoseInfrastructure(cwd),
+    diagnoseGovernance(cwd),
+    diagnoseSkills(cwd),
+    diagnoseHooks(cwd),
+    diagnoseDrift(cwd),
+    diagnoseSecurity(cwd),
+    diagnoseEnvironment(cwd),
+  ];
+
+  let pass = 0, warn = 0, fail = 0;
+  for (const section of sections) {
+    for (const check of section.checks) {
+      if (check.status === 'pass') pass++;
+      else if (check.status === 'warn') warn++;
+      else if (check.status === 'fail') fail++;
+    }
+  }
+
+  return { cwd, sections, pass, warn, fail };
+}
+
+// ============================================================================
+// Section: Infrastructure
+// ============================================================================
+
+function diagnoseInfrastructure(cwd) {
+  const checks = [];
+  const CORE = [
+    ['.claude/skills/pre-start-context/SKILL.md', 'Pre-start skill'],
+    ['.claude/skills/post-start-validation/SKILL.md', 'Post-start skill'],
+    ['.claude/governance.md', 'Governance file'],
+    ['.claude/hooks/sandbox-guard.sh', 'Sandbox guard hook'],
+    ['.claude/settings.local.json', 'Settings with hooks'],
+  ];
+  const OPTIONAL = [
+    ['.claude/hooks/drift-detector.sh', 'Drift detector (optional)'],
+    ['.claude/hooks/circuit-breaker.sh', 'Circuit breaker (optional)'],
+    ['.claude/agents/test-runner.md', 'Test runner agent (optional)'],
+    ['.claude/agents/security-reviewer.md', 'Security reviewer agent (optional)'],
+    ['.claude/ci-playbook.md', 'CI playbook (optional)'],
+  ];
+
+  for (const [file, name] of CORE) {
+    const present = fs.existsSync(path.join(cwd, file));
+    checks.push({
+      name,
+      status: present ? 'pass' : 'fail',
+      detail: present ? null : `missing: ${file}`,
+      fix: present ? null : `run 'crag init' or 'crag analyze' then 'crag compile --target all'`,
+    });
+  }
+
+  for (const [file, name] of OPTIONAL) {
+    const present = fs.existsSync(path.join(cwd, file));
+    checks.push({
+      name,
+      status: present ? 'pass' : 'warn',
+      detail: present ? null : `missing: ${file}`,
+      fix: null,
+    });
+  }
+
+  return { title: 'Infrastructure', checks };
+}
+
+// ============================================================================
+// Section: Governance integrity
+// ============================================================================
+
+function diagnoseGovernance(cwd) {
+  const checks = [];
+  const govPath = path.join(cwd, '.claude', 'governance.md');
+
+  if (!fs.existsSync(govPath)) {
+    checks.push({
+      name: 'governance.md exists',
+      status: 'fail',
+      detail: '.claude/governance.md not found',
+      fix: `run 'crag analyze' to generate one`,
+    });
+    return { title: 'Governance', checks };
+  }
+
+  let content;
+  try {
+    content = fs.readFileSync(govPath, 'utf-8');
+  } catch (err) {
+    checks.push({
+      name: 'governance.md readable',
+      status: 'fail',
+      detail: `cannot read: ${err.message}`,
+      fix: 'check file permissions',
+    });
+    return { title: 'Governance', checks };
+  }
+
+  // Parse
+  const parsed = parseGovernance(content);
+  const warnings = parsed.warnings || [];
+  checks.push({
+    name: 'parses cleanly',
+    status: warnings.length === 0 ? 'pass' : 'warn',
+    detail: warnings.length === 0 ? null : `${warnings.length} parser warning${warnings.length === 1 ? '' : 's'}: ${warnings[0]}${warnings.length > 1 ? '...' : ''}`,
+    fix: warnings.length > 0 ? 'review parser warnings in governance.md structure' : null,
+  });
+
+  // Required sections
+  const requiredSections = ['Identity', 'Gates', 'Branch Strategy', 'Security'];
+  for (const section of requiredSections) {
+    const present = new RegExp(`^##\\s+${section}`, 'm').test(content);
+    checks.push({
+      name: `has ${section} section`,
+      status: present ? 'pass' : 'fail',
+      detail: present ? null : `missing ## ${section}`,
+      fix: present ? null : `add a '## ${section}' section to governance.md`,
+    });
+  }
+
+  // Gate count
+  const gates = flattenGates(parsed.gates);
+  const gateCount = Object.values(gates).flat().length;
+  checks.push({
+    name: 'has gate commands',
+    status: gateCount > 0 ? 'pass' : 'fail',
+    detail: `${gateCount} gate${gateCount === 1 ? '' : 's'} declared`,
+    fix: gateCount === 0 ? 'add gate commands under ### Lint / ### Test / ### Build' : null,
+  });
+
+  // Project identity
+  checks.push({
+    name: 'project identity set',
+    status: parsed.name ? 'pass' : 'warn',
+    detail: parsed.name ? `name: ${parsed.name}` : 'no project name in - Project:',
+    fix: parsed.name ? null : `add '- Project: <name>' under ## Identity`,
+  });
+
+  return { title: 'Governance', checks };
+}
+
+// ============================================================================
+// Section: Skill currency
+// ============================================================================
+
+function diagnoseSkills(cwd) {
+  const checks = [];
+  const skills = ['pre-start-context', 'post-start-validation'];
+
+  for (const skill of skills) {
+    const skillPath = path.join(cwd, '.claude', 'skills', skill, 'SKILL.md');
+    if (!fs.existsSync(skillPath)) {
+      checks.push({
+        name: `${skill} installed`,
+        status: 'fail',
+        detail: `${skillPath} missing`,
+        fix: `run 'crag upgrade' to install`,
+      });
+      continue;
+    }
+
+    const parsed = readFrontmatter(skillPath);
+    if (!parsed || !parsed.version) {
+      checks.push({
+        name: `${skill} frontmatter`,
+        status: 'warn',
+        detail: parsed ? 'no version field in frontmatter' : 'no frontmatter found',
+        fix: `run 'crag upgrade --force' to refresh`,
+      });
+      continue;
+    }
+
+    // Self-integrity check: does the installed body hash match the stored
+    // source_hash? (isModified returns true when body was locally modified
+    // OR when the hash is missing)
+    const modified = isModified(skillPath);
+
+    checks.push({
+      name: `${skill} v${parsed.version}`,
+      status: modified ? 'warn' : 'pass',
+      detail: modified ? 'locally modified since install (body hash differs from source_hash)' : 'integrity verified',
+      fix: modified ? `run 'crag upgrade --check' to see what changed, or 'crag upgrade --force' to reset` : null,
+    });
+  }
+
+  return { title: 'Skills', checks };
+}
+
+// ============================================================================
+// Section: Hooks
+// ============================================================================
+
+function diagnoseHooks(cwd) {
+  const checks = [];
+  const hooksDir = path.join(cwd, '.claude', 'hooks');
+
+  if (!fs.existsSync(hooksDir)) {
+    checks.push({
+      name: 'hooks directory',
+      status: 'warn',
+      detail: '.claude/hooks/ does not exist',
+      fix: `run 'crag compile --target github' or 'crag init' to generate`,
+    });
+    return { title: 'Hooks', checks };
+  }
+
+  // Sandbox guard is the most important hook
+  const sandboxPath = path.join(hooksDir, 'sandbox-guard.sh');
+  if (fs.existsSync(sandboxPath)) {
+    const content = fs.readFileSync(sandboxPath, 'utf-8');
+    const hasShebang = content.startsWith('#!');
+    const hasRtkMarker = /#\s*rtk-hook-version:/m.test(content.split('\n').slice(0, 5).join('\n'));
+
+    checks.push({
+      name: 'sandbox-guard.sh installed',
+      status: hasShebang ? 'pass' : 'fail',
+      detail: hasShebang ? null : 'missing shebang line (#!/usr/bin/env bash)',
+      fix: hasShebang ? null : `run 'crag compile --target github' to regenerate`,
+    });
+
+    checks.push({
+      name: 'sandbox-guard has rtk-hook-version marker',
+      status: hasRtkMarker ? 'pass' : 'warn',
+      detail: hasRtkMarker ? null : '# rtk-hook-version marker not in first 5 lines (causes "Hook outdated" warnings)',
+      fix: hasRtkMarker ? null : `add '# rtk-hook-version: 3' near the top of the hook file`,
+    });
+
+    // On Unix, check executable bit
+    if (process.platform !== 'win32') {
+      try {
+        const stat = fs.statSync(sandboxPath);
+        const executable = (stat.mode & 0o111) !== 0;
+        checks.push({
+          name: 'sandbox-guard executable',
+          status: executable ? 'pass' : 'fail',
+          detail: executable ? null : `mode ${(stat.mode & 0o777).toString(8)} (not executable)`,
+          fix: executable ? null : `run 'chmod +x .claude/hooks/sandbox-guard.sh'`,
+        });
+      } catch { /* skip */ }
+    }
+  } else {
+    checks.push({
+      name: 'sandbox-guard.sh installed',
+      status: 'fail',
+      detail: 'no sandbox-guard.sh (hard-block of destructive commands is disabled)',
+      fix: `run 'crag compile --target github' to generate the hook`,
+    });
+  }
+
+  // Settings references hooks
+  const settingsPath = path.join(cwd, '.claude', 'settings.local.json');
+  if (fs.existsSync(settingsPath)) {
+    try {
+      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+      const hasHooks = settings.hooks && typeof settings.hooks === 'object' && Object.keys(settings.hooks).length > 0;
+      checks.push({
+        name: 'settings.local.json wires hooks',
+        status: hasHooks ? 'pass' : 'warn',
+        detail: hasHooks ? `${Object.keys(settings.hooks).length} hook event(s) configured` : 'no hooks section — hooks will not fire',
+        fix: hasHooks ? null : `run 'crag compile --target github' to wire hooks into settings`,
+      });
+
+      // Check for hardcoded paths in the `hooks` section only. User-local
+      // permissions allowlist (`permissions.allow`) can legitimately contain
+      // machine-specific paths like /c/Users/... and should not be flagged.
+      if (hasHooks) {
+        const hookJson = JSON.stringify(settings.hooks);
+        const hookHardcoded = /[A-Z]:[\\/]|\/home\/|\/Users\//.test(hookJson);
+        if (hookHardcoded) {
+          checks.push({
+            name: 'hook commands use $CLAUDE_PROJECT_DIR',
+            status: 'warn',
+            detail: 'hardcoded absolute paths in hooks section — prefer $CLAUDE_PROJECT_DIR',
+            fix: `replace hardcoded paths in settings.local.json hooks with $CLAUDE_PROJECT_DIR/...`,
+          });
+        }
+      }
+    } catch (err) {
+      checks.push({
+        name: 'settings.local.json valid JSON',
+        status: 'fail',
+        detail: `parse error: ${err.message}`,
+        fix: `check syntax of .claude/settings.local.json`,
+      });
+    }
+  }
+
+  return { title: 'Hooks', checks };
+}
+
+// ============================================================================
+// Section: Drift (reuses crag diff logic)
+// ============================================================================
+
+function diagnoseDrift(cwd) {
+  const checks = [];
+  const govPath = path.join(cwd, '.claude', 'governance.md');
+  if (!fs.existsSync(govPath)) {
+    return { title: 'Drift', checks: [{ name: 'drift check skipped', status: 'warn', detail: 'no governance.md', fix: null }] };
+  }
+
+  const content = fs.readFileSync(govPath, 'utf-8');
+
+  // Branch strategy alignment
+  const govBranchStrategy = content.includes('Feature branches') || content.includes('feature branches')
+    ? 'feature-branches'
+    : content.includes('Trunk-based') || content.includes('trunk-based')
+    ? 'trunk-based'
+    : null;
+
+  if (govBranchStrategy) {
+    try {
+      const branches = execSync('git branch -a --format="%(refname:short)"', {
+        cwd, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      const list = branches.trim().split('\n');
+      const featureBranches = list.filter(b => /^(feat|fix|docs|chore|feature|hotfix)\//.test(b));
+      const actualStrategy = featureBranches.length > 2 ? 'feature-branches' : 'trunk-based';
+
+      checks.push({
+        name: 'branch strategy matches git',
+        status: actualStrategy === govBranchStrategy ? 'pass' : 'warn',
+        detail: actualStrategy === govBranchStrategy
+          ? `${govBranchStrategy} (${featureBranches.length} feature branches)`
+          : `governance says ${govBranchStrategy}, git shows ${actualStrategy}`,
+        fix: actualStrategy === govBranchStrategy ? null
+          : `update governance.md to '${actualStrategy === 'trunk-based' ? 'Trunk-based development' : 'Feature branches'}'`,
+      });
+    } catch { /* skip — not a git repo or git unavailable */ }
+  }
+
+  // Commit convention alignment
+  const govConvention = content.includes('Conventional commits') || content.includes('conventional commits')
+    ? 'conventional'
+    : content.includes('Free-form') || content.includes('free-form')
+    ? 'free-form'
+    : null;
+
+  if (govConvention) {
+    try {
+      const log = execSync('git log --oneline -20', { cwd, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] });
+      const lines = log.trim().split('\n');
+      const conventional = lines.filter(l => /\b(feat|fix|docs|chore|style|refactor|test|build|ci|perf|revert)[\(:!]/.test(l));
+      const actual = conventional.length > lines.length * 0.3 ? 'conventional' : 'free-form';
+
+      checks.push({
+        name: 'commit convention matches git',
+        status: actual === govConvention ? 'pass' : 'warn',
+        detail: actual === govConvention ? `${govConvention} (${conventional.length}/${lines.length} recent commits match)` : `governance says ${govConvention}, git shows ${actual}`,
+        fix: actual === govConvention ? null : `update governance.md to '${actual === 'conventional' ? 'Conventional commits' : 'Free-form commits'}'`,
+      });
+    } catch { /* skip */ }
+  }
+
+  return { title: 'Drift', checks };
+}
+
+// ============================================================================
+// Section: Security smoke
+// ============================================================================
+
+function diagnoseSecurity(cwd) {
+  const checks = [];
+
+  // governance.md should not contain literal secrets
+  const govPath = path.join(cwd, '.claude', 'governance.md');
+  if (fs.existsSync(govPath)) {
+    const content = fs.readFileSync(govPath, 'utf-8');
+    const SECRET_PATTERNS = [
+      { pattern: /sk_live_[a-zA-Z0-9]{16,}/, label: 'Stripe live secret key' },
+      { pattern: /sk_test_[a-zA-Z0-9]{16,}/, label: 'Stripe test secret key' },
+      { pattern: /AKIA[A-Z0-9]{16}/, label: 'AWS access key ID' },
+      { pattern: /ghp_[a-zA-Z0-9]{36}/, label: 'GitHub personal access token' },
+      { pattern: /gho_[a-zA-Z0-9]{36}/, label: 'GitHub OAuth token' },
+      { pattern: /ghu_[a-zA-Z0-9]{36}/, label: 'GitHub user token' },
+      { pattern: /xox[baprs]-[a-zA-Z0-9-]{10,}/, label: 'Slack token' },
+      { pattern: /-----BEGIN (RSA|EC|DSA|OPENSSH) PRIVATE KEY-----/, label: 'Private key' },
+    ];
+    const leaks = [];
+    for (const { pattern, label } of SECRET_PATTERNS) {
+      if (pattern.test(content)) leaks.push(label);
+    }
+
+    checks.push({
+      name: 'governance.md secret-free',
+      status: leaks.length === 0 ? 'pass' : 'fail',
+      detail: leaks.length === 0 ? null : `found: ${leaks.join(', ')}`,
+      fix: leaks.length === 0 ? null : 'remove the secret and rotate it immediately',
+    });
+  }
+
+  // .env files should not be tracked in git
+  try {
+    const tracked = execSync('git ls-files', {
+      cwd, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    const envFiles = tracked.split('\n').filter(f =>
+      /(^|\/)\.env(\.|$)/.test(f) &&
+      !/\.env\.(example|template|sample|dist)/.test(f)
+    );
+    checks.push({
+      name: '.env files not tracked',
+      status: envFiles.length === 0 ? 'pass' : 'fail',
+      detail: envFiles.length === 0 ? null : `tracked: ${envFiles.slice(0, 3).join(', ')}${envFiles.length > 3 ? '...' : ''}`,
+      fix: envFiles.length === 0 ? null : `git rm --cached ${envFiles[0]} && add to .gitignore, then rotate any secrets inside`,
+    });
+  } catch { /* skip — not a git repo */ }
+
+  return { title: 'Security', checks };
+}
+
+// ============================================================================
+// Section: Environment
+// ============================================================================
+
+function diagnoseEnvironment(cwd) {
+  const checks = [];
+
+  // Node version
+  const nodeVersion = process.version;
+  checks.push({
+    name: 'node version',
+    status: 'pass',
+    detail: nodeVersion,
+    fix: null,
+  });
+
+  // crag's own engines requirement
+  try {
+    const cragPkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'package.json'), 'utf-8'));
+    const required = cragPkg.engines && cragPkg.engines.node;
+    if (required) {
+      const minMatch = required.match(/>=\s*(\d+)/);
+      if (minMatch) {
+        const minMajor = parseInt(minMatch[1], 10);
+        const currentMajor = parseInt(nodeVersion.replace(/^v/, '').split('.')[0], 10);
+        checks.push({
+          name: `node >= ${minMajor}`,
+          status: currentMajor >= minMajor ? 'pass' : 'fail',
+          detail: currentMajor >= minMajor ? null : `installed v${currentMajor}, need >= ${minMajor}`,
+          fix: currentMajor >= minMajor ? null : `upgrade Node.js to version ${minMajor} or later`,
+        });
+      }
+    }
+  } catch { /* skip */ }
+
+  // Git presence
+  try {
+    const gitVersion = execSync('git --version', { encoding: 'utf-8', timeout: 2000, stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+    checks.push({ name: 'git available', status: 'pass', detail: gitVersion, fix: null });
+  } catch {
+    checks.push({ name: 'git available', status: 'fail', detail: 'git not on PATH', fix: 'install git' });
+  }
+
+  return { title: 'Environment', checks };
+}
+
+// ============================================================================
+// Output
+// ============================================================================
+
+function printReport(report) {
+  console.log(`\n  ${BOLD}crag doctor${RESET} — ${report.cwd}\n`);
+
+  for (const section of report.sections) {
+    console.log(`  ${BOLD}${section.title}${RESET}`);
+    for (const check of section.checks) {
+      const icon = check.status === 'pass' ? ICON_PASS
+        : check.status === 'warn' ? ICON_WARN
+        : ICON_FAIL;
+      console.log(`    ${icon} ${check.name}${check.detail ? ` ${DIM}— ${check.detail}${RESET}` : ''}`);
+      if (check.fix && check.status !== 'pass') {
+        console.log(`      ${DIM}fix:${RESET} ${check.fix}`);
+      }
+    }
+    console.log();
+  }
+
+  // Summary
+  const total = report.pass + report.warn + report.fail;
+  const summary = `  ${report.pass}/${total} pass, ${report.warn} warn, ${report.fail} fail`;
+  if (report.fail > 0) {
+    console.log(`${RED}${BOLD}${summary}${RESET}\n`);
+  } else if (report.warn > 0) {
+    console.log(`${YELLOW}${BOLD}${summary}${RESET}\n`);
+  } else {
+    console.log(`${GREEN}${BOLD}${summary}${RESET}\n`);
+  }
+}
+
+module.exports = { doctor, runDiagnostics };

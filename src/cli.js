@@ -5,6 +5,7 @@ const { check } = require('./commands/check');
 const { compile } = require('./commands/compile');
 const { analyze } = require('./commands/analyze');
 const { diff } = require('./commands/diff');
+const { doctor } = require('./commands/doctor');
 const { upgrade } = require('./commands/upgrade');
 const { workspace } = require('./commands/workspace');
 const { checkOnce } = require('./update/version-check');
@@ -19,6 +20,7 @@ function printUsage() {
     crag init         Interview → generate governance, hooks, agents
     crag analyze      Generate governance from existing project (no interview)
     crag check        Verify infrastructure is complete
+    crag doctor       Deep diagnostic: governance integrity, drift, hook validity, security
     crag compile      Compile governance.md → CI, hooks, AGENTS.md, Cursor, Gemini
     crag diff         Compare governance against codebase reality
     crag upgrade      Update universal skills to latest version
@@ -93,6 +95,7 @@ function run(args) {
     case 'compile':   compile(args); break;
     case 'analyze':   analyze(args); break;
     case 'diff':      diff(args); break;
+    case 'doctor':    doctor(args.slice(1)); break;
     case 'upgrade':   upgrade(args); break;
     case 'workspace': workspace(args); break;
     case 'version': case '--version': case '-v':
