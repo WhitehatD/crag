@@ -69,7 +69,17 @@
       "Bash(cmd //c 'mklink /D \"\"C:\\\\Users\\\\alexc\\\\.claude\\\\projects\\\\D--playground-crag\\\\memory\"\" \"\"D:\\\\playground\\\\crag\\\\.claude\\\\memory\"\"')",
       "Bash(cmd.exe /c \"mklink /D \"\"C:\\\\Users\\\\alexc\\\\.claude\\\\projects\\\\D--playground-crag\\\\memory\"\" \"\"D:\\\\playground\\\\crag\\\\.claude\\\\memory\"\"\")",
       "Bash(mv D:/playground/crag/.claude/memory/*.md \"C:/Users/alexc/.claude/projects/D--playground-crag/memory/\")",
-      "Bash(rmdir D:/playground/crag/.claude/memory)"
+      "Bash(rmdir D:/playground/crag/.claude/memory)",
+      "Bash(jq --version)",
+      "Bash(SG_EXIT=$?)",
+      "Read(//tmp/**)",
+      "Bash(1 SG=$? echo 'sandbox-guard exit: $SG' cat sg.out echo --- echo \"{\"\"tool_input\"\":{\"\"command\"\":\"\"ls D:/playground/crag/benchmarks/raw/ | wc -l\"\"}}\")",
+      "Bash(1 AP=$? echo 'auto-post-start exit: $AP' cat ap.out)",
+      "Bash(1 SG=$? echo 'sandbox-guard exit: $SG' cat sg.out echo --- echo $PAYLOAD)",
+      "Bash(do cp:*)",
+      "Bash(cp \"D:/playground/crag/.claude/hooks/auto-post-start.sh\" \"$p/.claude/hooks/auto-post-start.sh\")",
+      "Bash(export CLAUDE_PROJECT_DIR=\"D:/playground/crag\")",
+      "Bash(1 echo:*)"
     ]
   },
   "hooks": {
@@ -79,7 +89,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/drift-detector.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/drift-detector.sh\""
           }
         ]
       },
@@ -88,7 +98,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/drift-detector.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/drift-detector.sh\""
           }
         ]
       }
@@ -98,7 +108,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/pre-compact-snapshot.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-compact-snapshot.sh\""
           }
         ]
       }
@@ -108,7 +118,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/post-compact-recovery.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-compact-recovery.sh\""
           }
         ]
       }
@@ -119,11 +129,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/sandbox-guard.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/sandbox-guard.sh\""
           },
           {
             "type": "command",
-            "command": "bash .claude/hooks/auto-post-start.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/auto-post-start.sh\""
           }
         ]
       }
@@ -133,7 +143,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/circuit-breaker.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/circuit-breaker.sh\""
           }
         ]
       }

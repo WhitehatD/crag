@@ -18,9 +18,10 @@ if ! echo "$COMMAND" | grep -qE '(^|&&|;\s*)(rtk\s+)?git\s+commit'; then
 fi
 
 # If gates already passed this session, allow
-if [ -f .claude/.gates-passed ]; then
+if [ -f "${CLAUDE_PROJECT_DIR:-.}/.claude/.gates-passed" ]; then
   exit 0
 fi
 
 # Gates haven't passed — warn (non-blocking)
 echo "WARNING: Governance gates haven't been verified this session. Run /post-start-validation before committing."
+exit 0

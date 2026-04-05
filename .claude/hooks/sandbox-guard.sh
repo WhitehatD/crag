@@ -59,7 +59,7 @@ echo "$CHECK" | grep -qEi 'git\s+push\s+.*--force.*\s+(main|master)\b' && {
 
 # === SOFT WARN: Out-of-bounds file operations ===
 
-PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}"
 if [ -n "$PROJECT_ROOT" ]; then
   # Check for write/delete operations targeting absolute paths outside project
   for target in $(echo "$CHECK" | grep -oE '(rm|mv|cp|chmod|chown)\s+[^|;&]*' | grep -oE '(/[a-zA-Z][a-zA-Z0-9_./-]+|[A-Z]:\\[^ ]+)'); do
