@@ -5,7 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
-[![159 tests](https://img.shields.io/badge/tests-159%20passing-brightgreen)](./test)
+[![228 tests](https://img.shields.io/badge/tests-228%20passing-brightgreen)](./test)
+[![Security hardened](https://img.shields.io/badge/security-hardened-brightgreen)](./SECURITY.md)
 
 **The bedrock layer for AI coding agents. One `governance.md`. Any project. Never stale.**
 

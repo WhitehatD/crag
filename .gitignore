@@ -75,3 +75,7 @@ desktop.ini
 # Coverage / test output (not used yet, but reserved)
 coverage/
 .nyc_output/
+
+# Benchmark harness — cloned OSS repos + raw outputs (not source)
+benchmarks/repos/
+benchmarks/raw/
