@@ -4,7 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { runDiagnostics } = require('../src/commands/doctor');
+const { runDiagnostics, countFeatureBranches, detectBranchStrategy } = require('../src/commands/doctor');
 
 function test(name, fn) {
   try {
@@ -229,6 +229,142 @@ test('doctor: permissions.allow with local paths is fine (not flagged)', () => {
   const hardcodedCheck = hooksSection.checks.find(c => c.name === 'hook commands use $CLAUDE_PROJECT_DIR');
   // Either check is absent (no warn condition) or it passes
   assert.ok(!hardcodedCheck || hardcodedCheck.status === 'pass', 'should not warn on permissions.allow user-local paths');
+});
+
+// --- detectBranchStrategy ---
+
+test('detectBranchStrategy: explicit trunk-based in section', () => {
+  const md = `# Governance\n## Branch Strategy\n- Trunk-based development\n- Conventional commits\n`;
+  assert.strictEqual(detectBranchStrategy(md), 'trunk-based');
+});
+
+test('detectBranchStrategy: explicit feature branches in section', () => {
+  const md = `# Governance\n## Branch Strategy\n- Feature branches: feat/, fix/, docs/\n`;
+  assert.strictEqual(detectBranchStrategy(md), 'feature-branches');
+});
+
+test('detectBranchStrategy: first mention wins (trunk first)', () => {
+  // Hosting-platform-wrapper case: root is trunk, sub-repos use feature branches.
+  // The opening line of the section is the rule.
+  const md = `## Branch Strategy
+- Trunk-based at the workspace wrapper (no feature branches at root)
+- Each sub-repo uses feature branches: feat/, fix/
+`;
+  assert.strictEqual(detectBranchStrategy(md), 'trunk-based');
+});
+
+test('detectBranchStrategy: first mention wins (feature first)', () => {
+  const md = `## Branch Strategy
+- Feature branches: feat/, fix/
+- Trunk-based is forbidden
+`;
+  assert.strictEqual(detectBranchStrategy(md), 'feature-branches');
+});
+
+test('detectBranchStrategy: scoped to section — ignores prose elsewhere', () => {
+  // The section says trunk, but the description mentions feature branches.
+  // The section must win.
+  const md = `# Governance
+Some preamble that mentions feature branches as an antipattern.
+## Branch Strategy
+- Trunk-based development
+## Security
+- No secrets
+`;
+  assert.strictEqual(detectBranchStrategy(md), 'trunk-based');
+});
+
+test('detectBranchStrategy: no section falls back to whole-file scan', () => {
+  const md = `# Governance\n## Identity\n- Project: x\n- Strategy: Feature branches in use\n`;
+  assert.strictEqual(detectBranchStrategy(md), 'feature-branches');
+});
+
+test('detectBranchStrategy: neither keyword returns null', () => {
+  const md = `## Branch Strategy\n- Whatever goes\n`;
+  assert.strictEqual(detectBranchStrategy(md), null);
+});
+
+test('detectBranchStrategy: handles empty and malformed input', () => {
+  assert.strictEqual(detectBranchStrategy(''), null);
+  assert.strictEqual(detectBranchStrategy(null), null);
+  assert.strictEqual(detectBranchStrategy(undefined), null);
+});
+
+// --- countFeatureBranches (branch strategy drift helper) ---
+
+test('countFeatureBranches: only local branches, no feature', () => {
+  const out = 'main\n';
+  assert.deepStrictEqual(countFeatureBranches(out), []);
+});
+
+test('countFeatureBranches: local feature branches', () => {
+  const out = 'main\nfeat/foo\nfix/bar\n';
+  const result = countFeatureBranches(out);
+  assert.deepStrictEqual(result.sort(), ['feat/foo', 'fix/bar']);
+});
+
+test('countFeatureBranches: remote-only feat/ branches count (merged+deleted local)', () => {
+  // Real-world output from a repo where local branches are merged+deleted
+  // but origin still has the open feature branches.
+  const out = [
+    'main',
+    'origin/main',
+    'origin/HEAD',
+    'origin/feat/billing',
+    'origin/feat/enterprise-backups',
+    'origin/fix/backup-oom',
+  ].join('\n');
+  const result = countFeatureBranches(out);
+  assert.deepStrictEqual(result.sort(), [
+    'feat/billing',
+    'feat/enterprise-backups',
+    'fix/backup-oom',
+  ]);
+});
+
+test('countFeatureBranches: local + remote refs to same branch deduplicate', () => {
+  const out = [
+    'main',
+    'feat/login',
+    'origin/main',
+    'origin/feat/login',
+  ].join('\n');
+  const result = countFeatureBranches(out);
+  assert.deepStrictEqual(result, ['feat/login']);
+});
+
+test('countFeatureBranches: all prefixes (feat, fix, docs, chore, feature, hotfix)', () => {
+  const out = [
+    'feat/a',
+    'fix/b',
+    'docs/c',
+    'chore/d',
+    'feature/e',
+    'hotfix/f',
+    'random/g', // not counted
+  ].join('\n');
+  const result = countFeatureBranches(out);
+  assert.strictEqual(result.length, 6);
+  assert.ok(!result.includes('random/g'));
+});
+
+test('countFeatureBranches: skips origin/HEAD symbolic refs', () => {
+  const out = 'main\norigin/HEAD\norigin/feat/x\n';
+  const result = countFeatureBranches(out);
+  assert.deepStrictEqual(result, ['feat/x']);
+});
+
+test('countFeatureBranches: handles empty and malformed input', () => {
+  assert.deepStrictEqual(countFeatureBranches(''), []);
+  assert.deepStrictEqual(countFeatureBranches(null), []);
+  assert.deepStrictEqual(countFeatureBranches(undefined), []);
+  assert.deepStrictEqual(countFeatureBranches('  \n\n  '), []);
+});
+
+test('countFeatureBranches: custom remote names (not just origin/)', () => {
+  const out = 'upstream/feat/x\nfork/fix/y\nmain\n';
+  const result = countFeatureBranches(out);
+  assert.deepStrictEqual(result.sort(), ['feat/x', 'fix/y']);
 });
 
 // --- Environment check ---

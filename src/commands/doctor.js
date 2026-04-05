@@ -21,7 +21,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { parseGovernance, flattenGates } = require('../governance/parse');
+const { parseGovernance, flattenGates, extractSection } = require('../governance/parse');
 const { isModified, readFrontmatter } = require('../update/integrity');
 const { EXIT_USER, EXIT_INTERNAL } = require('../cli-errors');
 
@@ -381,6 +381,68 @@ function diagnoseHooks(cwd) {
 // Section: Drift (reuses crag diff logic)
 // ============================================================================
 
+/**
+ * Detect the branch strategy declared in a governance.md document.
+ *
+ * Scopes the text scan to the `## Branch Strategy` section (avoiding false
+ * matches against unrelated prose). Within that section, the FIRST keyword
+ * to appear wins — this matches human reading order where the opening
+ * statement is the rule and later lines are qualifications.
+ *
+ * Returns 'feature-branches', 'trunk-based', or null.
+ *
+ * Exported for unit testing.
+ */
+function detectBranchStrategy(content) {
+  if (typeof content !== 'string' || content.length === 0) return null;
+  const section = extractSection(content, 'Branch Strategy');
+  const scope = section || content; // fall back to whole file if section absent
+  const featureIdx = scope.search(/[Ff]eature branches/);
+  const trunkIdx = scope.search(/[Tt]runk-based/);
+  if (featureIdx === -1 && trunkIdx === -1) return null;
+  if (featureIdx === -1) return 'trunk-based';
+  if (trunkIdx === -1) return 'feature-branches';
+  return featureIdx < trunkIdx ? 'feature-branches' : 'trunk-based';
+}
+
+/**
+ * Given the raw output of `git branch -a --format="%(refname:short)"`, return
+ * the list of unique feature branches (by short name, after stripping any
+ * remote prefix).
+ *
+ * This is the piece that decides whether a repo is practicing feature-branch
+ * development. A repo whose LOCAL branches have all been merged+deleted but
+ * whose REMOTE still has open feat/* branches is absolutely still practicing
+ * feature-branch development — so we count remote-tracking refs as equivalent
+ * to local branches, and we dedupe.
+ *
+ * Exported for unit testing — avoids the need to set up a real git fixture.
+ */
+const FEATURE_PREFIXES = ['feat', 'fix', 'docs', 'chore', 'feature', 'hotfix'];
+
+function countFeatureBranches(gitBranchOutput) {
+  if (typeof gitBranchOutput !== 'string' || gitBranchOutput.length === 0) {
+    return [];
+  }
+  const rawList = gitBranchOutput
+    .split('\n')
+    .map(b => b.trim())
+    .filter(Boolean)
+    // Skip symbolic refs like "origin/HEAD" (no payload branch underneath).
+    .filter(b => !b.endsWith('/HEAD'));
+
+  const prefixGroup = FEATURE_PREFIXES.join('|');
+  const remoteStripRe = new RegExp(`^[A-Za-z0-9_.-]+/((?:${prefixGroup})/.+)$`);
+  const featureRe = new RegExp(`^(${prefixGroup})/`);
+
+  const normalized = rawList.map(b => {
+    const m = b.match(remoteStripRe);
+    return m ? m[1] : b;
+  });
+  const unique = [...new Set(normalized)];
+  return unique.filter(b => featureRe.test(b));
+}
+
 function diagnoseDrift(cwd) {
   const checks = [];
   const govPath = path.join(cwd, '.claude', 'governance.md');
@@ -390,20 +452,19 @@ function diagnoseDrift(cwd) {
 
   const content = fs.readFileSync(govPath, 'utf-8');
 
-  // Branch strategy alignment
-  const govBranchStrategy = content.includes('Feature branches') || content.includes('feature branches')
-    ? 'feature-branches'
-    : content.includes('Trunk-based') || content.includes('trunk-based')
-    ? 'trunk-based'
-    : null;
+  // Branch strategy alignment — detect from the `## Branch Strategy` section
+  // rather than the whole file so unrelated prose ("feature branches in each
+  // sub-repo") doesn't override a workspace wrapper's actual trunk-based
+  // policy. Within that section, the FIRST keyword to appear wins: this
+  // matches the human reading order where the opening bullet states the rule.
+  const govBranchStrategy = detectBranchStrategy(content);
 
   if (govBranchStrategy) {
     try {
       const branches = execSync('git branch -a --format="%(refname:short)"', {
         cwd, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'],
       });
-      const list = branches.trim().split('\n');
-      const featureBranches = list.filter(b => /^(feat|fix|docs|chore|feature|hotfix)\//.test(b));
+      const featureBranches = countFeatureBranches(branches);
       const actualStrategy = featureBranches.length > 2 ? 'feature-branches' : 'trunk-based';
 
       checks.push({
@@ -583,4 +644,4 @@ function printReport(report, { ciMode = false, strict = false } = {}) {
   }
 }
 
-module.exports = { doctor, runDiagnostics };
+module.exports = { doctor, runDiagnostics, countFeatureBranches, detectBranchStrategy };

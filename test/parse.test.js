@@ -100,6 +100,103 @@ test('detects multiple runtimes', () => {
   assert.ok(result.runtimes.includes('python'));
 });
 
+// --- bash code fence extraction (v2.5) ---
+
+test('extracts gate commands from bash code fence', () => {
+  const md = `## Gates
+### Lint
+\`\`\`bash
+npm run lint
+\`\`\`
+
+### Test
+\`\`\`bash
+npm test
+\`\`\`
+`;
+  const result = parseGovernance(md);
+  assert.strictEqual(result.gates.lint.commands.length, 1);
+  assert.strictEqual(result.gates.lint.commands[0].cmd, 'npm run lint');
+  assert.strictEqual(result.gates.lint.commands[0].classification, 'MANDATORY');
+  assert.strictEqual(result.gates.test.commands.length, 1);
+  assert.strictEqual(result.gates.test.commands[0].cmd, 'npm test');
+});
+
+test('extracts multi-line bash fence as separate commands', () => {
+  const md = `## Gates
+### Build
+\`\`\`bash
+cd frontend && npm run build
+cd backend && ./gradlew build
+\`\`\`
+`;
+  const result = parseGovernance(md);
+  assert.strictEqual(result.gates.build.commands.length, 2);
+  assert.strictEqual(result.gates.build.commands[0].cmd, 'cd frontend && npm run build');
+  assert.strictEqual(result.gates.build.commands[1].cmd, 'cd backend && ./gradlew build');
+});
+
+test('bash fence skips blank lines and pure comment lines', () => {
+  const md = `## Gates
+### Check
+\`\`\`bash
+# this is a comment
+npm test
+
+# another comment
+npm run lint
+\`\`\`
+`;
+  const result = parseGovernance(md);
+  assert.strictEqual(result.gates.check.commands.length, 2);
+  assert.strictEqual(result.gates.check.commands[0].cmd, 'npm test');
+  assert.strictEqual(result.gates.check.commands[1].cmd, 'npm run lint');
+});
+
+test('mixes bullets and bash fences in same section', () => {
+  const md = `## Gates
+### Mixed
+- npm run lint
+\`\`\`bash
+npm test
+\`\`\`
+- npm run build
+`;
+  const result = parseGovernance(md);
+  assert.strictEqual(result.gates.mixed.commands.length, 3);
+  assert.strictEqual(result.gates.mixed.commands[0].cmd, 'npm run lint');
+  assert.strictEqual(result.gates.mixed.commands[1].cmd, 'npm test');
+  assert.strictEqual(result.gates.mixed.commands[2].cmd, 'npm run build');
+});
+
+test('plain ``` fence (no language tag) also extracts', () => {
+  const md = `## Gates
+### Generic
+\`\`\`
+echo hi
+\`\`\`
+`;
+  const result = parseGovernance(md);
+  assert.strictEqual(result.gates.generic.commands.length, 1);
+  assert.strictEqual(result.gates.generic.commands[0].cmd, 'echo hi');
+});
+
+test('code fence with parenthetical section name extracts commands', () => {
+  // Mirrors real hosting platform governance: "### Contract Check (if API surface changed)"
+  const md = `## Gates
+### Contract Check (if API surface changed)
+\`\`\`bash
+npm run api:contract:check
+\`\`\`
+`;
+  const result = parseGovernance(md);
+  // Section name gets lowercased with the parenthetical included.
+  const keys = Object.keys(result.gates);
+  assert.strictEqual(keys.length, 1);
+  assert.strictEqual(result.gates[keys[0]].commands.length, 1);
+  assert.strictEqual(result.gates[keys[0]].commands[0].cmd, 'npm run api:contract:check');
+});
+
 // --- flattenGates ---
 
 test('flattenGates returns v1-shape object', () => {

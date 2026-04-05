@@ -107,8 +107,40 @@ function parseGovernance(content) {
   if (gatesBody) {
     let section = 'default';
     let sectionMeta = { path: null, condition: null };
+    // Fenced code blocks (```bash / ```sh / ```shell) are treated as an
+    // alternative command carrier: every non-blank, non-comment line inside
+    // is extracted as a MANDATORY command for the current section. This
+    // matches the very common markdown pattern of documenting gate commands
+    // in a bash fence instead of a bullet list.
+    let inCodeBlock = false;
 
     for (const line of gatesBody.split('\n')) {
+      // Fence toggle. Accepts ``` , ```bash , ```sh , ```shell (and any other
+      // language tag) — we treat all fenced blocks inside ## Gates as gate
+      // command carriers. A non-shell language tag would be unusual here.
+      if (/^\s*```/.test(line)) {
+        inCodeBlock = !inCodeBlock;
+        continue;
+      }
+
+      if (inCodeBlock) {
+        const cmd = line.trim();
+        // Skip blanks and pure comments. Do NOT strip inline comments from
+        // the tail of a command — shell parsers treat `#` mid-line as a
+        // comment only when preceded by whitespace, and losing the rest of
+        // the line could silently drop logic like `echo "# header"`.
+        if (!cmd || cmd.startsWith('#')) continue;
+        if (!result.gates[section]) {
+          result.gates[section] = {
+            commands: [],
+            path: sectionMeta.path,
+            condition: sectionMeta.condition,
+          };
+        }
+        result.gates[section].commands.push({ cmd, classification: 'MANDATORY' });
+        continue;
+      }
+
       // Match ### Section or ### Section (path: dir/) or ### Section (if: file)
       const sub = line.match(/^### (.+?)(?:\s*\((?:(path|if):\s*(.+?))\))?\s*$/);
       if (sub) {
