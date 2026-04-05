@@ -87,7 +87,12 @@ jobs:
 
       - name: Compile all targets (smoke test)
         shell: bash
+        env:
+          CRAG_NO_UPDATE_CHECK: '1'
         run: |
+          # compile needs .claude/governance.md — regenerate it via analyze
+          # (the crag repo does not track .claude/; it's generated)
+          node bin/crag.js analyze > /dev/null
           node bin/crag.js compile --target all
           # Verify every expected artifact exists
           test -f .github/workflows/gates.yml
@@ -103,8 +108,7 @@ jobs:
           test -f .zed/rules.md
           test -f .sourcegraph/cody-instructions.md
           echo "All 12 compile targets produced artifacts."
-          # Clean up so the checkout stays clean
+          # Clean up — everything above is gitignored, just rm it
           rm -f AGENTS.md GEMINI.md .clinerules .continuerules .windsurfrules .pre-commit-config.yaml
-          rm -rf .cursor .husky .zed .sourcegraph
-          # Keep .github/copilot-instructions.md removal safe (it's in a dir we need)
-          rm -f .github/copilot-instructions.md
+          rm -rf .cursor .husky .zed .sourcegraph .claude
+          rm -f .github/copilot-instructions.md .github/workflows/gates.yml

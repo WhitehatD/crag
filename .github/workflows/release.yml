@@ -121,7 +121,12 @@ jobs:
 
       - name: Smoke test compile --target all
         shell: bash
+        env:
+          CRAG_NO_UPDATE_CHECK: '1'
         run: |
+          # compile needs .claude/governance.md — regenerate it via analyze
+          # (the crag repo does not track .claude/; it's generated)
+          node bin/crag.js analyze > /dev/null
           node bin/crag.js compile --target all
           # Every expected artifact must exist
           test -f .github/workflows/gates.yml
