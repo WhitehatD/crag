@@ -6,7 +6,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
-[![323 tests](https://img.shields.io/badge/tests-323%20passing-brightgreen)](./test)
+[![357 tests](https://img.shields.io/badge/tests-357%20passing-brightgreen)](./test)
+[![40/40 grade A](https://img.shields.io/badge/benchmark-40%2F40%20grade%20A-brightgreen)](./benchmarks/results.md)
 
 > **One `governance.md`. Any project. Generated in 250 ms.**
 >
@@ -19,7 +20,7 @@ npx @whitehatd/crag analyze            # Generate governance.md from an existing
 npx @whitehatd/crag compile --target all  # Turn it into CI + 12 downstream configs
 ```
 
-Zero dependencies. Node 18+. Validated across [20 OSS projects](#validation-on-real-repos).
+Zero dependencies. Node 18+. Validated across [40 OSS projects](#validation-on-real-repos) (100% grade A).
 
 ---
 
@@ -37,22 +38,46 @@ The result is a single source of truth for your rules that stays in lock-step wi
 
 ## Validation on real repos
 
-Unlike most tools in this space, crag ships with a reproducible cross-repo benchmark. `crag analyze --dry-run` was run against 20 diverse open-source projects:
+Unlike most tools in this space, crag ships with a reproducible cross-repo benchmark. `crag analyze --dry-run` was run against **40 diverse open-source projects** in two tiers:
 
-| Grade | Count | Meaning |
-|---|---:|---|
-| **A** — ship-ready governance | **17 / 20 (85%)** | Stack + test + lint + build gates captured. Minimal noise. Ready to commit with light review. |
-| **B** — usable after cleanup | 3 / 20 (15%) | Stack correct, some gates need pruning or adding. Still faster than writing from scratch. |
-| **C** — rework needed | **0 / 20 (0%)** | — |
+- **Tier 1** — 20 well-known libraries across 7 language families (Node, Python, Rust, Go, Java, Ruby, PHP).
+- **Tier 2** — 20 dense repos picked for **density over storage**: multi-language, matrix-heavy CI, polyglot microservices, and workspace layouts (pnpm monorepos, Cargo workspaces, Gradle multi-module).
 
-Repos tested: `expressjs/express`, `chalk/chalk`, `fastify/fastify`, `axios/axios`, `prettier/prettier`, `vitejs/vite`, `psf/requests`, `pallets/flask`, `pallets/click`, `tiangolo/fastapi`, `BurntSushi/ripgrep`, `clap-rs/clap`, `rust-lang/mdBook`, `tokio-rs/axum`, `spf13/cobra`, `gin-gonic/gin`, `charmbracelet/bubbletea`, `spring-projects/spring-petclinic`, `sinatra/sinatra` (Ruby), `slimphp/Slim` (PHP).
+| Grade | Tier 1 | Tier 2 | Combined | Meaning |
+|---|---:|---:|---:|---|
+| **A** — ship-ready governance | **20 / 20** | **20 / 20** | **40 / 40 (100%)** | Stack + test + lint + build gates captured. Minimal noise. Ready to commit with light review. |
+| **B** — usable after cleanup | 0 | 0 | **0 / 40 (0%)** | — |
+| **C** — rework needed | 0 | 0 | **0 / 40 (0%)** | — |
+
+**Tier 1 repos:** `expressjs/express`, `chalk/chalk`, `fastify/fastify`, `axios/axios`, `prettier/prettier`, `vitejs/vite`, `psf/requests`, `pallets/flask`, `pallets/click`, `tiangolo/fastapi`, `BurntSushi/ripgrep`, `clap-rs/clap`, `rust-lang/mdBook`, `tokio-rs/axum`, `spf13/cobra`, `gin-gonic/gin`, `charmbracelet/bubbletea`, `spring-projects/spring-petclinic`, `sinatra/sinatra`, `slimphp/Slim`.
+
+**Tier 2 repos:** `GoogleCloudPlatform/microservices-demo` (11-language polyglot), `vercel/turbo`, `swc-project/swc`, `dagger/dagger` (8-stack density max), `cloudflare/workers-sdk`, `tailwindlabs/tailwindcss`, `rust-lang/cargo`, `rust-lang/rust-analyzer`, `denoland/deno`, `nushell/nushell`, `withastro/astro`, `nrwl/nx` (7-stack pnpm monorepo), `mastodon/mastodon` (6-stack Rails+Node+Docker), `phoenixframework/phoenix_live_view`, `celery/celery`, `laravel/framework`, `grafana/k6`, `prometheus/prometheus`, `nats-io/nats-server`, `open-telemetry/opentelemetry-collector`.
+
+### Full-capability run on the 10 hardest repos
+
+Beyond `analyze`, the 10 densest repos across both tiers were exercised against every command in crag's surface — **80 / 80 operations succeeded**:
+
+| Command | Result |
+|---|---|
+| `crag analyze --dry-run` | 10 / 10 ✓ |
+| `crag analyze` (writes governance.md) | 10 / 10 ✓ |
+| `crag analyze --workspace --dry-run` | 10 / 10 ✓ (vite: 79 members in 322 ms) |
+| `crag workspace --json` | 10 / 10 ✓ |
+| `crag diff` | 10 / 10 ✓ |
+| `crag doctor --ci` | 10 / 10 ✓ |
+| `crag compile --target github` | 10 / 10 ✓ |
+| `crag compile --target agents-md` | 10 / 10 ✓ |
+
+### Coverage
 
 | Metric | Value |
 |---|---|
-| Mean `crag analyze` time | **238 ms** per repo |
-| Success rate | **20 / 20 exit 0** |
-| Language families covered | Node, Python, Rust, Go, Java, Ruby, PHP |
-| Zero-gate failures | **0** |
+| Repos tested | **40** |
+| Mean `crag analyze` time | **≈ 250 ms** per repo |
+| Grade A | **40 / 40 (100%)** |
+| Language families detected | Node, TypeScript, React, Next.js, Astro, Hono, Python, Rust, Go, Java (Maven + Gradle), Kotlin, Ruby (+Rails/Sinatra), PHP (+Laravel/Symfony/Slim), Elixir (+Phoenix), .NET, Swift, C# |
+| CI systems parsed | 10 — GitHub Actions, GitLab CI, CircleCI, Travis, Azure Pipelines, Buildkite, Drone, Woodpecker, Bitbucket, Jenkins |
+| Workspace types detected | pnpm, npm, cargo, go, gradle, maven, bazel, nx, turbo, git-submodules, independent-repos, subservices |
 
 Full methodology, grading rubric, per-repo results, and raw outputs: [`benchmarks/results.md`](./benchmarks/results.md).
 
@@ -151,9 +176,16 @@ Real target mining — not placeholders. Canonical test/lint/build targets extra
 
 ### Workspaces
 
-Eleven workspace types, enumerated at discovery time:
+Twelve workspace types, enumerated at discovery time:
 
-pnpm · npm/yarn · Cargo · Go · Gradle · Maven · Nx · Turborepo · Bazel · git submodules · independent nested repos
+pnpm · npm/yarn · Cargo · Go · Gradle · Maven · Nx · Turborepo · Bazel · git submodules · independent nested repos · **subservices** (polyglot microservices under `src/*`, `services/*`, `packages/*`, `apps/*`, etc. — no root manifest required)
+
+### Nested stack detection
+
+When a project has no root-level manifest but ships code under conventional container directories, crag scans one level down for per-service manifests and merges the detected stacks. This handles:
+
+- **Polyglot microservice monorepos** — e.g. `src/frontend/go.mod`, `src/cartservice/*.csproj`, `src/emailservice/pyproject.toml` — detected as a 6-stack `subservices` workspace
+- **Auxiliary subdirectory stacks** — e.g. `web/ui/package.json` (React UI), `editors/code/package.json` (VSCode extension), `sdk/typescript/package.json` (SDK) — surfaced as additional stacks alongside the root language
 
 ### Frameworks
 
@@ -183,6 +215,10 @@ crag compile --target all        # Compile to all 12 targets at once
 crag compile                     # List available targets
 
 crag diff                        # Compare governance against codebase reality
+crag doctor                      # Deep diagnostic — governance integrity, drift, hook validity, security
+crag doctor --ci                 # CI mode: skips checks that need runtime infrastructure
+crag doctor --json               # Machine-readable output
+crag doctor --strict             # Treat warnings as failures
 crag upgrade                     # Update universal skills to latest version
 crag upgrade --check             # Dry-run: show what would change
 crag check                       # Verify Claude Code infrastructure is in place
@@ -301,7 +337,7 @@ npx @whitehatd/crag <command>
 
 - **Node.js 18+** — uses built-in `https`, `crypto`, `fs`, `child_process`. No runtime dependencies.
 - **Git** — for branch strategy inference and the discovery cache.
-- **Claude Code CLI** — only needed for the interactive `crag init` flow. `analyze`, `compile`, `diff`, `upgrade`, `workspace`, `check` all run standalone.
+- **Claude Code CLI** — only needed for the interactive `crag init` flow. `analyze`, `compile`, `diff`, `doctor`, `upgrade`, `workspace`, `check` all run standalone.
 
 The package is published under `@whitehatd/crag` but the binary name is plain `crag` after install.
 
@@ -330,17 +366,18 @@ To skip a release on a specific push, put `crag:skip-release` on its own line in
 ## Honest status
 
 - **Published:** 2026-04-04 as `@whitehatd/crag` on npm. Scoped public package.
-- **Tests:** 323 unit tests, passing on Ubuntu/macOS/Windows × Node 18/20/22.
-- **Benchmark:** 17/20 grade A, 0/20 grade C across the 20 reference repos. Reproducible via `benchmarks/results.md`.
+- **Tests:** 357 unit tests, passing on Ubuntu/macOS/Windows × Node 18/20/22.
+- **Benchmark:** **40/40 grade A** across 20 tier-1 + 20 tier-2 reference repos. **80/80 operations succeeded** on the 10 hardest repos across every command (analyze, analyze --workspace, workspace, diff, doctor --ci, compile). Reproducible via `benchmarks/results.md`.
 - **Languages fully supported:** Node, Deno, Bun, Python, Rust, Go, Java, Kotlin, Ruby, PHP, .NET, Swift, Elixir (+ Terraform/Helm/K8s infra gates).
-- **CI systems parsed:** 9 (GitHub Actions, GitLab CI, CircleCI, Travis, Azure Pipelines, Buildkite, Drone, Woodpecker, Bitbucket).
+- **CI systems parsed:** **10** — GitHub Actions, GitLab CI, CircleCI, Travis, Azure Pipelines, Buildkite, Drone, Woodpecker, Bitbucket, **Jenkins** (declarative + scripted pipelines).
 - **Compile targets:** 12 (GitHub Actions, husky, pre-commit, AGENTS.md, Cursor, Gemini, Copilot, Cline, Continue, Windsurf, Zed, Cody).
+- **Nested stack detection:** Scans `src/*`, `services/*`, `packages/*`, `apps/*`, `sdk/*`, `web/*`, `ui/*`, `editors/*`, `extensions/*`, `clients/*` one level deep for per-service manifests. Handles polyglot microservice monorepos (`microservices-demo`) and auxiliary subdirectories (`prometheus/web/ui`, `rust-analyzer/editors/code`, `dagger/sdk/typescript`).
+- **`crag doctor`:** Deep diagnostic command — validates governance integrity, skill currency, hook validity, drift vs git, and runs a security smoke test (8 secret patterns: Stripe, AWS, GitHub PAT/OAuth, Slack, PEM keys). Wired into crag's own CI via `--ci` mode.
 
 ### Known limitations
 
-- **FastAPI and similar repos** where CI runs via `uv run ./scripts/*.py` data-pipeline scripts: crag captures the script invocations as gates. A user reviewing the output should prune the ones that aren't quality checks.
-- **Complex CI matrix template expansions** (clap's `make test-${{matrix.features}}` pattern): line-based extraction captures one variant per template; multi-line YAML join is not implemented yet.
-- **Jenkinsfile** (Groovy): CI system is detected but step extraction is not attempted.
+- **Kotlin via `.kt` source files only (no Gradle kotlin plugin)** isn't detected. Most Kotlin projects use Gradle + the plugin, so this is rare in practice.
+- **`crag analyze --workspace` still needs to be opted in.** Workspaces are auto-detected and reported, but per-member governance is only emitted when the flag is passed — an intentional guard against surprising enumeration on fixture-heavy monorepos.
 - **No telemetry, no network calls** beyond the optional `crag upgrade --check` npm registry ping (24h cached, 3s timeout, graceful offline).
 
 ### What crag does not do
