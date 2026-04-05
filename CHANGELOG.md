@@ -9,19 +9,142 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.11] — 2026-04-05
 
-## [0.2.10] — 2026-04-05
+### Fixed — 28 findings from the 101-repo stress-test audit
 
-## [0.2.9] — 2026-04-05
+**Correctness**
+- `cli-args.js` (new) — shared `validateFlags()` with typo suggestions,
+  wired into `analyze`, `compile`, `diff`, `doctor`, `upgrade`, `workspace`,
+  `check`. Unknown flags were previously accepted silently; `crag analyze
+  --garbage-flag` wrote governance with no warning. Now exits 1 with a
+  "did you mean?" hint for close matches.
+- `normalize.js` `isNoise` — extended with 11 new rules: standalone shell
+  builtins (`break`, `exit`, `continue`, `shift`, `trap`), backslash line
+  continuations, version probes (`node --version`, `which`,
+  `shellcheck --version`), variable assignments from embedded code
+  (`rake_version = File.read(...)`), subshell fragments, cross-language
+  prints (`puts`, `print`, `console.log`, `die`), and `curl | bash`
+  installers. Regression examples: vscode no longer gets `break` as a
+  gate; duckdb no longer gets `make \`; ruby no longer gets
+  `rake_version = ...` leaked from a ruby `run: |` block.
+- `normalize.js` `extractMainCommand` — now splits on `;` in addition to
+  `&&`, and returns `''` when every part of the compound is noise so the
+  caller rejects the whole line instead of leaking the last fragment.
+- `analyze.js` — emits `- true  # TODO: …` placeholder under `### Test`
+  when zero gates are detected. Previously crag wrote a valid file with
+  an empty `## Gates` section and every downstream doctor/compile/diff
+  call failed with "0 gates declared". 20 repos in the stress test hit
+  this path (bitcoin, postgres, sqlite, cabal, flutter, jint, nginx, …).
+- `diff.js` — deduplicate EXTRA commands across workflows via
+  `normalizeCiGates`; reuse analyze-side `extractCiCommands` so
+  non-GitHub CI systems (Jenkins, GitLab, CircleCI, Azure, Buildkite,
+  Cirrus, Drone, Woodpecker, Bitbucket) actually participate in drift
+  detection. Previously `diff.js` only scanned `.github/workflows/`.
+- `diff.js` `normalizeCmd` — strips YAML-style wrapping quotes
+  iteratively so `"npm test"` compares equal to `npm test`.
 
-## [0.2.8] — 2026-04-05
+**Coverage — 14 new stack detectors**
+- `stacks.js` — C/CMake (`CMakeLists.txt`), C/autotools (`configure.ac`,
+  `autogen.sh`), C/Meson (`meson.build`), Haskell (cabal/stack/hpack),
+  OCaml (dune/opam), Zig (`build.zig`), Crystal (`shard.yml`), Nim
+  (`*.nimble`), Julia (uuid-sniffed `Project.toml`), Dart/Flutter
+  (`pubspec.yaml`), Erlang (rebar3/erlang.mk), Lua (rockspec), expanded
+  .NET (`.slnx`, `Directory.Build.props`, `Directory.Packages.props`,
+  `global.json`). C/C++ Makefile detection is guarded so Node/Python/Go
+  projects with a convenience `Makefile` aren't mislabelled.
+- `stacks.js` `detectNestedStacks` — now skips fixture directories
+  (`examples/`, `samples/`, `fixtures/`, `docs/`, `testdata/`,
+  `benchmarks/`, `node_modules/`, `target/`, `dist/`, …) so nx no longer
+  reports 7 stacks because of fixture sub-apps. Added symlink cycle
+  protection via realpath identity (`lstatSync` + visited `Set`).
+- `stacks.js` `detectKotlin` — Kotlin-only `build.gradle.kts` now also
+  adds `java/gradle` + detects `gradleWrapper` so `inferKotlinGates` has
+  a build system hook.
+- `gates.js` — new `inferGates` implementations for 12 languages
+  (Erlang, Haskell, OCaml, Zig, Crystal, Nim, Julia, Dart, Flutter,
+  C-family CMake/Meson/autotools/Makefile).
 
-## [0.2.7] — 2026-04-05
+**Coverage — CI systems**
+- `ci-extractors.js` — added Cirrus CI extractor (`.cirrus.yml` `*_script:`
+  keys), used by bitcoin, postgres, flutter, and many embedded / systems
+  projects. Added ad-hoc `ci/*.sh`, `.ci/*.sh`, `scripts/ci-*.sh` scanner
+  for canonical gate names (test.sh, lint.sh, check.sh).
+- `ci-extractors.js` — block-scalar quote stripping is now consistent
+  across every extractor path. Previously CircleCI (`run: |` form),
+  Azure (`script: |`), and the generic `extractYamlListField` path used
+  by GitLab/Travis/Buildkite/Drone/Bitbucket all dropped `stripYamlQuotes`
+  on block scalars, leaking quoted strings. Regression guard: new
+  parametrized test in `test/analyze-ci-extractors.test.js` asserts
+  inline + block-scalar quote stripping across 7 CI systems.
+- `ci-extractors.js` `extractCircleCommands` — now handles the `run: |`
+  block scalar form. Previously only `command: |` was parsed, so any
+  CircleCI job using `- run: |\n  <commands>` dropped its entire body.
+- `yaml-run.js` `extractRunCommands` — block scalars on GitHub Actions
+  paths now also call `stripYamlQuotes`.
 
-## [0.2.6] — 2026-04-05
+**Coverage — task runners**
+- `task-runners.js` — `GATE_TARGET_NAMES` expanded with 20+ names
+  including `kselftest`, `selftest`, `sanity`, `smoke`, `regress`,
+  `integration`, `e2e`, `unit`, `itest`, `validate`, `audit`, `security`,
+  `sec`, `sast`. Removed ambiguous `'style'` (often a CSS build artifact
+  target, not a linter).
 
-## [0.2.5] — 2026-04-05
+**UX**
+- `compile.js` — target validation is now the first thing `compile()`
+  does, so `crag compile --target zzzunknown` fails fast without the
+  previous "Compiling → zzzunknown / 0 gates, 0 runtimes" noise that
+  used to precede the error.
+- `compile.js` — refuses to emit executable targets
+  (`github`, `husky`, `pre-commit`) when `gateCount === 0`. Previously
+  crag would write a valid-YAML-but-no-steps workflow file. Doc-only
+  targets (`cursor`, `agents-md`, `gemini`, …) still work.
+- `compile.js` — help text uses `${ALL_TARGETS.length}` instead of a
+  hardcoded "12".
+- `analyze.js` — cross-section gate dedup via `normalizeCmd`. Fixes
+  chalk regression where both `### Test - npm run test` and
+  `### CI - npm test` showed up.
+- `analyze.js` — auto-installs universal skills after writing
+  governance.md (opt out with `--no-install-skills`). Closes the UX gap
+  where `crag check` always failed right after `crag analyze`.
+- `check.js` — new `--governance-only` mode that only requires
+  `governance.md`, for the post-analyze path.
+- `analyze.js` — rotates `.bak.<millis>` files to the 3 newest. Previous
+  behaviour accumulated one backup per run.
+- `analyze.js` — warns when invoked from a known infra subdirectory
+  (`.claude/`, `.github/`, `.buildkite/`, `.gitlab/`, `.cursor/`,
+  `.vscode/`, `.idea/`, `.husky/`). Previous behaviour was to silently
+  treat the subdirectory as its own project.
+- `analyze.js` — drains malformed-JSON warnings from `stacks.js` and
+  reports them via `cliWarn`. Users now see when a root `package.json`
+  failed to parse.
 
-## [0.2.4] — 2026-04-05
+**Audit items**
+- `parse.js` — `MAX_CONTENT_SIZE` truncation now cuts at the last `\n## `
+  section boundary instead of mid-line, preserving gate integrity on
+  oversize files.
+- `doctor.js` — `rtk-hook-version` marker window 5 → 20 lines.
+- `doctor.js` — git command timeouts (`git branch -a`, `git log`) now
+  surface as `warn` with a clear detail instead of silent skip.
+
+### Testing
+- **498 tests passing** (from 357). 141 new cases covering every new
+  rule above, including a parametrized cross-CI quote-stripping
+  regression test against GitHub Actions, GitLab, CircleCI, Travis,
+  Azure, Drone, Bitbucket with both inline and block-scalar forms.
+- New test files: `cli-args.test.js`, `compile-validation.test.js`,
+  `workspace.test.js`, `upgrade.test.js`.
+
+### Stress-test evidence
+- 101 open-source repositories × 21 main commands + 23 edge-case
+  commands = ~4,400 invocations. 0 crashes, 0 unexpected exit codes.
+- Verified post-fix: all 17 previously-failing `doctor --ci` repos now
+  pass; vscode/duckdb/ruby/gatsby/elixir leaks are gone;
+  bitcoin/postgres/cabal/flutter/jint/duckdb now get correct stacks
+  instead of `unknown`.
+
+## [0.2.4] — [0.2.10] — 2026-04-05
+
+Auto-release bumps. No user-visible changes between `[0.2.3]` and
+`[0.2.11]`; consolidated here rather than keeping empty version headers.
 
 ## [0.2.3] — 2026-04-05
 

@@ -196,7 +196,7 @@ Raw outputs: `benchmarks/full-capability/*.{analyze,workspace,diff,doctor,compil
 
 | File | Role |
 |---|---|
-| `src/analyze/stacks.js` | Language/framework/runtime detection. 14 stacks (Node, Deno, Bun, Rust, Go, Python, Java/Maven, Java/Gradle, Kotlin, .NET, Swift, Elixir, Ruby, PHP) + 15 frameworks (Rails/Sinatra/Laravel/Symfony/Slim/Next.js/React/Vue/Svelte/SvelteKit/Nuxt/Astro/Solid/Qwik/Remix/Phoenix/...) + infra (Terraform, Helm, K8s, OpenAPI, Proto). Includes minimal TOML parser for `pyproject.toml` section detection. |
+| `src/analyze/stacks.js` | Language/framework/runtime detection. 25+ stacks — Node, Deno, Bun, Rust, Go, Python, Java (Maven + Gradle), Kotlin, .NET (csproj/fsproj/sln/slnx/Directory.Build.props), Swift, Elixir, Erlang, Ruby, PHP, Haskell (cabal/stack/hpack), OCaml (dune), Zig, Crystal, Nim, Julia, Dart/Flutter, Lua, C/C++ (CMake, autotools, Meson), plus 15+ frameworks (Rails/Sinatra/Laravel/Symfony/Slim/Next.js/React/Vue/Svelte/SvelteKit/Nuxt/Astro/Solid/Qwik/Remix/Phoenix/…) and infra (Terraform, Helm, K8s, OpenAPI, Proto). Includes minimal TOML parser for `pyproject.toml` section detection. |
 | `src/analyze/gates.js` | Per-language gate inference. Reads the `_manifests` attached by stacks.js and emits canonical shell commands per stack. Covers Python runners (uv/poetry/pdm/hatch/rye/pipenv), Ruby (rspec/rake/rubocop/standardrb/reek/brakeman/bundle-audit), PHP (phpunit/pest/phpcs/phpstan/psalm/php-cs-fixer/rector/composer scripts), Kotlin (detekt), .NET, Swift, Elixir (credo, dialyxir), Terraform, Helm, OpenAPI (spectral), Proto (buf). |
 | `src/analyze/normalize.js` | CI step normalization. Canonicalizes `${{ matrix.X }}` / `${{ env.X }}` / `${{ expr }}` patterns. Filters ~30 noise patterns (installs, echo, export, background processes, publish steps, benchmark one-offs, YAML ternary fragments, license checkers). Caps extracted CI gates at 8. `extractMainCommand` unwraps `cd x && install && test` compounds. |
 | `src/analyze/ci-extractors.js` | Multi-CI step extraction. Adds GitLab CI, CircleCI, Travis CI, Azure Pipelines (inc. `.azure-pipelines/` dir), Buildkite, Drone, Woodpecker, Bitbucket Pipelines. Each system has a parser; all feed into the same `normalizeCiGates` pipeline. |
@@ -223,15 +223,81 @@ Raw outputs: `benchmarks/full-capability/*.{analyze,workspace,diff,doctor,compil
 
 ## Known remaining limitations
 
-These were in scope but time-boxed out of this pass. Items 2 and 3 below are **resolved post-fix**; preserved for history.
+Only the items that still apply are listed here. Items from earlier drafts
+that have since been resolved have been removed to keep this file honest.
 
-1. ~~**Fastify still has a residual `cd test/bundler/webpack && npm install` line.**~~ **STALE NOTE.** Re-verified in raw3: fastify's post-fix output has zero cd+install outliers. The note carried over from an even earlier iteration of the noise filter. Fastify is grade A.
-2. ~~**Clap's CI has `make test-${{matrix.features}} ARGS='--workspace --benches`** that looks like an unterminated string — it's a YAML block scalar where the source spans multiple lines and our line-based extractor only grabs line 1.~~ **RESOLVED** in commit `492d8dd`. Root cause was not a multi-line join issue; it was a greedy quote-strip regex in `extractRunCommands` that stripped trailing quotes when no leading quote existed. Fixed via `stripYamlQuotes()` helper applied across 6 extractor paths.
-3. ~~**FastAPI CI captures `uv run ./scripts/*.py`** as gates because scripts legitimately run via `uv run` — these are data pipelines / doc publishers, not tests.~~ **RESOLVED** in commit `3474039`. Added noise filters for `(uv|poetry|pdm|hatch|rye|pipenv) run (./)?scripts/*`, direct interpreter variants (python/node/bash/sh), and shell control-flow fragments (`if … ; then` etc) that leak from block scalars. FastAPI now emits 6 real gates (build, coverage, codspeed benchmarks).
-4. **Clap's Makefile contains `make test-X` template targets** that get through because the make target mining only looks for canonical names, but the CI extraction grabs the templated variants. These are legit for clap's workflow; the user can prune them during review.
-5. **Kotlin via `.kt` source files only (no Gradle kotlin plugin)** isn't detected. Most Kotlin projects use Gradle + the plugin, so this is rare in practice.
-6. **`crag analyze --workspace` still needs to be opted in.** We detect and *report* the workspace automatically, but do not emit per-member governance unless the user passes the flag. Auto-enabling felt surprising for large fixture-heavy monorepos like vite (79 members, mostly playground/).
-7. **Jenkinsfile Groovy parsing** — we detect Jenkins (`ci: jenkins`) but do not extract commands from Jenkinsfiles. Last CI system not covered by `ci-extractors.js`.
+1. **Clap's Makefile `test-${{matrix.features}}` template targets** still
+   reach the output because CI extraction grabs templated variants that
+   task-runner mining can't normalise. These are legitimate for clap's
+   workflow; the user prunes them during review.
+2. **`crag analyze --workspace` still needs to be opted in.** Workspaces
+   are auto-detected and reported, but per-member governance is only
+   emitted when the flag is passed — an intentional guard against
+   surprising enumeration on fixture-heavy monorepos (e.g. vite, 79
+   members, mostly under `playground/`).
+
+---
+
+## Follow-up stress test (101 repos)
+
+After the 40-repo reference benchmark reached 100% Grade A, `crag` was run
+against a second corpus of **101 open-source repositories** chosen for
+breadth: every major language family, every CI system, every workspace
+type, plus deliberate edge cases (mirror repos, dotfile repos,
+non-English READMEs, docs-only repos). Each repo was exercised against a
+21-command main matrix plus a 23-step edge-case matrix — roughly **4,400
+invocations in total**.
+
+**Result**: 0 crashes, 0 unexpected exit codes, 28 findings identified
+and fixed in the v0.2.11 pass. Full audit report, per-repo outputs, and
+reproducible driver scripts live under `/d/stress-crag/` (git-ignored
+scratch). Selected findings drove these code changes:
+
+- **14 new stack detectors** added for C/CMake, C/autotools, C/Meson,
+  Haskell (cabal+stack+hpack), OCaml (dune), Zig, Crystal, Nim, Julia
+  (uuid-sniffed), Dart/Flutter, Erlang (rebar3), Lua, plus expanded
+  .NET (`.slnx`, `Directory.Build.props`, `global.json`).
+- **Cirrus CI extractor** (`.cirrus.yml` `*_script:` keys — now used by
+  bitcoin, postgres, flutter) and `ci/*.sh` / `.ci/*.sh` /
+  `scripts/ci-*.sh` scanner for projects that predate YAML-based CI.
+- **isNoise filter extended** with 11 new rules covering standalone
+  shell builtins (`break`, `exit`, `continue`, `shift`, `trap`),
+  backslash line continuations, version probes (`node --version`,
+  `which`, `shellcheck --version`), variable assignments from
+  embedded code (`rake_version = File.read(...)`), subshell fragments,
+  cross-language prints (`puts`, `print`, `console.log`, `die`), and
+  `curl | bash` installers.
+- **Unknown flag rejection** via a new shared `src/cli-args.js`
+  `validateFlags()` helper with Levenshtein typo suggestions. All 7
+  commands (`analyze`, `compile`, `diff`, `doctor`, `upgrade`,
+  `workspace`, `check`) use it.
+- **`crag diff` multi-CI coverage** — previously only scanned
+  `.github/workflows/`, so drift against Jenkins/GitLab/Circle/etc. was
+  invisible. Now reuses the analyze-side extractors (all 11 systems) and
+  deduplicates EXTRA commands across workflows via `normalizeCiGates`.
+- **`detectNestedStacks` fixture filter + symlink cycle guard.** Fixes
+  nx reporting 7 stacks because of fixture sub-apps under `examples/`.
+- **Empty-gates placeholder**: repos where no gates can be inferred
+  (mirror repos, docs-only, unknown build systems) now emit a
+  `- true  # TODO:` placeholder under `### Test` so downstream
+  compile/doctor/diff keep working rather than crashing on an empty
+  section.
+- **`crag compile --target …` early validation** — bad targets now fail
+  fast with `Unknown target` before touching `governance.md`; refuses to
+  emit `github` / `husky` / `pre-commit` targets with 0 gates (previously
+  wrote valid-but-broken empty workflows).
+- **Cross-section gate dedup** via `normalizeCmd` so a CI-inferred
+  `npm test` and a language-inferred `npm run test` don't both appear
+  (chalk regression).
+- **Backup rotation** — re-running `crag analyze` now keeps the 3 most
+  recent `.bak.*` files instead of accumulating one per run.
+- **`crag check --governance-only`** — post-analyze UX mode that only
+  checks for `governance.md` rather than the full infra bundle.
+- **`parse.js` truncation** now cuts at the last `## ` section boundary
+  instead of mid-line, preserving gate integrity on oversize files.
+
+See the `[Unreleased]` entry in `CHANGELOG.md` for the full list of 28
+findings and their resolutions.
 
 ---
 

@@ -6,7 +6,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
-[![498 tests](https://img.shields.io/badge/tests-498%20passing-brightgreen)](./test)
+
+[![Tests](https://img.shields.io/badge/tests-498%20passing-brightgreen)](./test)
+[![OSS repos](https://img.shields.io/badge/OSS%20repos%20tested-141-blue)](./benchmarks/results.md)
+[![Languages](https://img.shields.io/badge/languages%20detected-25%2B-blue)](#supported-languages-and-runtimes)
+[![CI systems](https://img.shields.io/badge/CI%20systems-11-blue)](#supported-ci-systems)
+[![Workspace types](https://img.shields.io/badge/workspace%20types-12-blue)](#supported-workspaces)
+[![Compile targets](https://img.shields.io/badge/compile%20targets-12-blue)](#2-twelve-derived-outputs-from-one-command)
 
 One `governance.md` describing a project's quality gates, branch policy, and
 security rules. `crag` generates it from an existing codebase, then compiles
@@ -18,6 +24,40 @@ npx @whitehatd/crag compile --target all  # compile to 12 downstream files
 ```
 
 Zero runtime dependencies. Node 18+. Deterministic output (no LLM calls).
+
+---
+
+## Scale of validation
+
+| | |
+|---|---:|
+| Open-source repositories `crag` has been run against | **141** |
+|   — reference benchmark (Tier 1 + Tier 2, reproducible, 100% Grade A) | 40 |
+|   — stress-test corpus (101 OSS repos × full command matrix) | 101 |
+| Total command invocations in the stress test | **≈ 4,400** |
+| Unexpected crashes / exit codes across the stress test | **0** |
+| Languages and build systems detected | **25+** |
+| CI systems with native command extraction | **11** |
+| Workspace types recognised | **12** |
+| Compile targets (CI + hooks + AI agents) | **12** |
+| Unit tests passing (Ubuntu + macOS + Windows × Node 18/20/22) | **498** |
+| Runtime dependencies | **0** |
+| `crag analyze` wall-clock time (median) | **~250 ms** |
+
+Reference benchmark: [`benchmarks/results.md`](./benchmarks/results.md) — 40
+repos across 7 language families plus 20 polyglot density repos, every one
+graded A. Stress test: 101 OSS repos covering every CI system, workspace
+type, and language listed below; each repo exercised against 21 main
+commands plus 23 edge-case commands. Findings from that run drove the fixes
+in the current release.
+
+Self-audit — `crag` applies its own governance.md and passes its own gates:
+
+```
+crag doctor   29/29 pass, 0 warn, 0 fail
+crag diff     11 match, 0 drift, 0 missing, 0 extra
+crag check    9/9 core files present
+```
 
 ---
 
@@ -136,44 +176,6 @@ mismatches between governance and git.
 skill currency, hook validity (shebang, `rtk-hook-version` marker, executable
 bit), git drift, and a security smoke test for 8 secret patterns (Stripe,
 AWS, GitHub PAT/OAuth, Slack, PEM keys).
-
----
-
-## What backs it up
-
-| | Count |
-|---|---:|
-| Tests passing (Ubuntu + macOS + Windows × Node 18/20/22) | **498** |
-| Runtime dependencies | **0** |
-| Stress-tested open-source repos (full command matrix) | **101** |
-| Unexpected crashes in stress test | **0** |
-| Languages / stacks detected | **25+** |
-| CI systems parsed | **11** |
-| Workspace types detected | **12** |
-| Compile targets | **12** |
-| `crag analyze` wall-clock time (median) | **~250 ms** |
-
-**Stress test** (v0.2.10 → v0.2.11 pass): `crag` was run against 101 OSS
-repositories covering every language family, CI system, and workspace type
-listed below. Matrix: 21 commands per repo + 23 edge-case variants =
-≈4,400 invocations total. Zero crashes, zero unexpected exit codes.
-Findings from that run drove the fixes in the current release.
-
-**Benchmark** (reproducible): `crag analyze --dry-run` against 40 reference
-repos across two tiers — Tier 1 is 20 well-known libraries across 7 language
-families; Tier 2 is 20 high-density polyglot repos (multi-language,
-matrix-heavy CI, workspace layouts). All 40 receive Grade A (ship-ready
-governance). On the 10 densest repos across both tiers, every command in
-crag's surface succeeded (80/80 operations). Full methodology, per-repo
-results, and raw outputs: [`benchmarks/results.md`](./benchmarks/results.md).
-
-**Self-audit**: `crag` manages its own governance.md. Current state:
-
-```
-crag doctor   29/29 pass, 0 warn, 0 fail
-crag diff     11 match, 0 drift, 0 missing, 0 extra
-crag check    9/9 core files present
-```
 
 ---
 
