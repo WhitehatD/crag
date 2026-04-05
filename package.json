@@ -1,6 +1,6 @@
 {
   "name": "@whitehatd/crag",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "description": "The bedrock layer for AI coding agents. One governance.md. Any project. Never stale.",
   "bin": {
     "crag": "bin/crag.js"
