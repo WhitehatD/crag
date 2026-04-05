@@ -7,12 +7,15 @@ const { detectWorkspace } = require('../workspace/detect');
 const { enumerateMembers } = require('../workspace/enumerate');
 const { isGateCommand } = require('../governance/yaml-run');
 const { cliWarn, cliError, EXIT_INTERNAL } = require('../cli-errors');
+const { validateFlags } = require('../cli-args');
 const { detectStack } = require('../analyze/stacks');
 const { inferGates } = require('../analyze/gates');
 const { normalizeCiGates } = require('../analyze/normalize');
 const { extractCiCommands } = require('../analyze/ci-extractors');
 const { mineTaskTargets } = require('../analyze/task-runners');
 const { mineDocGates } = require('../analyze/doc-mining');
+const { normalizeCmd } = require('./diff');
+const { drainMalformedJsonFiles } = require('../analyze/stacks');
 
 // Directories commonly used for test fixtures and examples in workspaces.
 // When analyze auto-wires to workspace detection, these are excluded from
@@ -30,14 +33,45 @@ const FIXTURE_DIR_PATTERNS = [
  * crag analyze — generate governance.md from existing project without interview.
  */
 function analyze(args) {
+  validateFlags('analyze', args, {
+    boolean: ['--dry-run', '--workspace', '--merge', '--no-install-skills'],
+  });
   const dryRun = args.includes('--dry-run');
   const workspaceFlag = args.includes('--workspace');
   const merge = args.includes('--merge');
+  const noInstallSkills = args.includes('--no-install-skills');
   const cwd = process.cwd();
+
+  // Guard: refuse to analyze inside a known-AI-infra subdirectory.
+  // When a user cds into `.claude/`, `.buildkite/`, `.github/`, etc. and
+  // runs `crag analyze`, the previous behavior was to treat the subdir as
+  // its own project (Stack: unknown, Project: <subdir-basename>). That's
+  // almost always wrong — the user meant to analyze the enclosing repo.
+  const INFRA_SUBDIRS = new Set([
+    '.claude', '.buildkite', '.github', '.gitlab',
+    '.cursor', '.vscode', '.idea', '.husky',
+  ]);
+  const base = path.basename(cwd);
+  if (INFRA_SUBDIRS.has(base)) {
+    const parent = path.dirname(cwd);
+    cliWarn(`you are inside '${base}/' — this looks like a tooling subdirectory, not a project root.`);
+    cliWarn(`  if you meant to analyze the parent repo, run: (cd "${parent}" && crag analyze)`);
+    cliWarn(`  continuing anyway; pass --dry-run to preview without writing.`);
+  }
 
   console.log(`\n  Analyzing project in ${cwd}...\n`);
 
   const analysis = analyzeProject(cwd);
+
+  // Surface any manifest files that failed JSON.parse. These are silent
+  // failures in safeJson(); users should know if their root package.json
+  // is broken because downstream gate inference will miss it.
+  const malformed = drainMalformedJsonFiles();
+  for (const [file, reason] of malformed) {
+    cliWarn(`malformed JSON in ${path.relative(cwd, file)} — crag could not read it`);
+    cliWarn(`  reason: ${reason}`);
+    cliWarn(`  gate inference for this manifest was skipped.`);
+  }
 
   // Workspace detection always runs. If a workspace is detected, we either:
   //   (a) emit per-member sections when --workspace is passed, OR
@@ -92,19 +126,24 @@ function analyze(args) {
     return;
   }
 
+  // Surface an empty-gates warning so users know the file they're about to
+  // write will fail downstream. Detected when analyze found zero lint/test/
+  // build/CI gates and there's no placeholder in the generated content.
+  const totalGates =
+    analysis.linters.length + analysis.testers.length + analysis.builders.length + analysis.ciGates.length;
+  if (totalGates === 0) {
+    cliWarn(`no gates detected — crag could not infer any quality checks from this project.`);
+    cliWarn(`  the generated governance.md will include a placeholder under '### Test'.`);
+    cliWarn(`  edit it manually or run 'crag init' for an interactive walkthrough.`);
+  }
+
   const govPath = path.join(cwd, '.claude', 'governance.md');
   const govDir = path.dirname(govPath);
   try {
     if (!fs.existsSync(govDir)) fs.mkdirSync(govDir, { recursive: true });
 
     if (fs.existsSync(govPath) && !merge) {
-      const backupPath = govPath + '.bak.' + Date.now();
-      try {
-        fs.copyFileSync(govPath, backupPath);
-        console.log(`  Backed up existing governance to ${path.basename(backupPath)}`);
-      } catch (err) {
-        cliWarn(`could not create backup (continuing anyway): ${err.message}`);
-      }
+      rotateBackups(govPath);
     }
 
     if (merge && fs.existsSync(govPath)) {
@@ -119,9 +158,56 @@ function analyze(args) {
     cliError(`failed to write ${path.relative(cwd, govPath)}: ${err.message}`, EXIT_INTERNAL);
   }
 
+  // Auto-install the universal skills so `crag check` / `crag doctor` can
+  // succeed after analyze. Previously users had to run `crag init` (which
+  // requires Claude CLI and launches an interactive interview) just to get
+  // the skills installed. The skills are static, universal, and zero-risk
+  // to copy — there's no reason to gate them behind the interview.
+  if (!noInstallSkills) {
+    try {
+      const { installSkills } = require('./init');
+      installSkills(cwd);
+    } catch (err) {
+      cliWarn(`could not install universal skills: ${err.message}`);
+      cliWarn(`  governance.md was written; run 'crag init' to install skills interactively.`);
+    }
+  }
+
   console.log(`  \x1b[32m✓\x1b[0m Generated ${path.relative(cwd, govPath)}`);
   console.log(`\n  Review the file — sections marked "# Inferred" should be verified.`);
   console.log(`  Run 'crag check' to verify infrastructure.\n`);
+}
+
+/**
+ * Cap backup files at a small number so re-running `crag analyze` doesn't
+ * pile up hundreds of `governance.md.bak.<epochMs>` files. Keeps the 3 most
+ * recent backups; deletes the rest.
+ */
+function rotateBackups(govPath) {
+  try {
+    const dir = path.dirname(govPath);
+    const base = path.basename(govPath);
+    const newBackup = govPath + '.bak.' + Date.now();
+    fs.copyFileSync(govPath, newBackup);
+    console.log(`  Backed up existing governance to ${path.basename(newBackup)}`);
+
+    // Find all backups and keep the 3 newest (including the one just created).
+    const backups = fs.readdirSync(dir)
+      .filter(f => f.startsWith(base + '.bak.'))
+      .map(f => ({ name: f, path: path.join(dir, f), mtime: safeMtime(path.join(dir, f)) }))
+      .sort((a, b) => b.mtime - a.mtime); // newest first
+
+    const KEEP = 3;
+    for (let i = KEEP; i < backups.length; i++) {
+      try { fs.unlinkSync(backups[i].path); } catch { /* best effort */ }
+    }
+  } catch (err) {
+    cliWarn(`could not create backup (continuing anyway): ${err.message}`);
+  }
+}
+
+function safeMtime(filePath) {
+  try { return fs.statSync(filePath).mtimeMs; } catch { return 0; }
 }
 
 /**
@@ -317,65 +403,81 @@ function generateGovernance(analysis, cwd) {
 
   sections.push('## Gates (run in order, stop on failure)');
 
+  // `allGates` holds the raw command strings already emitted so we don't
+  // write the same command twice in one section. `canonicalSet` holds
+  // normalized forms (via normalizeCmd: lowercased, quote-stripped, npm-run
+  // aliased) so we also catch `npm test` vs `npm run test` duplicates
+  // across sections — previously both slipped through and chalk's
+  // governance.md had both under ### Test and ### CI.
   const allGates = new Set();
+  const canonicalSet = new Set();
+  const addGate = (cmd) => {
+    const canon = normalizeCmd(cmd);
+    if (canonicalSet.has(canon) || allGates.has(cmd)) return false;
+    canonicalSet.add(canon);
+    allGates.add(cmd);
+    return true;
+  };
+
+  // Detect the no-gates case early so we can emit a placeholder instead of
+  // a totally empty Gates section (which trips downstream parsers and fails
+  // `crag doctor`, `crag compile`, etc.). `true` is a shell no-op that
+  // succeeds — it keeps governance.md parseable and downstream tools happy
+  // without pretending a real gate exists.
+  const totalGates =
+    analysis.linters.length + analysis.testers.length + analysis.builders.length + (analysis.ciGates || []).length;
+  if (totalGates === 0) {
+    sections.push('### Test');
+    sections.push('- true  # TODO: crag could not detect a gate — replace with your real test command (e.g. `pytest`, `go test ./...`, `cargo test`, `make test`)');
+    sections.push('');
+    addGate('true');
+  }
 
   // Lint
-  if (analysis.linters.length > 0) {
-    sections.push('### Lint');
-    for (const cmd of analysis.linters) {
-      if (!allGates.has(cmd)) {
-        sections.push(`- ${cmd}`);
-        allGates.add(cmd);
-      }
-    }
-    sections.push('');
+  const lintLines = [];
+  for (const cmd of analysis.linters) {
+    if (addGate(cmd)) lintLines.push(`- ${cmd}`);
+  }
+  if (lintLines.length > 0) {
+    sections.push('### Lint', ...lintLines, '');
   }
 
   // Test
-  if (analysis.testers.length > 0) {
-    sections.push('### Test');
-    for (const cmd of analysis.testers) {
-      if (!allGates.has(cmd)) {
-        sections.push(`- ${cmd}`);
-        allGates.add(cmd);
-      }
-    }
-    sections.push('');
+  const testLines = [];
+  for (const cmd of analysis.testers) {
+    if (addGate(cmd)) testLines.push(`- ${cmd}`);
+  }
+  if (testLines.length > 0) {
+    sections.push('### Test', ...testLines, '');
   }
 
   // Build
-  if (analysis.builders.length > 0) {
-    sections.push('### Build');
-    for (const cmd of analysis.builders) {
-      if (!allGates.has(cmd)) {
-        sections.push(`- ${cmd}`);
-        allGates.add(cmd);
-      }
-    }
-    sections.push('');
+  const buildLines = [];
+  for (const cmd of analysis.builders) {
+    if (addGate(cmd)) buildLines.push(`- ${cmd}`);
+  }
+  if (buildLines.length > 0) {
+    sections.push('### Build', ...buildLines, '');
   }
 
-  // CI — only include gates not already captured by language inference
-  const uniqueCiGates = analysis.ciGates.filter(g => !allGates.has(g));
-  if (uniqueCiGates.length > 0) {
-    sections.push('### CI (inferred from workflow)');
-    for (const gate of uniqueCiGates) {
-      sections.push(`- ${gate}`);
-      allGates.add(gate);
-    }
-    sections.push('');
+  // CI — only include gates not already captured by language inference.
+  // Dedup via normalizeCmd so `npm test` from CI doesn't collide with
+  // `npm run test` that inferNodeGates already added.
+  const ciLines = [];
+  for (const gate of analysis.ciGates) {
+    if (addGate(gate)) ciLines.push(`- ${gate}`);
+  }
+  if (ciLines.length > 0) {
+    sections.push('### CI (inferred from workflow)', ...ciLines, '');
   }
 
   // Documentation-derived gates (advisory — need user confirmation)
-  const newDocGates = (analysis.docGates || [])
-    .filter(g => !allGates.has(g.command));
-  if (newDocGates.length > 0) {
-    sections.push('### Contributor docs (ADVISORY — confirm before enforcing)');
-    for (const { command, source } of newDocGates) {
-      sections.push(`- ${command}  # from ${source}`);
-      allGates.add(command);
-    }
-    sections.push('');
+  const docLines = [];
+  for (const { command, source } of (analysis.docGates || [])) {
+    if (addGate(command)) docLines.push(`- ${command}  # from ${source}`);
+  }
+  if (docLines.length > 0) {
+    sections.push('### Contributor docs (ADVISORY — confirm before enforcing)', ...docLines, '');
   }
 
   // Workspace members — per-member gates

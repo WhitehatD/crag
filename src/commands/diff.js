@@ -4,14 +4,18 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { parseGovernance, flattenGates } = require('../governance/parse');
-const { extractRunCommands, isGateCommand } = require('../governance/yaml-run');
+const { extractRunCommands, isGateCommand, stripYamlQuotes } = require('../governance/yaml-run');
+const { extractCiCommands } = require('../analyze/ci-extractors');
+const { normalizeCiGates } = require('../analyze/normalize');
 const { detectBranchStrategy, classifyGitBranchStrategy } = require('../governance/drift-utils');
 const { cliError, EXIT_USER, EXIT_INTERNAL, readFileOrExit } = require('../cli-errors');
+const { validateFlags } = require('../cli-args');
 
 /**
  * crag diff — compare governance.md against codebase reality.
  */
 function diff(args) {
+  validateFlags('diff', args, { boolean: ['--json'] });
   const cwd = process.cwd();
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
@@ -43,14 +47,19 @@ function diff(args) {
     }
   }
 
-  // Check for CI gates not in governance
+  // Check for CI gates not in governance. Deduplicates across workflows so
+  // the same command appearing in 5 different .yml files is reported once.
   const ciGates = extractCIGateCommands(cwd);
   const govCommands = Object.values(flat).flat();
+  const reportedExtras = new Set();
   for (const ciGate of ciGates) {
-    if (!govCommands.some(g => normalizeCmd(g) === normalizeCmd(ciGate))) {
+    const normalized = normalizeCmd(ciGate);
+    if (reportedExtras.has(normalized)) continue; // already reported
+    if (!govCommands.some(g => normalizeCmd(g) === normalized)) {
       console.log(`  \x1b[36mEXTRA\x1b[0m   ${ciGate}`);
       console.log(`          In CI workflow but not in governance`);
       results.extra++;
+      reportedExtras.add(normalized);
     }
   }
 
@@ -142,31 +151,19 @@ function checkCommitConvention(cwd, content, results) {
 }
 
 function extractCIGateCommands(cwd) {
-  const gates = [];
-  const workflowDir = path.join(cwd, '.github', 'workflows');
-  if (!fs.existsSync(workflowDir)) return gates;
-
+  // Reuse the analyze-side extractor so diff sees the SAME gates that
+  // analyze would propose. This covers all 10+ CI systems (GitHub, GitLab,
+  // CircleCI, Travis, Azure, Buildkite, Drone, Woodpecker, Bitbucket,
+  // Jenkins, Cirrus) in one pass — previously diff only looked at
+  // .github/workflows/ which made it invisible on Jenkins/GitLab projects.
   try {
-    // Walk recursively to catch nested workflow files
-    const walk = (d) => {
-      const out = [];
-      for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
-        const full = path.join(d, entry.name);
-        if (entry.isDirectory()) out.push(...walk(full));
-        else if (entry.name.endsWith('.yml') || entry.name.endsWith('.yaml')) out.push(full);
-      }
-      return out;
-    };
-
-    for (const file of walk(workflowDir)) {
-      const content = fs.readFileSync(file, 'utf-8');
-      for (const cmd of extractRunCommands(content)) {
-        if (isGateCommand(cmd)) gates.push(cmd);
-      }
-    }
-  } catch { /* skip */ }
-
-  return gates;
+    const ci = extractCiCommands(cwd);
+    // Filter to gate-like commands and normalize noise (dedup, de-matrix,
+    // drop install/echo/etc.) so the user sees a signal, not a wall of noise.
+    return normalizeCiGates(ci.commands.filter(c => isGateCommand(c)));
+  } catch {
+    return [];
+  }
 }
 
 // extractRunCommands and isGateCommand now live in src/governance/yaml-run.js
@@ -179,18 +176,22 @@ function extractCIGateCommands(cwd) {
  *   - `npm start` ⇔ `npm run start`
  *   - `./gradlew x` ⇔ `gradlew x`
  *   - `./mvnw x` ⇔ `mvnw x`
- *   - quoted arguments ⇔ unquoted (lexical equality only for simple cases)
+ *   - quoted vs unquoted commands: `"npm test"` ⇔ `npm test`
  */
 function normalizeCmd(cmd) {
-  let c = String(cmd).replace(/\s+/g, ' ').trim().toLowerCase();
+  // Strip YAML-style surrounding quotes first so `"npm test"` compares equal
+  // to `npm test`. Apply repeatedly in case of nested wrappers (rare but
+  // possible when a workflow has `run: "'npm test'"`).
+  let raw = String(cmd);
+  let prev;
+  do {
+    prev = raw;
+    raw = stripYamlQuotes(raw.trim());
+  } while (raw !== prev);
+
+  let c = raw.replace(/\s+/g, ' ').trim().toLowerCase();
 
   // npm lifecycle aliases: `npm <script>` → `npm run <script>` (except reserved verbs)
-  const npmReserved = new Set([
-    'test', 'start', 'stop', 'restart', 'install', 'uninstall', 'ci', 'publish',
-    'pack', 'audit', 'ls', 'list', 'run', 'exec', 'init', 'update', 'outdated',
-    'version', 'view', 'whoami', 'login', 'logout', 'link', 'unlink', 'config',
-    'cache', 'prune', 'dedupe', 'rebuild', 'shrinkwrap', 'help',
-  ]);
   const npmMatch = c.match(/^npm\s+(\S+)(\s+.*)?$/);
   if (npmMatch && (npmMatch[1] === 'test' || npmMatch[1] === 'start' || npmMatch[1] === 'stop' || npmMatch[1] === 'restart')) {
     // npm test == npm run test

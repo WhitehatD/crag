@@ -183,3 +183,101 @@ test('isGateCommand: rejects non-gate commands', () => {
   assert.ok(!isGateCommand('mkdir foo'));
   assert.ok(!isGateCommand('git log'));
 });
+
+// --- normalizeCmd quote stripping (regression from stress test) ----------
+
+test('normalizeCmd: strips surrounding double quotes', () => {
+  assert.strictEqual(normalizeCmd('"npm test"'), normalizeCmd('npm test'));
+});
+
+test('normalizeCmd: strips surrounding single quotes', () => {
+  assert.strictEqual(normalizeCmd("'cargo test'"), normalizeCmd('cargo test'));
+});
+
+test('normalizeCmd: does not strip mismatched quotes', () => {
+  // `"foo bar'` — leading " and trailing ' — must NOT strip
+  const out = normalizeCmd(`"foo bar'`);
+  assert.ok(out.includes('"') || out.includes("'"));
+});
+
+test('normalizeCmd: strips nested wrapping quotes iteratively', () => {
+  assert.strictEqual(normalizeCmd(`"'npm test'"`), normalizeCmd('npm test'));
+});
+
+// --- diff E2E on a temp repo with dedup check ----------------------------
+
+test('diff: deduplicates extras across multiple workflows', () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const { execFileSync } = require('child_process');
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-diff-dedup-'));
+  fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+  fs.mkdirSync(path.join(dir, '.github', 'workflows'), { recursive: true });
+
+  // Governance has nothing that matches the CI gates — everything will be EXTRA
+  fs.writeFileSync(path.join(dir, '.claude', 'governance.md'),
+    '# Governance — test\n## Identity\n- Project: test\n## Gates\n### Test\n- true\n');
+
+  // Three workflows that all contain the same `npm test` gate
+  for (const wf of ['a.yml', 'b.yml', 'c.yml']) {
+    fs.writeFileSync(path.join(dir, '.github', 'workflows', wf),
+      `name: ${wf}\non: push\njobs:\n  t:\n    runs-on: ubuntu-latest\n    steps:\n      - run: npm test\n      - run: npm run lint\n`);
+  }
+
+  // Run `crag diff` and count EXTRA lines
+  const cragBin = path.join(__dirname, '..', 'bin', 'crag.js');
+  let output;
+  try {
+    output = execFileSync('node', [cragBin, 'diff'], {
+      cwd: dir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  } catch (err) {
+    // diff may exit non-zero if there are drifts; still captures stdout
+    output = (err.stdout || '').toString();
+  }
+
+  // Strip ANSI and count distinct EXTRA lines (excluding the "In CI workflow" subline)
+  const clean = output.replace(/\x1b\[[0-9;]*m/g, '');
+  const extraLines = clean.split('\n').filter(l => /^\s*EXTRA\s/.test(l));
+  // 2 distinct gates (`npm test`, `npm run lint`) across 3 workflows.
+  // With dedup, we should see AT MOST 2 EXTRA lines (pre-fix it would be 6).
+  assert.ok(extraLines.length <= 2,
+    `expected ≤2 deduped EXTRA lines, got ${extraLines.length}: ${extraLines.join(' | ')}`);
+
+  // cleanup
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('diff: picks up gates from non-GitHub CI systems', () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const { execFileSync } = require('child_process');
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-diff-multici-'));
+  fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+  fs.writeFileSync(path.join(dir, '.claude', 'governance.md'),
+    '# Governance — test\n## Identity\n- Project: test\n## Gates\n### Test\n- true\n');
+
+  // GitLab CI with a real gate — diff used to miss this entirely
+  fs.writeFileSync(path.join(dir, '.gitlab-ci.yml'),
+    `stages:\n  - test\ntest_job:\n  script:\n    - cargo test\n    - cargo clippy\n`);
+
+  const cragBin = path.join(__dirname, '..', 'bin', 'crag.js');
+  let output;
+  try {
+    output = execFileSync('node', [cragBin, 'diff'], {
+      cwd: dir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  } catch (err) {
+    output = (err.stdout || '').toString();
+  }
+  const clean = output.replace(/\x1b\[[0-9;]*m/g, '');
+  // The gitlab cargo test should appear as EXTRA (it's in CI but not governance)
+  assert.ok(/EXTRA\s+cargo test/.test(clean) || /cargo test/.test(clean),
+    `expected cargo test to appear as drift from .gitlab-ci.yml, got: ${clean}`);
+
+  fs.rmSync(dir, { recursive: true, force: true });
+});

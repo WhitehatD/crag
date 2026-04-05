@@ -128,6 +128,20 @@ function extractCiCommands(dir) {
     }
   }
 
+  // Cirrus CI (bitcoin, postgres, flutter — huge OSS projects depend on it)
+  for (const cfFile of ['.cirrus.yml', '.cirrus.yaml']) {
+    const p = path.join(dir, cfFile);
+    if (fs.existsSync(p)) {
+      primary = primary || 'cirrus-ci';
+      commands.push(...extractCirrusCommands(safeRead(p)));
+    }
+  }
+
+  // Ad-hoc ci/ shell scripts (common in C/C++ projects that predate GH Actions)
+  // We scan ci/*.sh and scripts/ci-*.sh for canonical names like test.sh,
+  // lint.sh, check.sh. Each matching script becomes `bash ci/<name>.sh`.
+  commands.push(...extractCiShellScripts(dir));
+
   return { system: primary, commands };
 }
 
@@ -173,6 +187,18 @@ function extractCircleCommands(content) {
       if (rest && !rest.startsWith('#') && !rest.startsWith('|') && !rest.startsWith('>') &&
           !rest.startsWith('{') && !rest.startsWith('name:') && !rest.startsWith('command:')) {
         commands.push(stripYamlQuotes(rest));
+      } else if (/^[|>][+-]?\s*$/.test(rest)) {
+        // `run: |` block scalar — collect following lines with greater indent.
+        // Previously CircleCI only recognized this under the `command:` key,
+        // so `run: |\n  cmd` was silently dropped.
+        const baseIndent = (line.match(/^(\s*)/) || ['', ''])[1].length;
+        for (let j = i + 1; j < lines.length; j++) {
+          const inner = lines[j];
+          if (inner.trim() === '') continue;
+          const innerIndent = (inner.match(/^(\s*)/) || ['', ''])[1].length;
+          if (innerIndent <= baseIndent) break;
+          commands.push(stripYamlQuotes(inner.trim()));
+        }
       }
     }
     // Nested: command: ...
@@ -189,7 +215,7 @@ function extractCircleCommands(content) {
           if (inner.trim() === '') continue;
           const innerIndent = (inner.match(/^(\s*)/) || ['', ''])[1].length;
           if (innerIndent <= baseIndent) break;
-          commands.push(inner.trim());
+          commands.push(stripYamlQuotes(inner.trim()));
         }
       }
     }
@@ -224,7 +250,7 @@ function extractAzureCommands(content) {
         if (inner.trim() === '') continue;
         const innerIndent = (inner.match(/^(\s*)/) || ['', ''])[1].length;
         if (innerIndent <= baseIndent) break;
-        commands.push(inner.trim());
+        commands.push(stripYamlQuotes(inner.trim()));
       }
     } else if (rest && !rest.startsWith('#')) {
       commands.push(stripYamlQuotes(rest));
@@ -388,7 +414,7 @@ function extractYamlListField(content, fields) {
         if (inner.trim() === '') continue;
         const indentMatch = inner.match(/^(\s*)/);
         if (indentMatch[1].length <= baseIndent) break;
-        commands.push(inner.trim());
+        commands.push(stripYamlQuotes(inner.trim()));
       }
     } else if (rest.startsWith('[')) {
       // Inline list: script: [cmd1, cmd2]
@@ -405,4 +431,99 @@ function extractYamlListField(content, fields) {
   return commands;
 }
 
-module.exports = { extractCiCommands, walkYaml, extractYamlListField, extractJenkinsfileCommands };
+// --- Cirrus CI -------------------------------------------------------------
+
+/**
+ * Cirrus CI uses `<name>_script:` keys (e.g. test_script, build_script,
+ * lint_script) at task level, each containing either a single-line command
+ * or a block scalar list. Tasks are named via `task:` or inline.
+ */
+function extractCirrusCommands(content) {
+  const commands = [];
+  const lines = content.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Match any *_script key: test_script, build_script, lint_script, etc.
+    const m = line.match(/^(\s*)-?\s*([a-z_]+_script):\s*(.*)$/);
+    if (!m) continue;
+    const baseIndent = m[1].length;
+    const rest = m[3].trim();
+
+    if (!rest) {
+      // List form
+      for (let j = i + 1; j < lines.length; j++) {
+        const inner = lines[j];
+        if (inner.trim() === '') continue;
+        const innerIndent = (inner.match(/^(\s*)/) || ['', ''])[1].length;
+        if (innerIndent <= baseIndent) break;
+        const listItem = inner.match(/^\s*-\s*(.+)$/);
+        if (listItem) commands.push(stripYamlQuotes(listItem[1].trim()));
+      }
+    } else if (/^[|>][+-]?\s*$/.test(rest)) {
+      // Block scalar
+      for (let j = i + 1; j < lines.length; j++) {
+        const inner = lines[j];
+        if (inner.trim() === '') continue;
+        const innerIndent = (inner.match(/^(\s*)/) || ['', ''])[1].length;
+        if (innerIndent <= baseIndent) break;
+        commands.push(stripYamlQuotes(inner.trim()));
+      }
+    } else if (!rest.startsWith('#')) {
+      commands.push(stripYamlQuotes(rest));
+    }
+  }
+  return commands;
+}
+
+// --- ci/*.sh scanner -------------------------------------------------------
+
+/**
+ * Many C/C++/Haskell projects predate GitHub Actions and keep their CI
+ * commands in shell scripts under `ci/`, `scripts/ci/`, or `.ci/`. This
+ * scanner finds scripts with canonical gate-like names and emits them as
+ * `bash ci/<name>.sh` commands. It does NOT read script contents — the
+ * script name is the signal.
+ */
+function extractCiShellScripts(dir) {
+  const commands = [];
+  const candidates = [
+    { dir: 'ci', prefix: 'bash ci/' },
+    { dir: '.ci', prefix: 'bash .ci/' },
+    { dir: 'scripts', prefix: 'bash scripts/', nameFilter: /^ci[-_]/ },
+  ];
+
+  const GATE_NAMES = new Set([
+    'test.sh', 'tests.sh', 'check.sh', 'ci.sh',
+    'lint.sh', 'format.sh', 'fmt.sh',
+    'build.sh', 'compile.sh',
+    'verify.sh', 'validate.sh',
+    'run-tests.sh', 'run_tests.sh',
+  ]);
+
+  for (const { dir: sub, prefix, nameFilter } of candidates) {
+    const full = path.join(dir, sub);
+    if (!fs.existsSync(full)) continue;
+    try {
+      const entries = fs.readdirSync(full);
+      for (const entry of entries) {
+        if (!entry.endsWith('.sh')) continue;
+        const name = entry.toLowerCase();
+        // Strip "ci-" or "ci_" prefix for scripts/ci-test.sh → test.sh match
+        const stripped = nameFilter ? name.replace(/^ci[-_]/, '') : name;
+        if (GATE_NAMES.has(stripped) || GATE_NAMES.has(name)) {
+          commands.push(prefix + entry);
+        }
+      }
+    } catch { /* skip */ }
+  }
+  return commands;
+}
+
+module.exports = {
+  extractCiCommands,
+  walkYaml,
+  extractYamlListField,
+  extractJenkinsfileCommands,
+  extractCirrusCommands,
+  extractCiShellScripts,
+};

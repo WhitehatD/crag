@@ -111,6 +111,113 @@ test('isNoise: shell control-flow fragments from block scalars', () => {
   assert.ok(!isNoise('cargo test'));
 });
 
+// Regression: stress-test on 101 OSS repos found these leaks
+test('isNoise: standalone shell builtins (break, exit, continue, shift)', () => {
+  // vscode's workflows use `npm ci || break` in retry loops
+  assert.ok(isNoise('break'));
+  assert.ok(isNoise('break 2'));
+  assert.ok(isNoise('continue'));
+  assert.ok(isNoise('return'));
+  assert.ok(isNoise('exit'));
+  assert.ok(isNoise('exit 0'));
+  assert.ok(isNoise('exit 1'));
+  assert.ok(isNoise('shift'));
+  assert.ok(isNoise('trap'));
+  assert.ok(isNoise('pushd /tmp'));
+  assert.ok(isNoise('popd'));
+  // Must NOT reject commands that merely contain these words
+  assert.ok(!isNoise('cargo test --no-exit-on-first-fail'));
+  assert.ok(!isNoise('make break-stuff'));
+});
+
+test('isNoise: backslash line continuations leak from block scalars', () => {
+  // duckdb workflow: `run: | \n  make \\\n    target` → extractor captures `make \`
+  assert.ok(isNoise('make \\'));
+  assert.ok(isNoise('\\'));
+  assert.ok(isNoise('\\\\'));
+  assert.ok(isNoise('make gather-libs \\'));
+  // Real commands must not match
+  assert.ok(!isNoise('make test'));
+});
+
+test('isNoise: version / health probes across tools', () => {
+  // Common workflow sanity checks
+  assert.ok(isNoise('node --version'));
+  assert.ok(isNoise('node -v'));
+  assert.ok(isNoise('go version'));
+  assert.ok(isNoise('rustc --version'));
+  assert.ok(isNoise('python --version'));
+  assert.ok(isNoise('python3 --version'));
+  assert.ok(isNoise('npm --version'));
+  assert.ok(isNoise('yarn --version'));
+  assert.ok(isNoise('pnpm --version'));
+  assert.ok(isNoise('java --version'));
+  assert.ok(isNoise('gcc --version'));
+  assert.ok(isNoise('clang --version'));
+  assert.ok(isNoise('shellcheck --version'));
+  assert.ok(isNoise('deno --version'));
+  // With `|| true` fallback
+  assert.ok(isNoise('node --version || true'));
+  // `which X` probes
+  assert.ok(isNoise('which node'));
+  assert.ok(isNoise('which node || true'));
+  assert.ok(isNoise('which'));
+  // Real commands must not match
+  assert.ok(!isNoise('cargo test'));
+  assert.ok(!isNoise('node bin/crag.js version'));
+});
+
+test('isNoise: cross-language print/output leaks', () => {
+  // Ruby code embedded in `run: |` (ruby/workflow/bundled_gems.yml)
+  assert.ok(isNoise('puts "::info:: just after released"'));
+  assert.ok(isNoise('print("hello")'));
+  assert.ok(isNoise('printf "%s\\n" "done"'));
+  assert.ok(isNoise('console.log("test")'));
+  assert.ok(isNoise('die "oops"'));
+  assert.ok(isNoise('raise RuntimeError'));
+  assert.ok(isNoise('throw new Error("x")'));
+  // Must NOT reject commands that contain these as substrings
+  assert.ok(!isNoise('printf-tests'));
+});
+
+test('isNoise: variable assignments from embedded code', () => {
+  // Ruby workflow: `rake_version = File.read("...")` as a captured "command"
+  assert.ok(isNoise('rake_version = File.read("gems/bundled_gems")'));
+  assert.ok(isNoise('foo = "bar"'));
+  assert.ok(isNoise('FOO=bar'));
+  // Must NOT reject env-prefixed commands where the assignment prefixes a real command
+  assert.ok(!isNoise('FOO=bar cargo test'));
+});
+
+test('isNoise: subshell fragments from multi-line compounds', () => {
+  // gatsby workflow captured `exit 1) || npx -p renovate...` as a fragment
+  assert.ok(isNoise(')'));
+  assert.ok(isNoise(') || npx renovate'));
+  assert.ok(isNoise(') && echo done'));
+});
+
+test('isNoise: process substitution / curl-pipe-bash install scripts', () => {
+  // duckdb workflow has `bash <(curl --retry 5 https://...)` for actionlint install
+  assert.ok(isNoise('bash <(curl --retry 5 https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)'));
+  assert.ok(isNoise('sh <(curl -sL https://example.com/installer.sh)'));
+  assert.ok(isNoise('curl https://example.com/script.sh | bash'));
+  assert.ok(isNoise('wget -O - https://example.com/install.sh | sh'));
+});
+
+// --- extractMainCommand — split on `;` as well as `&&` ---
+test('extractMainCommand: splits on semicolon', () => {
+  assert.strictEqual(
+    extractMainCommand('cd test ; npm install ; npm run lint'),
+    'npm run lint'
+  );
+});
+
+test('extractMainCommand: returns empty when all parts are noise', () => {
+  // `npm ci && break` has all-noise parts — should return '' so caller rejects
+  assert.strictEqual(extractMainCommand('npm ci && break'), '');
+  assert.strictEqual(extractMainCommand('cd /tmp && exit 1'), '');
+});
+
 // --- extractMainCommand ---
 test('extractMainCommand: strips leading cd and npm install', () => {
   assert.strictEqual(

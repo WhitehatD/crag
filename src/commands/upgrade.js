@@ -4,11 +4,15 @@ const path = require('path');
 const { syncSkills } = require('../update/skill-sync');
 const { detectWorkspace } = require('../workspace/detect');
 const { enumerateMembers } = require('../workspace/enumerate');
+const { validateFlags } = require('../cli-args');
 
 /**
  * crag upgrade — update universal skills to latest version.
  */
 function upgrade(args) {
+  validateFlags('upgrade', args, {
+    boolean: ['--check', '--workspace', '--force'],
+  });
   const checkOnly = args.includes('--check');
   const workspace = args.includes('--workspace');
   const force = args.includes('--force');

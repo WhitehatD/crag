@@ -37,7 +37,28 @@ function safeRead(filePath, maxBytes = 2 * 1024 * 1024) {
 function safeJson(filePath) {
   const content = safeRead(filePath);
   if (!content) return null;
-  try { return JSON.parse(content); } catch { return null; }
+  try {
+    return JSON.parse(content);
+  } catch (err) {
+    // Leave a breadcrumb so analyze can warn about malformed manifests.
+    // We can't import cli-errors here (circular risk + stacks.js is called
+    // from many test fixtures), so we stash the error on a module-level map
+    // that analyze.js can drain and report.
+    MALFORMED_JSON_FILES.set(filePath, err.message);
+    return null;
+  }
+}
+
+/**
+ * Files where JSON.parse failed. analyze.js drains this map after each run
+ * to surface warnings. Keyed by absolute path.
+ */
+const MALFORMED_JSON_FILES = new Map();
+
+function drainMalformedJsonFiles() {
+  const snapshot = [...MALFORMED_JSON_FILES.entries()];
+  MALFORMED_JSON_FILES.clear();
+  return snapshot;
 }
 
 /**
@@ -109,8 +130,21 @@ function detectStack(dir, result, options = {}) {
   detectDotNet(dir, result);
   detectSwift(dir, result);
   detectElixir(dir, result);
+  detectErlang(dir, result);
   detectRuby(dir, result);
   detectPhp(dir, result);
+  detectHaskell(dir, result);
+  detectOCaml(dir, result);
+  detectZig(dir, result);
+  detectCrystal(dir, result);
+  detectNim(dir, result);
+  detectJulia(dir, result);
+  detectDart(dir, result);
+  detectLua(dir, result);
+  // C / C++ family (CMake, autotools, meson, make) — must come AFTER language
+  // detectors above so repos that also have a higher-level language manifest
+  // aren't flagged as C just because they include a Makefile.
+  detectCFamily(dir, result);
   detectDocker(dir, result);
   detectInfrastructure(dir, result);
 
@@ -143,7 +177,32 @@ function detectStack(dir, result, options = {}) {
  * Scans two depths below each container: container/manifest (depth 1) and
  * container/<child>/manifest (depth 2). Does NOT recurse further.
  */
-function detectNestedStacks(dir, result) {
+// Directory basenames that should NOT be treated as subservices. These are
+// test fixtures, samples, benchmarks, and docs — they contain manifests that
+// look real but are one-off setups for testing or demonstration. If a repo's
+// `examples/` directory has a package.json, that does not make the repo a
+// Node project; it just means the examples directory has Node demos.
+//
+// This list must stay in sync with FIXTURE_DIR_PATTERNS in commands/analyze.js
+// so workspace enumeration and nested-stack detection filter identically.
+const NESTED_SCAN_EXCLUDE = new Set([
+  // Test & benchmark harnesses
+  'examples', 'example', 'samples', 'sample',
+  'demos', 'demo', 'fixtures', 'fixture',
+  'testdata', 'test-data', 'test_data',
+  'benchmarks', 'benchmark', 'bench',
+  'e2e', 'integration-tests', 'perf', 'stress',
+  'playground', 'playgrounds', 'sandbox',
+  '__fixtures__', '__mocks__', '__snapshots__',
+  // Documentation / site generators
+  'docs', 'doc', 'documentation', 'website', 'site', 'www',
+  // Generated / vendored
+  'node_modules', 'vendor', 'vendored', 'third_party', 'third-party',
+  'target', 'dist', 'build', 'out', 'bin', 'obj',
+  '.git', '.svn', '.hg', '.idea', '.vscode',
+]);
+
+function detectNestedStacks(dir, result, visited = new Set()) {
   const containerDirs = [
     // Classic containers (monorepos, microservice demos, VSCode-style editors)
     'src', 'services', 'packages', 'apps', 'cmd', 'projects', 'microservices',
@@ -162,20 +221,32 @@ function detectNestedStacks(dir, result) {
   const rootHadStacks = result.stack.length > 0;
   const subservices = [];
 
+  // Guard against symlink cycles: resolve the real path of `dir` and skip if
+  // we've already scanned it on this invocation. Uses lstat to detect links
+  // before following them; realpath canonicalizes for identity comparison.
+  const rootReal = safeRealpath(dir);
+  if (rootReal && visited.has(rootReal)) return;
+  if (rootReal) visited.add(rootReal);
+
   for (const container of containerDirs) {
     const containerPath = path.join(dir, container);
     if (!fs.existsSync(containerPath)) continue;
+    if (isSymlink(containerPath)) continue; // skip symlinked containers
 
     // Depth 1: container itself has a manifest (e.g. web/ui/package.json where
     // the container is `ui` directly, or sdk/package.json)
-    scanOneSubdir(containerPath, container, result, subservices);
+    scanOneSubdir(containerPath, container, result, subservices, visited);
 
     // Depth 2: container/<child>/manifest (the common microservices pattern)
     let children;
     try {
       children = fs.readdirSync(containerPath, { withFileTypes: true })
-        .filter(e => e.isDirectory())
-        .map(e => e.name);
+        // Skip symlinks — they can create cycles or double-count targets
+        .filter(e => e.isDirectory() && !e.isSymbolicLink())
+        .map(e => e.name)
+        // Drop fixture / docs / sample directories so we don't report
+        // `java/maven` for nx just because it has a Java example.
+        .filter(name => !NESTED_SCAN_EXCLUDE.has(name));
     } catch { continue; }
 
     // Cap children scan at a reasonable number to avoid pathological
@@ -184,7 +255,7 @@ function detectNestedStacks(dir, result) {
     for (const child of capped) {
       const childPath = path.join(containerPath, child);
       const relPath = container + '/' + child;
-      scanOneSubdir(childPath, relPath, result, subservices);
+      scanOneSubdir(childPath, relPath, result, subservices, visited);
     }
   }
 
@@ -198,17 +269,36 @@ function detectNestedStacks(dir, result) {
   }
 }
 
+function safeRealpath(p) {
+  try { return fs.realpathSync(p); } catch { return null; }
+}
+
+function isSymlink(p) {
+  try { return fs.lstatSync(p).isSymbolicLink(); } catch { return false; }
+}
+
 /**
  * Run non-recursive stack detection on `subdir` and merge unique stacks into
  * the main `result`. Records the subservice in `subservices` if any stacks
- * were detected.
+ * were detected. Skips symlinks and already-visited realpaths (cycle guard).
  */
-function scanOneSubdir(subdir, relPath, result, subservices) {
+function scanOneSubdir(subdir, relPath, result, subservices, visited = new Set()) {
   if (!fs.existsSync(subdir)) return;
+  if (isSymlink(subdir)) return;
   try {
-    const st = fs.statSync(subdir);
+    const st = fs.lstatSync(subdir);
     if (!st.isDirectory()) return;
   } catch { return; }
+
+  // Cycle guard via realpath identity.
+  const real = safeRealpath(subdir);
+  if (real && visited.has(real)) return;
+  if (real) visited.add(real);
+
+  // Skip fixture directories at depth-1 as well (a repo might put examples
+  // directly under `src/` with no intermediate container).
+  const base = path.basename(subdir);
+  if (NESTED_SCAN_EXCLUDE.has(base)) return;
 
   const subResult = { stack: [], _manifests: {} };
   detectStack(subdir, subResult, { recursive: false });
@@ -382,31 +472,203 @@ function detectJava(dir, result) {
 function detectKotlin(dir, result) {
   // Kotlin is almost always also "java/gradle" via Gradle. We look for
   // the kotlin plugin in build.gradle.kts or .kt source files.
+  let kotlinDetected = false;
   const gradleKts = path.join(dir, 'build.gradle.kts');
   if (fs.existsSync(gradleKts)) {
     const content = safeRead(gradleKts);
     if (/kotlin\(["']jvm["']\)|kotlin\(["']android["']\)|org\.jetbrains\.kotlin/.test(content)) {
-      if (!result.stack.includes('kotlin')) result.stack.push('kotlin');
+      kotlinDetected = true;
     }
   }
   // Also detect via .kt files in src/
   try {
     const srcMain = path.join(dir, 'src', 'main', 'kotlin');
-    if (fs.existsSync(srcMain)) {
-      if (!result.stack.includes('kotlin')) result.stack.push('kotlin');
-    }
+    if (fs.existsSync(srcMain)) kotlinDetected = true;
   } catch { /* skip */ }
+
+  if (kotlinDetected) {
+    if (!result.stack.includes('kotlin')) result.stack.push('kotlin');
+    // Kotlin almost always uses Gradle. If detectJava didn't fire because
+    // only `.kts` was present, ensure `java/gradle` is in the stack so
+    // downstream gate inference (inferKotlinGates) has a build system hook.
+    if (!result.stack.includes('java/gradle')) result.stack.push('java/gradle');
+    if (!result._manifests.javaBuildSystem) result._manifests.javaBuildSystem = 'gradle';
+    if (result._manifests.gradleWrapper === undefined) {
+      result._manifests.gradleWrapper = exists(dir, 'gradlew') || exists(dir, 'gradlew.bat');
+    }
+  }
+}
+
+// --- Erlang ----------------------------------------------------------------
+
+function detectErlang(dir, result) {
+  if (existsAny(dir, ['rebar.config', 'rebar3.config'])) {
+    result.stack.push('erlang');
+    result._manifests.erlangBuildSystem = 'rebar3';
+  } else if (exists(dir, 'erlang.mk')) {
+    result.stack.push('erlang');
+    result._manifests.erlangBuildSystem = 'erlang.mk';
+  }
+}
+
+// --- Haskell ---------------------------------------------------------------
+
+function detectHaskell(dir, result) {
+  const hasStackYaml = existsAny(dir, ['stack.yaml', 'stack.yaml.lock']);
+  const hasPackageYaml = exists(dir, 'package.yaml');
+  const hasCabal = safeListContains(dir, /\.cabal$/);
+  const hasCabalProject = exists(dir, 'cabal.project');
+
+  if (!hasStackYaml && !hasCabal && !hasCabalProject && !hasPackageYaml) return;
+
+  result.stack.push('haskell');
+  if (hasStackYaml) {
+    result._manifests.haskellBuildSystem = 'stack';
+  } else if (hasCabal || hasCabalProject) {
+    result._manifests.haskellBuildSystem = 'cabal';
+  } else if (hasPackageYaml) {
+    result._manifests.haskellBuildSystem = 'hpack';
+  }
+}
+
+// --- OCaml -----------------------------------------------------------------
+
+function detectOCaml(dir, result) {
+  if (exists(dir, 'dune-project') || exists(dir, 'dune')) {
+    result.stack.push('ocaml');
+    result._manifests.ocamlBuildSystem = 'dune';
+    return;
+  }
+  if (safeListContains(dir, /\.opam$/)) {
+    result.stack.push('ocaml');
+    result._manifests.ocamlBuildSystem = 'opam';
+  }
+}
+
+// --- Zig -------------------------------------------------------------------
+
+function detectZig(dir, result) {
+  if (exists(dir, 'build.zig') || exists(dir, 'build.zig.zon')) {
+    result.stack.push('zig');
+  }
+}
+
+// --- Crystal ---------------------------------------------------------------
+
+function detectCrystal(dir, result) {
+  if (exists(dir, 'shard.yml') || exists(dir, 'shard.yaml')) {
+    result.stack.push('crystal');
+  }
+}
+
+// --- Nim -------------------------------------------------------------------
+
+function detectNim(dir, result) {
+  if (safeListContains(dir, /\.nimble$/) || exists(dir, 'nim.cfg') || exists(dir, 'config.nims')) {
+    result.stack.push('nim');
+  }
+}
+
+// --- Julia -----------------------------------------------------------------
+
+function detectJulia(dir, result) {
+  if (exists(dir, 'Project.toml')) {
+    // Project.toml with `name = "X"` and `uuid = "..."` is Julia. Other
+    // ecosystems also use Project.toml (Poetry shims, etc.), so sniff.
+    const content = safeRead(path.join(dir, 'Project.toml'));
+    if (/^uuid\s*=/m.test(content) || /\[deps\]/.test(content)) {
+      result.stack.push('julia');
+    }
+  }
+}
+
+// --- Dart / Flutter --------------------------------------------------------
+
+function detectDart(dir, result) {
+  if (exists(dir, 'pubspec.yaml') || exists(dir, 'pubspec.yml')) {
+    result.stack.push('dart');
+    const content = safeRead(path.join(dir, 'pubspec.yaml'));
+    if (/flutter\s*:\s*/.test(content) || /sdk\s*:\s*flutter/.test(content)) {
+      result.stack.push('flutter');
+    }
+  }
+}
+
+// --- Lua -------------------------------------------------------------------
+
+function detectLua(dir, result) {
+  if (safeListContains(dir, /\.rockspec$/) || exists(dir, '.luarc.json') || exists(dir, '.luacheckrc')) {
+    result.stack.push('lua');
+  }
+}
+
+// --- C / C++ family (CMake, autotools, meson, plain Make) ------------------
+
+function detectCFamily(dir, result) {
+  // CMake — most common C++ build system today
+  if (exists(dir, 'CMakeLists.txt')) {
+    if (!result.stack.includes('c++/cmake')) result.stack.push('c++/cmake');
+    result._manifests.cBuildSystem = 'cmake';
+    return;
+  }
+
+  // Meson — modern alternative (used by e.g. postgres, systemd, glib)
+  if (exists(dir, 'meson.build')) {
+    if (!result.stack.includes('c/meson')) result.stack.push('c/meson');
+    result._manifests.cBuildSystem = 'meson';
+    return;
+  }
+
+  // GNU autotools (configure.ac / configure.in / autogen.sh)
+  if (existsAny(dir, ['configure.ac', 'configure.in', 'autogen.sh'])) {
+    if (!result.stack.includes('c/autotools')) result.stack.push('c/autotools');
+    result._manifests.cBuildSystem = 'autotools';
+    return;
+  }
+
+  // Plain Makefile with no higher-level build system. Only flag as C if the
+  // repo also has C/C++ source files at root to avoid false positives on
+  // Node/Python/Go projects that have a convenience Makefile.
+  if (exists(dir, 'Makefile') || exists(dir, 'makefile') || exists(dir, 'GNUmakefile') || exists(dir, 'GNUmakefile.in')) {
+    // Already detected a higher-level language? Don't overwrite it with C.
+    const hasOtherLang = result.stack.some(s =>
+      s === 'node' || s === 'python' || s === 'go' || s === 'rust' ||
+      s === 'ruby' || s === 'php' || s === 'dotnet' || s === 'java/maven' ||
+      s === 'java/gradle' || s === 'kotlin' || s === 'swift' || s === 'elixir'
+    );
+    if (hasOtherLang) return;
+
+    // Sniff root files for C/C++ sources (cheap — readdir only)
+    try {
+      const entries = fs.readdirSync(dir);
+      const hasCSources = entries.some(f =>
+        f.endsWith('.c') || f.endsWith('.cpp') || f.endsWith('.cc') ||
+        f.endsWith('.cxx') || f.endsWith('.h') || f.endsWith('.hpp')
+      );
+      if (hasCSources) {
+        result.stack.push('c');
+        result._manifests.cBuildSystem = 'make';
+      } else {
+        // Just a convenience Makefile — mine its targets via task-runners.js
+        // but don't pollute the stack list.
+      }
+    } catch { /* skip */ }
+  }
 }
 
 // --- C# / .NET -------------------------------------------------------------
 
 function detectDotNet(dir, result) {
-  // Look for *.csproj, *.fsproj, *.vbproj, *.sln at top level
+  // Look for *.csproj, *.fsproj, *.vbproj, *.sln, *.slnx at top level,
+  // OR `Directory.Build.props` / `Directory.Packages.props` which are
+  // central .NET convention files used in multi-project solutions like Jint.
   try {
     const entries = fs.readdirSync(dir);
     const hasDotNet = entries.some(f =>
       f.endsWith('.csproj') || f.endsWith('.fsproj') ||
-      f.endsWith('.vbproj') || f.endsWith('.sln')
+      f.endsWith('.vbproj') || f.endsWith('.sln') || f.endsWith('.slnx') ||
+      f === 'Directory.Build.props' || f === 'Directory.Packages.props' ||
+      f === 'global.json'
     );
     if (hasDotNet) {
       result.stack.push('dotnet');
@@ -570,4 +832,5 @@ module.exports = {
   safeJson,
   parseSimpleToml,
   listFiles,
+  drainMalformedJsonFiles,
 };

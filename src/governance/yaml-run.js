@@ -52,7 +52,12 @@ function extractRunCommands(content) {
         const indentMatch = ln.match(/^(\s*)/);
         if (indentMatch[1].length <= baseIndent) break;
         const trimmed = ln.trim();
-        if (trimmed && !trimmed.startsWith('#')) commands.push(trimmed);
+        if (trimmed && !trimmed.startsWith('#')) {
+          // Strip surrounding quotes so `"cargo test"` compares equal to
+          // `cargo test`. Consistent with inline and list forms below and
+          // with all other CI extractors in src/analyze/ci-extractors.js.
+          commands.push(stripYamlQuotes(trimmed));
+        }
       }
     } else if (rest && !rest.startsWith('#')) {
       commands.push(stripYamlQuotes(rest));

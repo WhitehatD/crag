@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { EXIT_USER } = require('../cli-errors');
+const { validateFlags } = require('../cli-args');
 
 const CORE_CHECKS = [
   ['.claude/skills/pre-start-context/SKILL.md', 'Pre-start skill (universal)'],
@@ -29,8 +30,16 @@ const OPTIONAL_CHECKS = [
  * Probe the filesystem and return a structured report of crag infrastructure.
  * Exported for testing — the CLI wraps this and prints.
  */
-function runChecks(cwd) {
-  const core = CORE_CHECKS.map(([file, name]) => ({
+function runChecks(cwd, options = {}) {
+  const { governanceOnly = false } = options;
+  // In governance-only mode, we only care whether governance.md exists.
+  // This is the post-`crag analyze` sanity check — users who ran analyze
+  // haven't installed skills/hooks and shouldn't be told "3 files missing"
+  // for infrastructure they didn't ask for.
+  const activeChecks = governanceOnly
+    ? CORE_CHECKS.filter(([file]) => file === '.claude/governance.md')
+    : CORE_CHECKS;
+  const core = activeChecks.map(([file, name]) => ({
     file,
     name,
     present: fs.existsSync(path.join(cwd, file)),
@@ -43,6 +52,7 @@ function runChecks(cwd) {
   const missing = core.filter((c) => !c.present).length;
   return {
     cwd,
+    mode: governanceOnly ? 'governance-only' : 'full',
     core,
     optional,
     missing,
@@ -52,8 +62,10 @@ function runChecks(cwd) {
 }
 
 function check(args = []) {
+  validateFlags('check', args, { boolean: ['--json', '--governance-only'] });
   const cwd = process.cwd();
-  const report = runChecks(cwd);
+  const governanceOnly = args.includes('--governance-only');
+  const report = runChecks(cwd, { governanceOnly });
 
   // --json: machine-readable output, no colors, no prose
   if (args.includes('--json')) {

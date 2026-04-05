@@ -87,8 +87,18 @@ function parseGovernance(content) {
     return result;
   }
   if (content.length > MAX_CONTENT_SIZE) {
-    result.warnings.push(`governance.md exceeds ${MAX_CONTENT_SIZE} bytes — truncating`);
-    content = content.slice(0, MAX_CONTENT_SIZE);
+    // Truncate at a section boundary so we don't sever `## Gates` mid-list
+    // and silently lose half the gates. Find the last `## ` heading before
+    // the cap and cut there; if none exists, cut at the last newline to at
+    // least avoid leaving a half-written line.
+    const truncated = content.slice(0, MAX_CONTENT_SIZE);
+    const lastSection = truncated.lastIndexOf('\n## ');
+    const lastLine = truncated.lastIndexOf('\n');
+    const cut = lastSection !== -1 ? lastSection : (lastLine !== -1 ? lastLine : MAX_CONTENT_SIZE);
+    content = content.slice(0, cut);
+    result.warnings.push(
+      `governance.md exceeds ${MAX_CONTENT_SIZE} bytes — truncated at byte ${cut} (last section boundary).`
+    );
   }
 
   const nameMatch = content.match(/- Project:\s*(.+)/);

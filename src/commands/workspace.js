@@ -5,12 +5,14 @@ const path = require('path');
 const { detectWorkspace } = require('../workspace/detect');
 const { enumerateMembers } = require('../workspace/enumerate');
 const { loadGovernanceHierarchy } = require('../workspace/governance');
+const { validateFlags } = require('../cli-args');
 
 /**
  * crag workspace — inspect the detected workspace.
  * Prints workspace type, root, all members with their stacks and governance status.
  */
 function workspace(args) {
+  validateFlags('workspace', args, { boolean: ['--json'] });
   const json = args.includes('--json');
   const cwd = process.cwd();
 

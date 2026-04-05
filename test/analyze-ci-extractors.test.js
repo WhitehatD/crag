@@ -341,3 +341,139 @@ test('extractCiCommands: ci/Jenkinsfile subdirectory', () => {
   assert.strictEqual(system, 'jenkins');
   assert.ok(commands.includes('make release'));
 });
+
+// --- Cirrus CI (added in v0.2.11 after bitcoin/postgres stress-test hits) ---
+
+test('extractCiCommands: Cirrus CI script blocks', () => {
+  const dir = mkFixture({
+    '.cirrus.yml': `
+task:
+  name: Test
+  container:
+    image: ubuntu:latest
+  test_script:
+    - cargo test
+    - cargo clippy
+  lint_script: cargo fmt --check
+`,
+  });
+  const { system, commands } = extractCiCommands(dir);
+  assert.strictEqual(system, 'cirrus-ci');
+  assert.ok(commands.some(c => c.includes('cargo test')));
+  assert.ok(commands.some(c => c.includes('cargo clippy')));
+  assert.ok(commands.some(c => c.includes('cargo fmt --check')));
+});
+
+test('extractCiCommands: Cirrus CI block-scalar script with quote stripping', () => {
+  const dir = mkFixture({
+    '.cirrus.yml': `
+task:
+  build_script: |
+    "./configure"
+    "make -j4"
+`,
+  });
+  const { commands } = extractCiCommands(dir);
+  // Block-scalar commands should have their surrounding quotes stripped
+  assert.ok(commands.includes('./configure'),
+    `expected stripped "./configure", got: ${JSON.stringify(commands)}`);
+  assert.ok(commands.includes('make -j4'),
+    `expected stripped "make -j4", got: ${JSON.stringify(commands)}`);
+});
+
+// --- ci/*.sh ad-hoc scanner --------------------------------------------
+
+test('extractCiCommands: ci/ shell scripts with canonical names', () => {
+  const dir = mkFixture({
+    'ci/test.sh': '#!/bin/bash\nset -e\n./test-all',
+    'ci/lint.sh': '#!/bin/bash\nshellcheck **/*.sh',
+    'ci/random-helper.sh': '# not a gate',
+  });
+  const { commands } = extractCiCommands(dir);
+  assert.ok(commands.includes('bash ci/test.sh'));
+  assert.ok(commands.includes('bash ci/lint.sh'));
+  // Non-canonical script names should NOT be captured
+  assert.ok(!commands.includes('bash ci/random-helper.sh'));
+});
+
+// --- Cross-CI quote-stripping consistency regression test ---------------
+
+test('extractCiCommands: quote stripping is CONSISTENT across all CI systems', () => {
+  // Create one fixture per CI system, each with a `quoted` command.
+  // All systems should yield the unquoted form.
+  const cases = [
+    {
+      name: 'github-actions',
+      files: { '.github/workflows/q.yml': `jobs:\n  t:\n    steps:\n      - run: "npm test"\n` },
+    },
+    {
+      name: 'gitlab-ci',
+      files: { '.gitlab-ci.yml': `test:\n  script:\n    - "npm test"\n` },
+    },
+    {
+      name: 'circleci',
+      files: { '.circleci/config.yml': `jobs:\n  build:\n    steps:\n      - run: "npm test"\n` },
+    },
+    {
+      name: 'travis',
+      files: { '.travis.yml': `script:\n  - "npm test"\n` },
+    },
+    {
+      name: 'azure',
+      files: { 'azure-pipelines.yml': `steps:\n  - script: "npm test"\n` },
+    },
+    {
+      name: 'drone',
+      files: { '.drone.yml': `kind: pipeline\nsteps:\n  - name: test\n    commands:\n      - "npm test"\n` },
+    },
+    {
+      name: 'bitbucket',
+      files: { 'bitbucket-pipelines.yml': `pipelines:\n  default:\n    - step:\n        script:\n          - "npm test"\n` },
+    },
+  ];
+
+  for (const { name, files } of cases) {
+    const dir = mkFixture(files);
+    const { commands } = extractCiCommands(dir);
+    const stripped = commands.map(c => c.replace(/^\s+|\s+$/g, ''));
+    assert.ok(
+      stripped.includes('npm test'),
+      `[${name}] expected unquoted 'npm test' in commands, got: ${JSON.stringify(stripped)}`
+    );
+    assert.ok(
+      !stripped.includes('"npm test"'),
+      `[${name}] should have stripped quotes but found "npm test" in: ${JSON.stringify(stripped)}`
+    );
+  }
+});
+
+test('extractCiCommands: block-scalar quote stripping is CONSISTENT across CI systems', () => {
+  // Same test but using block scalar form (run: | or script: |)
+  const cases = [
+    {
+      name: 'github-actions',
+      files: { '.github/workflows/q.yml': `jobs:\n  t:\n    steps:\n      - run: |\n          "cargo test"\n` },
+    },
+    {
+      name: 'gitlab-ci',
+      files: { '.gitlab-ci.yml': `test:\n  script: |\n    "cargo test"\n` },
+    },
+    {
+      name: 'circleci',
+      files: { '.circleci/config.yml': `jobs:\n  b:\n    steps:\n      - run: |\n          "cargo test"\n` },
+    },
+    {
+      name: 'azure',
+      files: { 'azure-pipelines.yml': `steps:\n  - script: |\n      "cargo test"\n` },
+    },
+  ];
+
+  for (const { name, files } of cases) {
+    const dir = mkFixture(files);
+    const { commands } = extractCiCommands(dir);
+    assert.ok(
+      commands.includes('cargo test'),
+      `[${name}] expected unquoted 'cargo test' in block-scalar commands, got: ${JSON.stringify(commands)}`
+    );
+  }
+});

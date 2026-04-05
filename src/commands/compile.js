@@ -16,6 +16,7 @@ const { generateWindsurf } = require('../compile/windsurf');
 const { generateZed } = require('../compile/zed');
 const { generateCody } = require('../compile/cody');
 const { cliError, readFileOrExit, EXIT_USER, EXIT_INTERNAL } = require('../cli-errors');
+const { validateFlags } = require('../cli-args');
 
 // All supported compile targets in dispatch order.
 // Grouped: CI (3) + AI agent native (3) + AI agent extras (6)
@@ -35,9 +36,25 @@ const ALL_TARGETS = [
 ];
 
 function compile(args) {
+  validateFlags('compile', args, {
+    boolean: ['--dry-run', '--force'],
+    string: ['--target'],
+  });
   const targetIdx = args.indexOf('--target');
   const target = targetIdx !== -1 ? args[targetIdx + 1] : args[1];
   const dryRun = args.includes('--dry-run');
+
+  // Validate the target BEFORE reading governance.md or doing any work. A
+  // previous bug had target validation buried inside the compile loop, so
+  // `crag compile --target zzzunknown` would print "Compiling → zzzunknown"
+  // and "0 gates, 0 runtimes" before finally erroring. Fail fast.
+  const KNOWN_TARGETS = new Set([...ALL_TARGETS, 'all', 'list']);
+  if (target && !KNOWN_TARGETS.has(target)) {
+    console.error(`  Unknown target: ${target}`);
+    console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
+    process.exit(EXIT_USER);
+  }
+
   const cwd = process.cwd();
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
@@ -72,12 +89,27 @@ function compile(args) {
     console.log('    crag compile --target zed          .zed/rules.md');
     console.log('    crag compile --target cody         .sourcegraph/cody-instructions.md\n');
     console.log('  Combined:');
-    console.log('    crag compile --target all          All 12 targets at once');
+    console.log(`    crag compile --target all          All ${ALL_TARGETS.length} targets at once`);
     console.log('    crag compile --target <t> --dry-run  Preview paths without writing\n');
     return;
   }
 
   const targets = target === 'all' ? ALL_TARGETS : [target];
+
+  // Refuse to emit a workflow / hook / CI file when there are 0 gates —
+  // these targets produce broken artifacts (empty workflows, hooks with
+  // no checks). The user should either fix governance.md or run analyze
+  // again. Doc-only targets (cursor, agents-md, gemini, ...) still work
+  // because they're reference material, not executable.
+  const EXECUTABLE_TARGETS = new Set(['github', 'husky', 'pre-commit']);
+  const wantsExecutable = targets.some(t => EXECUTABLE_TARGETS.has(t));
+  if (gateCount === 0 && wantsExecutable) {
+    console.error(`  \x1b[31m✗\x1b[0m Refusing to compile executable targets with 0 gates.`);
+    console.error(`    Targets affected: ${targets.filter(t => EXECUTABLE_TARGETS.has(t)).join(', ')}`);
+    console.error(`    This would generate a broken workflow/hook with no quality checks.`);
+    console.error(`    Fix: edit .claude/governance.md and add real gate commands under ### Test / ### Lint.`);
+    process.exit(EXIT_USER);
+  }
 
   console.log(`\n  Compiling governance.md → ${targets.join(', ')}`);
   console.log(`  ${gateCount} gates, ${parsed.runtimes.length} runtimes detected${dryRun ? ' (dry-run)' : ''}\n`);

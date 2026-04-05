@@ -33,8 +33,17 @@ function inferGates(dir, result) {
   inferDotNetGates(dir, result);
   inferSwiftGates(dir, result);
   inferElixirGates(dir, result);
+  inferErlangGates(dir, result);
   inferRubyGates(dir, result);
   inferPhpGates(dir, result);
+  inferHaskellGates(dir, result);
+  inferOCamlGates(dir, result);
+  inferZigGates(dir, result);
+  inferCrystalGates(dir, result);
+  inferNimGates(dir, result);
+  inferJuliaGates(dir, result);
+  inferDartGates(dir, result);
+  inferCFamilyGates(dir, result);
   inferInfrastructureGates(dir, result);
 }
 
@@ -373,6 +382,145 @@ function inferPhpGates(dir, result) {
 
   // composer validate is a near-universal sanity gate
   push(result.linters, 'composer validate --strict');
+}
+
+// --- Erlang ----------------------------------------------------------------
+
+function inferErlangGates(dir, result) {
+  if (!result.stack.includes('erlang')) return;
+  const buildSystem = result._manifests.erlangBuildSystem;
+  if (buildSystem === 'rebar3') {
+    push(result.testers, 'rebar3 eunit');
+    push(result.testers, 'rebar3 ct');
+    push(result.linters, 'rebar3 dialyzer');
+    push(result.builders, 'rebar3 compile');
+  } else if (buildSystem === 'erlang.mk') {
+    push(result.testers, 'make tests');
+    push(result.builders, 'make');
+  }
+}
+
+// --- Haskell ---------------------------------------------------------------
+
+function inferHaskellGates(dir, result) {
+  if (!result.stack.includes('haskell')) return;
+  const buildSystem = result._manifests.haskellBuildSystem;
+  if (buildSystem === 'stack') {
+    push(result.testers, 'stack test');
+    push(result.builders, 'stack build');
+  } else {
+    // cabal / hpack
+    push(result.testers, 'cabal test');
+    push(result.builders, 'cabal build');
+  }
+  // hlint is near-universal for Haskell lint
+  if (fs.existsSync(path.join(dir, '.hlint.yaml')) || fs.existsSync(path.join(dir, '.hlint.yml'))) {
+    push(result.linters, 'hlint .');
+  }
+}
+
+// --- OCaml -----------------------------------------------------------------
+
+function inferOCamlGates(dir, result) {
+  if (!result.stack.includes('ocaml')) return;
+  const buildSystem = result._manifests.ocamlBuildSystem;
+  if (buildSystem === 'dune') {
+    push(result.testers, 'dune runtest');
+    push(result.builders, 'dune build');
+    push(result.linters, 'dune build @fmt --auto-promote');
+  } else if (buildSystem === 'opam') {
+    push(result.testers, 'opam exec -- dune runtest');
+  }
+}
+
+// --- Zig -------------------------------------------------------------------
+
+function inferZigGates(dir, result) {
+  if (!result.stack.includes('zig')) return;
+  push(result.testers, 'zig build test');
+  push(result.builders, 'zig build');
+  push(result.linters, 'zig fmt --check .');
+}
+
+// --- Crystal ---------------------------------------------------------------
+
+function inferCrystalGates(dir, result) {
+  if (!result.stack.includes('crystal')) return;
+  push(result.testers, 'crystal spec');
+  push(result.builders, 'shards build');
+  push(result.linters, 'crystal tool format --check');
+  if (fs.existsSync(path.join(dir, '.ameba.yml'))) {
+    push(result.linters, 'bin/ameba');
+  }
+}
+
+// --- Nim -------------------------------------------------------------------
+
+function inferNimGates(dir, result) {
+  if (!result.stack.includes('nim')) return;
+  push(result.testers, 'nimble test');
+  push(result.builders, 'nimble build');
+}
+
+// --- Julia -----------------------------------------------------------------
+
+function inferJuliaGates(dir, result) {
+  if (!result.stack.includes('julia')) return;
+  push(result.testers, 'julia --project=. -e "using Pkg; Pkg.test()"');
+}
+
+// --- Dart / Flutter --------------------------------------------------------
+
+function inferDartGates(dir, result) {
+  if (!result.stack.includes('dart')) return;
+  if (result.stack.includes('flutter')) {
+    push(result.testers, 'flutter test');
+    push(result.linters, 'flutter analyze');
+    push(result.builders, 'flutter build apk --debug');
+  } else {
+    push(result.testers, 'dart test');
+    push(result.linters, 'dart analyze');
+    push(result.builders, 'dart compile exe');
+  }
+  push(result.linters, 'dart format --output=none --set-exit-if-changed .');
+}
+
+// --- C / C++ family --------------------------------------------------------
+
+/**
+ * Infer gates for C / C++ projects. Prefers task-runner output (mined from
+ * Makefile) because the exact build steps vary wildly. Only emits generic
+ * gates when the Makefile mining returned nothing.
+ */
+function inferCFamilyGates(dir, result) {
+  const buildSystem = result._manifests.cBuildSystem;
+  if (!buildSystem) return;
+  // If task-runners.js already populated gates from the Makefile, don't
+  // add generic fallbacks — the project-specific targets are better.
+  const hasMakeGates =
+    (result.taskTargets && result.taskTargets.make && result.taskTargets.make.length > 0);
+
+  if (buildSystem === 'cmake') {
+    push(result.builders, 'cmake -S . -B build');
+    push(result.builders, 'cmake --build build');
+    if (fs.existsSync(path.join(dir, 'build'))) {
+      push(result.testers, 'ctest --test-dir build --output-on-failure');
+    } else {
+      push(result.testers, 'ctest --test-dir build --output-on-failure');
+    }
+  } else if (buildSystem === 'meson') {
+    push(result.builders, 'meson setup build');
+    push(result.builders, 'meson compile -C build');
+    push(result.testers, 'meson test -C build');
+  } else if (buildSystem === 'autotools') {
+    if (!hasMakeGates) {
+      push(result.builders, './configure && make');
+      push(result.testers, 'make check');
+    }
+  } else if (buildSystem === 'make' && !hasMakeGates) {
+    push(result.builders, 'make');
+    push(result.testers, 'make check');
+  }
 }
 
 // --- Infrastructure --------------------------------------------------------

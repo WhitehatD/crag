@@ -382,3 +382,132 @@ test('detectNestedStacks: ml/ + pipelines/ data monolith', () => {
   assert.ok(result.stack.includes('python'));
   assert.ok(result._manifests.subservices.length >= 2);
 });
+
+// --- NEW: detectors added during the v0.2.11 stress-test fix pass -------
+
+test('detectStack: C++ with CMake', () => {
+  const { result } = analyze({ 'CMakeLists.txt': 'project(foo)\nadd_library(bar bar.cpp)' });
+  assert.ok(result.stack.includes('c++/cmake'));
+  assert.strictEqual(result._manifests.cBuildSystem, 'cmake');
+});
+
+test('detectStack: C/autotools', () => {
+  const { result } = analyze({ 'configure.ac': 'AC_INIT(foo, 1.0)\nAC_OUTPUT' });
+  assert.ok(result.stack.includes('c/autotools'));
+});
+
+test('detectStack: Meson', () => {
+  const { result } = analyze({ 'meson.build': "project('foo', 'c')" });
+  assert.ok(result.stack.includes('c/meson'));
+});
+
+test('detectStack: Haskell via cabal', () => {
+  const { result } = analyze({
+    'foo.cabal': 'name: foo\nversion: 1.0',
+  });
+  assert.ok(result.stack.includes('haskell'));
+  assert.strictEqual(result._manifests.haskellBuildSystem, 'cabal');
+});
+
+test('detectStack: Haskell via stack.yaml', () => {
+  const { result } = analyze({ 'stack.yaml': 'resolver: lts-20.0' });
+  assert.ok(result.stack.includes('haskell'));
+  assert.strictEqual(result._manifests.haskellBuildSystem, 'stack');
+});
+
+test('detectStack: OCaml via dune', () => {
+  const { result } = analyze({ 'dune-project': '(lang dune 3.0)' });
+  assert.ok(result.stack.includes('ocaml'));
+  assert.strictEqual(result._manifests.ocamlBuildSystem, 'dune');
+});
+
+test('detectStack: Zig via build.zig', () => {
+  const { result } = analyze({ 'build.zig': 'const std = @import("std");' });
+  assert.ok(result.stack.includes('zig'));
+});
+
+test('detectStack: Crystal via shard.yml', () => {
+  const { result } = analyze({ 'shard.yml': 'name: foo\nversion: 0.1.0' });
+  assert.ok(result.stack.includes('crystal'));
+});
+
+test('detectStack: Nim via .nimble', () => {
+  const { result } = analyze({ 'foo.nimble': 'version = "0.1.0"' });
+  assert.ok(result.stack.includes('nim'));
+});
+
+test('detectStack: Julia via Project.toml with uuid', () => {
+  const { result } = analyze({
+    'Project.toml': 'name = "Foo"\nuuid = "a1234567-89ab-cdef-0123-456789abcdef"\n[deps]\nJSON = "..."',
+  });
+  assert.ok(result.stack.includes('julia'));
+});
+
+test('detectStack: Julia does NOT match Python Project.toml (no uuid, no deps)', () => {
+  const { result } = analyze({
+    'Project.toml': '# Some other tool\n[tool.foo]\nname = "x"',
+  });
+  assert.ok(!result.stack.includes('julia'));
+});
+
+test('detectStack: Dart via pubspec', () => {
+  const { result } = analyze({ 'pubspec.yaml': 'name: foo\nversion: 0.1.0' });
+  assert.ok(result.stack.includes('dart'));
+});
+
+test('detectStack: Flutter via pubspec sdk', () => {
+  const { result } = analyze({ 'pubspec.yaml': 'name: foo\ndependencies:\n  flutter:\n    sdk: flutter' });
+  assert.ok(result.stack.includes('dart'));
+  assert.ok(result.stack.includes('flutter'));
+});
+
+test('detectStack: Erlang via rebar.config', () => {
+  const { result } = analyze({ 'rebar.config': '{erl_opts, [debug_info]}.' });
+  assert.ok(result.stack.includes('erlang'));
+});
+
+test('detectStack: Lua via rockspec', () => {
+  const { result } = analyze({ 'foo-scm-1.rockspec': 'package = "foo"\nversion = "scm-1"' });
+  assert.ok(result.stack.includes('lua'));
+});
+
+test('detectStack: Kotlin-only .kts adds java/gradle to stack', () => {
+  // Previously a repo with only build.gradle.kts (no .gradle) could get
+  // `kotlin` without `java/gradle`, leaving inferKotlinGates without a
+  // build system hook. Now detectKotlin ensures both are set.
+  const { result } = analyze({
+    'build.gradle.kts': 'plugins { kotlin("jvm") version "1.9.0" }',
+    'gradlew': '#!/bin/sh\nexec gradle "$@"',
+  });
+  assert.ok(result.stack.includes('kotlin'));
+  assert.ok(result.stack.includes('java/gradle'));
+  assert.strictEqual(result._manifests.javaBuildSystem, 'gradle');
+});
+
+test('detectStack: C family does NOT fire on Node project with Makefile', () => {
+  // Node projects often have a convenience Makefile — this should NOT make
+  // crag label them as C.
+  const { result } = analyze({
+    'package.json': '{"name":"foo","scripts":{"test":"jest"}}',
+    'Makefile': 'test:\n\tnpm test',
+  });
+  assert.ok(result.stack.includes('node'));
+  assert.ok(!result.stack.includes('c'));
+});
+
+test('detectNestedStacks: fixture directories are excluded', () => {
+  // Previously nx reported 7 stacks because `examples/java-app/pom.xml`
+  // and similar fixture manifests were being walked. Now filtered.
+  const { result } = analyze({
+    'package.json': '{"name":"root","workspaces":["packages/*"]}',
+    'examples/java-app/pom.xml': '<project></project>',
+    'samples/go-app/go.mod': 'module sample',
+    'fixtures/python-fixture/pyproject.toml': '[project]\nname="fx"',
+    'docs/rust-example/Cargo.toml': '[package]\nname = "doc"',
+  });
+  assert.ok(result.stack.includes('node'));
+  // None of the fixture directory stacks should have leaked in
+  assert.ok(!result.stack.includes('java/maven'));
+  assert.ok(!result.stack.includes('go'));
+  assert.ok(!result.stack.some(s => s === 'rust' || s === 'python'));
+});

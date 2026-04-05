@@ -27,6 +27,7 @@ const { isModified, readFrontmatter } = require('../update/integrity');
 const { detectWorkspace } = require('../workspace/detect');
 const { enumerateMembers } = require('../workspace/enumerate');
 const { EXIT_USER, EXIT_INTERNAL } = require('../cli-errors');
+const { validateFlags } = require('../cli-args');
 
 const GREEN = '\x1b[32m';
 const YELLOW = '\x1b[33m';
@@ -53,6 +54,9 @@ const ICON_FAIL = `${RED}✗${RESET}`;
  *               members and exits non-zero if ANY member failed.
  */
 function doctor(args) {
+  validateFlags('doctor', args, {
+    boolean: ['--json', '--ci', '--strict', '--workspace'],
+  });
   const cwd = process.cwd();
   const jsonOutput = args.includes('--json');
   const ciMode = args.includes('--ci');
@@ -361,7 +365,11 @@ function diagnoseHooks(cwd) {
   if (fs.existsSync(sandboxPath)) {
     const content = fs.readFileSync(sandboxPath, 'utf-8');
     const hasShebang = content.startsWith('#!');
-    const hasRtkMarker = /#\s*rtk-hook-version:/m.test(content.split('\n').slice(0, 5).join('\n'));
+    // The rtk-hook-version marker must live near the top for rtk to see it.
+    // rtk scans the first 20 lines — widened from 5 to match rtk's actual
+    // behavior and to accommodate hooks that have a license header block.
+    const RTK_MARKER_WINDOW = 20;
+    const hasRtkMarker = /#\s*rtk-hook-version:/m.test(content.split('\n').slice(0, RTK_MARKER_WINDOW).join('\n'));
 
     checks.push({
       name: 'sandbox-guard.sh installed',
@@ -373,7 +381,7 @@ function diagnoseHooks(cwd) {
     checks.push({
       name: 'sandbox-guard has rtk-hook-version marker',
       status: hasRtkMarker ? 'pass' : 'warn',
-      detail: hasRtkMarker ? null : '# rtk-hook-version marker not in first 5 lines (causes "Hook outdated" warnings)',
+      detail: hasRtkMarker ? null : `# rtk-hook-version marker not in first ${RTK_MARKER_WINDOW} lines (causes "Hook outdated" warnings)`,
       fix: hasRtkMarker ? null : `add '# rtk-hook-version: 3' near the top of the hook file`,
     });
 
@@ -477,7 +485,20 @@ function diagnoseDrift(cwd) {
         fix: actualStrategy === govBranchStrategy ? null
           : `update governance.md to '${actualStrategy === 'trunk-based' ? 'Trunk-based development' : 'Feature branches'}'`,
       });
-    } catch { /* skip — not a git repo or git unavailable */ }
+    } catch (err) {
+      // Not a git repo, git unavailable, or command timed out. Surface as a
+      // warning instead of silent skip so users know the check didn't run.
+      const isTimeout = err && (err.code === 'ETIMEDOUT' || /timed?\s*out/i.test(String(err.message)));
+      const isNotGit = err && (err.code === 'ENOENT' || /not a git repo/i.test(String(err.message)));
+      if (!isNotGit) {
+        checks.push({
+          name: 'branch strategy matches git',
+          status: 'warn',
+          detail: isTimeout ? 'git command timed out (5s) — likely huge repo' : `git command failed: ${err.message}`,
+          fix: isTimeout ? 'inspect `git branch -a` manually and update governance.md if needed' : null,
+        });
+      }
+    }
   }
 
   // Commit convention alignment

@@ -17,12 +17,28 @@ const fs = require('fs');
 const path = require('path');
 const { safeRead } = require('./stacks');
 
+// Target names that consistently mean "run quality gates" across ecosystems.
+// `style` was previously here but is ambiguous (often a CSS/JS build artifact
+// target rather than a linter). Kernel-style projects use `kselftest`,
+// `selftest`, `sanity` — added so e.g. linux and cpython get real gates.
 const GATE_TARGET_NAMES = new Set([
-  'test', 'tests', 'spec', 'check', 'ci',
-  'lint', 'format', 'fmt', 'style',
-  'build', 'compile',
-  'typecheck', 'type-check', 'types',
-  'verify', 'validate',
+  // Tests
+  'test', 'tests', 'spec', 'specs', 'check', 'checks', 'ci',
+  'unit', 'unittest', 'unit-test', 'unit_test',
+  'integration', 'integration-test', 'integration_test', 'itest',
+  'e2e', 'e2e-test', 'e2e_test',
+  'kselftest', 'selftest', 'sanity', 'smoke', 'regress', 'regression',
+  // Lint / format
+  'lint', 'lints', 'format', 'format-check', 'fmt', 'fmt-check',
+  'format-fix', 'formatting', 'linting',
+  // Build / compile
+  'build', 'compile', 'compile-check',
+  // Type checking
+  'typecheck', 'type-check', 'type_check', 'types', 'tc',
+  // Verification / audit
+  'verify', 'validate', 'audit',
+  // Security smoke
+  'security', 'sec', 'sast',
 ]);
 
 function mineTaskTargets(dir) {

@@ -2,7 +2,7 @@
 
 const { init, install } = require('./commands/init');
 const { check } = require('./commands/check');
-const { compile } = require('./commands/compile');
+const { compile, ALL_TARGETS } = require('./commands/compile');
 const { analyze } = require('./commands/analyze');
 const { diff } = require('./commands/diff');
 const { doctor } = require('./commands/doctor');
@@ -28,7 +28,7 @@ function printUsage() {
     crag install      Install agent globally for /crag-project
     crag version      Show version
 
-  Compile targets (12):
+  Compile targets (${ALL_TARGETS.length}):
     CI / git hooks:
       crag compile --target github       .github/workflows/gates.yml
       crag compile --target husky        .husky/pre-commit
@@ -44,7 +44,7 @@ function printUsage() {
       crag compile --target windsurf     .windsurfrules
       crag compile --target zed          .zed/rules.md
       crag compile --target cody         .sourcegraph/cody-instructions.md
-    crag compile --target all            All 12 targets at once
+    crag compile --target all            All ${ALL_TARGETS.length} targets at once
 
   Analyze options:
     crag analyze --dry-run            Print inferred governance without writing
