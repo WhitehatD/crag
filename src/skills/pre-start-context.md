@@ -1,7 +1,7 @@
 ---
 name: pre-start-context
-version: 0.2.2
-source_hash: b7be8434b99d5b189c904263e783d573c82109218725cc31fbd4fa1bf81538b6
+version: 0.2.8
+source_hash: 4ace3388804f528a7e7a446466a506ca5f0da4c23e42b540b9ae8923eaf35e4e
 description: Universal context loader. Discovers any project's stack, architecture, and state at runtime. Reads governance.md for project-specific rules. Works for any language, framework, or deployment target.
 ---
 
@@ -54,17 +54,20 @@ Detect OS and shell. Use appropriate syntax (Unix forward slashes if Git Bash on
 
 ## 0.05. Skill Currency Check
 
-Check installed skill version:
+Check whether installed skills are behind the crag CLI:
 
+// turbo
 ```
-Read .claude/skills/pre-start-context/SKILL.md
+crag upgrade --check
 ```
 
-If the file has a `version:` frontmatter field, compare it to the expected version (0.2.0). If outdated:
-- Report: `"Pre-start skill vX.Y.Z is outdated (v0.2.0 available). Run: crag upgrade"`
-- Continue with current version — never block startup.
+If the output lists any skill as needing an upgrade (e.g. `0.2.x → 0.2.y`):
+- Report: `"Skills outdated — run: crag upgrade"`
+- Continue with the current version — never block startup.
 
-> This check costs one Read call. If skills are current, no action needed.
+> This check uses `crag upgrade --check` so the skill never has to hard-code
+> its own version number; it asks the CLI, which is always in lockstep with
+> the package. If `crag` is not on PATH (bare CI runner), skip silently.
 
 ---
 

@@ -10,12 +10,19 @@
 //
 // What it does:
 //   1. Bumps package.json version
-//   2. Updates CHANGELOG.md: converts [Unreleased] → [X.Y.Z] — YYYY-MM-DD
+//   2. Bumps the `version:` frontmatter field of every src/skills/*.md
+//      so installed skills no longer lag behind the CLI on `crag upgrade`
+//   3. Updates CHANGELOG.md: converts [Unreleased] → [X.Y.Z] — YYYY-MM-DD
 //      and inserts a new empty [Unreleased] section above
-//   3. Prints next steps (commit + push)
+//   4. Prints next steps (commit + push)
 //
 // It does NOT commit or push. You review the diff, then commit yourself.
 // The release.yml workflow handles everything else automatically on push.
+//
+// NOTE: skill source_hash fields are recomputed by scripts/sync-skill-hashes.js,
+// which runs automatically in CI on any src/skills/ change. Run it locally
+// (`npm run sync-hashes`) if you want the hash refreshed in the same commit
+// as the version bump.
 
 const fs = require('fs');
 const path = require('path');
@@ -57,6 +64,51 @@ function bumpPackageJson(newVersion) {
     throw new Error('could not find version field in package.json');
   }
   fs.writeFileSync(pkgPath, updated);
+}
+
+/**
+ * Update the `version:` frontmatter field of every *.md file in `skillsDir`
+ * to `newVersion`. Returns the list of files that were rewritten.
+ *
+ * Without this, `crag upgrade` reports skill versions that are stuck at
+ * whatever value someone last set manually (e.g. 0.2.2 while the CLI ships
+ * 0.2.7), so installed copies never appear to need updating on release
+ * even when the skill body has changed. Keeping skill versions in lockstep
+ * with the package version is the simplest contract.
+ *
+ * `skillsDir` defaults to `src/skills/` inside the crag repo; tests pass
+ * a tmpdir fixture instead.
+ */
+function bumpSkillVersions(newVersion, skillsDir) {
+  const dir = skillsDir || path.join(__dirname, '..', 'src', 'skills');
+  if (!fs.existsSync(dir)) return [];
+
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
+  const changed = [];
+
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    const raw = fs.readFileSync(filePath, 'utf-8');
+
+    // Only touch the frontmatter block (between the first pair of `---`
+    // lines). Replacing site-wide would clobber any legitimate prose
+    // mention of `version: X.Y.Z` in the skill body.
+    const fmMatch = raw.match(/^(---\r?\n)([\s\S]*?)(\r?\n---\r?\n)/);
+    if (!fmMatch) continue;
+
+    const [full, openDelim, fmBody, closeDelim] = fmMatch;
+    const versionLineRe = /^version:\s*[^\r\n]+$/m;
+    if (!versionLineRe.test(fmBody)) continue;
+
+    const newFmBody = fmBody.replace(versionLineRe, `version: ${newVersion}`);
+    if (newFmBody === fmBody) continue;
+
+    const updated = raw.replace(full, `${openDelim}${newFmBody}${closeDelim}`);
+    fs.writeFileSync(filePath, updated);
+    changed.push(file);
+  }
+
+  return changed;
 }
 
 function bumpChangelog(newVersion) {
@@ -124,22 +176,34 @@ function main() {
   bumpPackageJson(newVersion);
   console.log('  ✓ package.json updated');
 
+  const skillChanges = bumpSkillVersions(newVersion);
+  if (skillChanges.length > 0) {
+    console.log(`  ✓ ${skillChanges.length} skill${skillChanges.length === 1 ? '' : 's'} bumped: ${skillChanges.join(', ')}`);
+  } else {
+    console.log('  ○ no skill frontmatter needed updating');
+  }
+
   const clUpdated = bumpChangelog(newVersion);
   if (clUpdated) console.log('  ✓ CHANGELOG.md updated');
 
   console.log('');
   console.log('  Next steps:');
-  console.log(`    1. Review the diff: git diff`);
-  console.log(`    2. Commit:          git add -A && git commit -m "release: v${newVersion}"`);
-  console.log(`    3. Push:            git push`);
+  console.log(`    1. Refresh skill hashes: npm run sync-hashes`);
+  console.log(`    2. Review the diff:      git diff`);
+  console.log(`    3. Commit:               git add -A && git commit -m "release: v${newVersion}"`);
+  console.log(`    4. Push:                 git push`);
   console.log('');
   console.log('  The release.yml workflow will auto-publish to npm, create the tag,');
   console.log('  and create the GitHub release. No manual npm publish needed.\n');
 }
 
-try {
-  main();
-} catch (err) {
-  console.error(`  error: ${err.message}`);
-  process.exit(1);
+if (require.main === module) {
+  try {
+    main();
+  } catch (err) {
+    console.error(`  error: ${err.message}`);
+    process.exit(1);
+  }
 }
+
+module.exports = { bumpSemver, bumpPackageJson, bumpSkillVersions, bumpChangelog };

@@ -182,7 +182,11 @@ jobs:
           if npm view "$PKG_NAME@$VERSION" version >/dev/null 2>&1; then
             echo "::notice::Version $VERSION is already published — auto-bumping patch"
 
-            # Bump package.json + CHANGELOG.md via the existing script
+            # Bump package.json + CHANGELOG.md + src/skills/*.md frontmatter
+            # via the existing script. bumpSkillVersions (added 2026-04-05)
+            # keeps skill versions in lockstep with the package version so
+            # `crag upgrade` on consumer projects actually reports the new
+            # version on the next run.
             node scripts/bump-version.js patch
 
             NEW_VERSION=$(node -p "require('./package.json').version")
@@ -190,7 +194,7 @@ jobs:
 
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add package.json CHANGELOG.md
+            git add package.json CHANGELOG.md src/skills
             git commit -m "chore: auto-release v$NEW_VERSION [skip ci]
 
             Auto-bumped from v$VERSION by .github/workflows/release.yml
