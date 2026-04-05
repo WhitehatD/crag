@@ -37,12 +37,13 @@ const ALL_TARGETS = [
 
 function compile(args) {
   validateFlags('compile', args, {
-    boolean: ['--dry-run', '--force'],
+    boolean: ['--dry-run', '--force', '--verbose'],
     string: ['--target'],
   });
   const targetIdx = args.indexOf('--target');
   const target = targetIdx !== -1 ? args[targetIdx + 1] : args[1];
   const dryRun = args.includes('--dry-run');
+  const verbose = args.includes('--verbose');
 
   // Validate the target BEFORE reading governance.md or doing any work. A
   // previous bug had target validation buried inside the compile loop, so
@@ -115,16 +116,30 @@ function compile(args) {
   console.log(`  ${gateCount} gates, ${parsed.runtimes.length} runtimes detected${dryRun ? ' (dry-run)' : ''}\n`);
 
   // --dry-run: print the planned output paths without writing files.
+  // With --verbose, also compute the byte size of each generated artifact
+  // by running the real generators into a temp scratch directory and
+  // stat-ing the results. The scratch dir is cleaned up immediately.
   if (dryRun) {
+    const sizes = verbose ? computeArtifactSizes(parsed, targets) : null;
     for (const t of targets) {
       const outPath = planOutputPath(cwd, t);
       if (outPath) {
-        console.log(`  \x1b[36mplan\x1b[0m ${path.relative(cwd, outPath)}`);
+        const rel = path.relative(cwd, outPath);
+        if (verbose && sizes && sizes[t] !== undefined) {
+          const sizeLabel = formatBytes(sizes[t]);
+          console.log(`  \x1b[36mplan\x1b[0m ${rel.padEnd(44)} \x1b[2m${sizeLabel}\x1b[0m`);
+        } else {
+          console.log(`  \x1b[36mplan\x1b[0m ${rel}`);
+        }
       } else {
         console.error(`  Unknown target: ${t}`);
         console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
         process.exit(EXIT_USER);
       }
+    }
+    if (verbose && sizes) {
+      const total = Object.values(sizes).reduce((a, b) => a + b, 0);
+      console.log(`\n  \x1b[2mTotal: ${formatBytes(total)} across ${Object.keys(sizes).length} target(s)\x1b[0m`);
     }
     console.log('\n  Dry-run complete — no files written.\n');
     return;
@@ -132,23 +147,13 @@ function compile(args) {
 
   try {
     for (const t of targets) {
-      switch (t) {
-        case 'github':     generateGitHubActions(cwd, parsed); break;
-        case 'husky':      generateHusky(cwd, parsed); break;
-        case 'pre-commit': generatePreCommitConfig(cwd, parsed); break;
-        case 'agents-md':  generateAgentsMd(cwd, parsed); break;
-        case 'cursor':     generateCursorRules(cwd, parsed); break;
-        case 'gemini':     generateGeminiMd(cwd, parsed); break;
-        case 'copilot':    generateCopilot(cwd, parsed); break;
-        case 'cline':      generateCline(cwd, parsed); break;
-        case 'continue':   generateContinue(cwd, parsed); break;
-        case 'windsurf':   generateWindsurf(cwd, parsed); break;
-        case 'zed':        generateZed(cwd, parsed); break;
-        case 'cody':       generateCody(cwd, parsed); break;
-        default:
-          console.error(`  Unknown target: ${t}`);
-          console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
-          process.exit(EXIT_USER);
+      runGenerator(t, cwd, parsed);
+      if (verbose) {
+        const outPath = planOutputPath(cwd, t);
+        let size = 0;
+        try { size = fs.statSync(outPath).size; } catch { /* ignore */ }
+        const rel = path.relative(cwd, outPath);
+        console.log(`  \x1b[32mwrote\x1b[0m ${rel.padEnd(44)} \x1b[2m${formatBytes(size)}\x1b[0m`);
       }
     }
   } catch (err) {
@@ -156,6 +161,75 @@ function compile(args) {
   }
 
   console.log('\n  Done. Governance is now executable infrastructure.\n');
+}
+
+/**
+ * Dispatch to the right generator for a given target name. Shared by the
+ * real compile path and by `computeArtifactSizes` (which runs the same
+ * generators against a scratch dir for dry-run byte counts).
+ */
+function runGenerator(target, cwd, parsed) {
+  switch (target) {
+    case 'github':     generateGitHubActions(cwd, parsed); break;
+    case 'husky':      generateHusky(cwd, parsed); break;
+    case 'pre-commit': generatePreCommitConfig(cwd, parsed); break;
+    case 'agents-md':  generateAgentsMd(cwd, parsed); break;
+    case 'cursor':     generateCursorRules(cwd, parsed); break;
+    case 'gemini':     generateGeminiMd(cwd, parsed); break;
+    case 'copilot':    generateCopilot(cwd, parsed); break;
+    case 'cline':      generateCline(cwd, parsed); break;
+    case 'continue':   generateContinue(cwd, parsed); break;
+    case 'windsurf':   generateWindsurf(cwd, parsed); break;
+    case 'zed':        generateZed(cwd, parsed); break;
+    case 'cody':       generateCody(cwd, parsed); break;
+    default:
+      console.error(`  Unknown target: ${target}`);
+      console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
+      process.exit(EXIT_USER);
+  }
+}
+
+/**
+ * Dry-run helper: run every generator into a scratch temp directory, stat
+ * the produced files, then clean up. Returns `{ [target]: byteSize }`.
+ * This gives `--verbose --dry-run` real artifact sizes without leaving any
+ * trace on the user's filesystem.
+ */
+function computeArtifactSizes(parsed, targets) {
+  const os = require('os');
+  const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-compile-verbose-'));
+  const sizes = {};
+  try {
+    for (const t of targets) {
+      try {
+        runGenerator(t, scratch, parsed);
+        const outPath = planOutputPath(scratch, t);
+        const stat = fs.statSync(outPath);
+        sizes[t] = stat.size;
+      } catch {
+        // If a single target fails to generate in the scratch dir, record
+        // size as 0 and keep going. The real compile path will re-raise.
+        sizes[t] = 0;
+      }
+    }
+  } finally {
+    try { fs.rmSync(scratch, { recursive: true, force: true }); } catch { /* best effort */ }
+  }
+  return sizes;
+}
+
+/**
+ * Human-readable byte count: `"1.2 KB"`, `"456 B"`, `"12.8 KB"`. Kept
+ * tiny on purpose — this is surface output, not a library function.
+ */
+function formatBytes(n) {
+  if (typeof n !== 'number' || !isFinite(n) || n < 0) return '? B';
+  if (n < 1024) return `${n} B`;
+  const kb = n / 1024;
+  if (kb < 10) return `${kb.toFixed(2)} KB`;
+  if (kb < 100) return `${kb.toFixed(1)} KB`;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  return `${(kb / 1024).toFixed(2)} MB`;
 }
 
 /**
@@ -180,4 +254,4 @@ function planOutputPath(cwd, target) {
   return map[target] || null;
 }
 
-module.exports = { compile, ALL_TARGETS, planOutputPath };
+module.exports = { compile, ALL_TARGETS, planOutputPath, formatBytes, computeArtifactSizes };

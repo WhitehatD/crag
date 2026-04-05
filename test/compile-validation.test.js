@@ -117,6 +117,36 @@ test('compile: --target github with real gates succeeds (dry run)', () => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('compile: --verbose --dry-run prints byte sizes for every target', () => {
+  const dir = mkProject('### Test\n- npm test\n### Lint\n- npx eslint .');
+  const { rc, stdout } = runCrag(dir, ['compile', '--target', 'all', '--dry-run', '--verbose']);
+  assert.strictEqual(rc, 0);
+  // Strip ANSI before regex-matching plan lines.
+  const clean = stdout.replace(/\x1b\[[0-9;]*m/g, '');
+  const planLines = clean.split('\n').filter(l => /^\s*plan\s/.test(l));
+  assert.ok(planLines.length === 12, `expected 12 plan lines, got ${planLines.length}:\n${clean}`);
+  for (const line of planLines) {
+    assert.ok(
+      /\b\d+(?:\.\d+)?\s*(?:B|KB|MB)\s*$/.test(line.trim()),
+      `expected byte size at end of plan line, got: ${line}`
+    );
+  }
+  // Total line should be present
+  assert.ok(/Total:\s+[\d.]+\s*(?:B|KB|MB)/.test(clean),
+    `expected total line, got:\n${clean}`);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('compile: --verbose write mode prints sizes after each file', () => {
+  const dir = mkProject('### Test\n- npm test');
+  const { rc, stdout } = runCrag(dir, ['compile', '--target', 'cursor', '--verbose']);
+  assert.strictEqual(rc, 0);
+  // "wrote <path> <size>" instead of "plan"
+  assert.ok(/wrote\s+.*governance\.mdc.*\b\d/.test(stdout.replace(/\x1b\[[0-9;]*m/g, '')),
+    `expected wrote line with size, got: ${stdout}`);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('analyze: rejects unknown --flag', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-analyze-val-'));
   const { rc, stderr } = runCrag(dir, ['analyze', '--garbage-flag']);

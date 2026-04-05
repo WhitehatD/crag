@@ -11,21 +11,21 @@
 [![Deterministic](https://img.shields.io/badge/deterministic-SHA--verified-brightgreen)](#see-it-work-in-3-seconds)
 [![Stress test](https://img.shields.io/badge/stress%20test-101%20repos%20%C2%B7%204%2C400%20invocations%20%C2%B7%200%20crashes-brightgreen)](./benchmarks/stress-test.md)
 [![Reference benchmark](https://img.shields.io/badge/benchmark-40%2F40%20Grade%20A-brightgreen)](./benchmarks/results.md)
-[![Languages](https://img.shields.io/badge/languages%20detected-25%2B-blue)](#supported-languages-and-runtimes)
-[![CI systems](https://img.shields.io/badge/CI%20systems-11-blue)](#supported-ci-systems)
-[![Workspace types](https://img.shields.io/badge/workspace%20types-12-blue)](#supported-workspaces)
-[![Compile targets](https://img.shields.io/badge/compile%20targets-12-blue)](#2-twelve-derived-outputs-from-one-command)
 
-One `governance.md` describing a project's quality gates, branch policy, and
-security rules. `crag` generates it from an existing codebase, then compiles
-it to CI configuration, git hooks, and config files for 9 AI coding agents.
+**Your AI coding rules and your CI will never disagree again.**
+
+Write your quality rules once in a ~20-line `governance.md`. `crag` keeps
+them in sync with your CI workflow, your pre-commit hooks, and whichever
+AI coding tool you use — Cursor, Copilot, Gemini, Cline, Continue, Zed,
+Windsurf, Sourcegraph Cody, plus 4 more. Change one line, regenerate
+everything. Deterministic — no LLM, no network, SHA-verified on every
+release.
 
 ```bash
-npx @whitehatd/crag analyze               # write governance.md from the filesystem
-npx @whitehatd/crag compile --target all  # compile to 12 downstream files
+npx @whitehatd/crag demo          # 3-second proof-of-value, no install, no config
+npx @whitehatd/crag analyze       # write governance.md from your existing project
+npx @whitehatd/crag compile       # regenerate every derived file
 ```
-
-Zero runtime dependencies. Node 18+. Deterministic output (no LLM calls).
 
 ---
 
@@ -35,7 +35,7 @@ Zero runtime dependencies. Node 18+. Deterministic output (no LLM calls).
 npx @whitehatd/crag demo
 ```
 
-One command, no config, no network, no LLM. In ~500 ms `crag demo` does
+No install, no config, no network, no LLM. In ~500 ms `crag demo` does
 the following on a synthetic polyglot project it builds from scratch:
 
 ```
@@ -53,464 +53,206 @@ the following on a synthetic polyglot project it builds from scratch:
 
   What this proves
     ✓ crag analyzes a multi-stack project in one pass
-    ✓ crag diff catches real drift: 6 gates match, 3 gate(s) exist in CI but
-       NOT in the hand-written governance (this is what humans miss)
+    ✓ crag diff catches real drift: 6 gates match, 3 gate(s) exist in CI
+      but NOT in the hand-written governance (this is what humans miss)
     ✓ crag compile --target all produces 12 downstream files from one governance.md
     ✓ Deterministic: two back-to-back runs produced byte-identical SHA-256 hashes
-       hash: 17cd4969d74a1996bfae0e99abd12b1fd20f715de1e5ca4d6b4d0f40fb1a1a0f
 
   Total: 507 ms from empty directory to verified 12-target pipeline.
 ```
 
-The demo is self-cleaning and runs entirely from a temp directory.
-`--json` emits structured output for scripting. `--keep` leaves the
-temp project behind for manual inspection. Source:
-[`src/commands/demo.js`](./src/commands/demo.js). Lock-in contract:
-[`test/demo.test.js`](./test/demo.test.js) (11 tests including a
-determinism SHA assertion).
+The demo self-cleans. `--json` emits structured output. `--keep` leaves
+the temp project behind. The same determinism SHA is verified in CI on
+every push across 9 runner slots (Ubuntu + macOS + Windows × Node
+18/20/22), so the release tag you install from npm is proven to be
+reproducible on every supported platform.
+
+---
+
+## What 12 files from one governance.md actually looks like
+
+This is the real output of `crag compile --target all --dry-run --verbose`
+on a small project (crag itself):
+
+```
+$ crag compile --target all --dry-run --verbose
+
+  Compiling governance.md → github, husky, pre-commit, agents-md, cursor,
+  gemini, copilot, cline, continue, windsurf, zed, cody
+  9 gates, 1 runtimes detected (dry-run)
+
+  plan .github/workflows/gates.yml                  1.57 KB
+  plan .husky/pre-commit                              507 B
+  plan .pre-commit-config.yaml                      2.23 KB
+  plan AGENTS.md                                    1.08 KB
+  plan .cursor/rules/governance.mdc                   993 B
+  plan GEMINI.md                                    1.24 KB
+  plan .github/copilot-instructions.md              1.86 KB
+  plan .clinerules                                  1.58 KB
+  plan .continuerules                               1.70 KB
+  plan .windsurfrules                               1.72 KB
+  plan .zed/rules.md                                1.69 KB
+  plan .sourcegraph/cody-instructions.md            1.75 KB
+
+  Total: 17.9 KB across 12 target(s)
+  Dry-run complete — no files written.
+```
+
+Same rules, 12 output files, zero copy-paste, atomic writes. Every file
+reflects the same `governance.md`. Change one gate in the source, re-run
+`crag compile`, and all 12 update together.
+
+---
+
+## Why this exists
+
+Every project duplicates the same quality rules across multiple config
+files: the CI workflow, a pre-commit hook, contributor docs, the README,
+and one instruction file per AI coding tool you use (`AGENTS.md`,
+`.cursor/rules/`, `GEMINI.md`, `.clinerules`, `.continuerules`,
+`.windsurfrules`, `.zed/rules.md`, `.sourcegraph/cody-instructions.md`,
+`.github/copilot-instructions.md`). That's **up to 12 places to keep in
+sync**, every single time a rule changes.
+
+They drift. Someone tightens the lint rules in `.cursor/rules/`, misses
+the Copilot file. Someone updates the CI workflow, forgets the
+pre-commit hook. A new AI agent ships and needs its own instruction
+format. The rules split into N copies that start disagreeing with each
+other and the truth gets lost.
+
+`crag` removes the duplication at its source. You maintain one ~20 line
+`governance.md`. `crag compile` regenerates every derived file from it,
+atomically. Changing a rule means editing one line and re-running the
+compiler.
 
 ---
 
 ## How it works at a glance
 
 ```
-  Input                      crag                    Output
-  ─────                      ────                    ──────
+  Your repo                      crag                       Output
+  ─────────                      ────                       ──────
 
-  your repo       ─►   crag analyze        ─►   governance.md  (one file, ~20 lines)
-  (any stack)          (detects stack,          ▲
-                        CI, gates,               │  Hand-edit ANY rule here
-                        workspaces)              │  when it changes.
-                                                 │
-                                                 ▼
-                       crag compile       ─►    .github/workflows/gates.yml
-                       --target all            .husky/pre-commit
-                                                .pre-commit-config.yaml
-                                                AGENTS.md
-                                                .cursor/rules/governance.mdc
-                                                GEMINI.md
-                                                .github/copilot-instructions.md
-                                                .clinerules
-                                                .continuerules
-                                                .windsurfrules
-                                                .zed/rules.md
-                                                .sourcegraph/cody-instructions.md
-                                                └─ 12 files, regenerated atomically
+  any stack       ─►   crag analyze        ─►    governance.md  (one file, ~20 lines)
+  any CI system         (detects stack,           ▲
+  any workspace          gates, CI, and           │  Hand-edit ANY rule here
+                         workspace layout)         │  when it needs to change.
+                                                    │
+                                                    ▼
+                       crag compile          ─►    .github/workflows/gates.yml
+                       --target all                .husky/pre-commit
+                                                   .pre-commit-config.yaml
+                                                   AGENTS.md              (Codex, Aider, Factory)
+                                                   .cursor/rules/*        (Cursor)
+                                                   GEMINI.md              (Gemini CLI)
+                                                   copilot-instructions.md
+                                                   .clinerules
+                                                   .continuerules
+                                                   .windsurfrules
+                                                   .zed/rules.md
+                                                   cody-instructions.md
+                                                   └─ 12 files, regenerated atomically
 
-                       crag diff          ─►   MATCH / DRIFT / MISSING / EXTRA
-                                                (governance.md vs your 11 supported
-                                                 CI systems, deduplicated, normalized)
+                       crag diff            ─►    MATCH / DRIFT / MISSING / EXTRA
+                                                   (governance.md vs your 11 supported
+                                                    CI systems, deduplicated, normalized)
 
-                       crag doctor        ─►   governance integrity + drift +
-                                                security smoke test + hook validity
+                       crag doctor          ─►    governance integrity + drift +
+                                                   security smoke test + hook validity
 
   Deterministic: same input → byte-identical output. No LLM. No network.
-  Verified via hash on every release by `crag demo`.
 ```
 
 ---
 
 ## Validated on 141 open-source repositories
 
-`crag` is validated against **two independent OSS corpora**. Every release
-ships with both reports checked into the repo.
+`crag` ships with two independent OSS validation corpora, both
+reproducible in-tree, both rerun on every release.
 
-### 1. Stress test — 101 repos, 4,400 invocations, 0 crashes
-
-The primary robustness metric. 101 open-source repos picked to span every
-supported language, every CI system, every workspace type, plus deliberate
-edge cases (mirror repos, dotfile repos, docs-only, kernel-style Makefiles,
+**Stress test — 101 repos, 4,400 invocations, 0 crashes.** The primary
+robustness metric. 101 open-source repos picked to span every supported
+language, every CI system, every workspace type, plus deliberate edge
+cases (mirror repos, dotfile repos, docs-only, kernel-style Makefiles,
 embedded CMake, multi-GB monorepos, non-English READMEs, Fossil and
-Mercurial mirrors). Each repo was exercised against a 21-command main
-matrix plus a 23-step edge-case matrix.
+Mercurial mirrors). Each repo exercised against a 21-command main matrix
+plus a 23-step edge-case matrix. Result: **0 unexpected exit codes, 28
+findings surfaced, 28 resolved** before release. 141 regression tests
+added as guards. Full report with corpus breakdown, matrix definitions,
+and per-step aggregation: [`benchmarks/stress-test.md`](./benchmarks/stress-test.md).
 
-| Metric | Value |
-|---|---:|
-| Repositories tested | **101** |
-| **Total command invocations** | **≈ 4,400** |
-| **Unexpected crashes / exit codes (`rc > 1`)** | **0** |
-| JSON contract violations on 303 `--json \| JSON.parse` calls | **0** |
-| Findings surfaced | **28** |
-| Findings resolved in v0.2.11 | **28 / 28** |
-| Regression tests added as guards | **141** (357 → 498) |
+**Reference benchmark — 40 repos, 100 % Grade A.** The output-quality
+metric. 40 well-known repos graded on whether `crag analyze` produces
+ship-ready governance. 20 Tier 1 libraries across 7 language families,
+20 Tier 2 polyglot density repos. Full methodology, per-repo grades,
+raw outputs: [`benchmarks/results.md`](./benchmarks/results.md).
 
-Full report — corpus breakdown, 21-step + 23-step matrix definitions,
-per-step pass/fail aggregation, all 28 findings with resolutions, post-fix
-verification, and reproducibility scripts:
-[`benchmarks/stress-test.md`](./benchmarks/stress-test.md).
-
-### 2. Reference benchmark — 40 repos, 100% Grade A
-
-The output-quality metric. 40 well-known repos graded on whether
-`crag analyze` produces ship-ready governance (Stack + Test + Lint + Build
-gates captured with minimal noise). 20 Tier 1 libraries across 7 language
-families, 20 Tier 2 polyglot density repos, plus a full-capability run
-(every command × 10 hardest repos = 80 / 80 operations).
-
-| Metric | Value |
-|---|---:|
-| Repositories graded | **40** |
-| **Grade A (ship-ready)** | **40 / 40 (100 %)** |
-| Full-capability operations on 10 densest repos | **80 / 80** |
-| Mean `crag analyze` wall-clock | **≈ 250 ms** |
-
-Full methodology, per-repo grades, before/after comparisons, and raw
-outputs: [`benchmarks/results.md`](./benchmarks/results.md).
-
-### Shared foundation
-
-| | |
-|---|---:|
-| Unit tests (Ubuntu + macOS + Windows × Node 18/20/22) | **498 passing** |
-| Runtime dependencies | **0** |
-| Languages / build systems detected | **25+** |
-| CI systems with native command extraction | **11** |
-| Workspace types recognised | **12** |
-| Compile targets (CI + hooks + AI agents) | **12** |
-
-Self-audit — `crag` applies its own governance.md and passes its own gates:
+**Self-audit**: `crag` applies its own `governance.md` and passes its
+own gates on every commit.
 
 ```
 crag doctor   29/29 pass, 0 warn, 0 fail
-crag diff     11 match, 0 drift, 0 missing, 0 extra
+crag diff     12 match, 0 drift, 0 missing, 0 extra
 crag check    9/9 core files present
 ```
 
 ---
 
-## The problem this solves
+## Why not X?
 
-Every project duplicates the same quality rules across multiple config files:
-
-- CI workflow (GitHub Actions / GitLab / Jenkins / Azure / Buildkite / Cirrus / …)
-- Pre-commit hooks (husky / pre-commit)
-- AI agent instructions (`AGENTS.md`, `.cursor/rules/`, `GEMINI.md`,
-  `.clinerules`, `.continuerules`, `.windsurfrules`, `.zed/rules.md`,
-  `.sourcegraph/cody-instructions.md`, `copilot-instructions.md`)
-- Contributor docs and onboarding
-
-These drift. Someone updates CI, forgets the pre-commit hook. Someone tightens
-the lint rules in `.cursor/rules/`, misses the Copilot file. A new AI agent
-ships and needs its own instruction format. The rules split into N copies and
-start disagreeing.
-
-`crag` removes the duplication. You maintain one ~20 line `governance.md`.
-`crag compile` regenerates every derived file from it. Changing a rule means
-editing one line and re-running the compiler.
-
----
-
-## What you get
-
-### 1. A single governance file
-
-`governance.md` is the one file you edit. It looks like this:
-
-```markdown
-# Governance — example-app
-
-## Identity
-- Project: example-app
-
-## Gates (run in order, stop on failure)
-### Lint
-- npx eslint . --max-warnings 0
-- npx tsc --noEmit
-
-### Test
-- npm run test
-- cargo test
-
-### Build
-- cargo build --release
-
-## Branch Strategy
-- Trunk-based, conventional commits
-
-## Security
-- No hardcoded secrets or API keys
-```
-
-Section annotations (optional): `### Section (path: subdir/)`,
-`### Section (if: config.json)`, `- command  # [OPTIONAL]`,
-`- command  # [ADVISORY]`, `## Gates (inherit: root)`.
-
-### 2. Twelve derived outputs from one command
-
-`crag compile --target all` writes, atomically, every file below:
-
-| Target | Output | Consumer |
+| Alternative | When it's better than crag | When crag is better |
 |---|---|---|
-| `github` | `.github/workflows/gates.yml` | GitHub Actions |
-| `husky` | `.husky/pre-commit` | husky |
-| `pre-commit` | `.pre-commit-config.yaml` | pre-commit.com |
-| `agents-md` | `AGENTS.md` | Codex, Aider, Factory, Crush |
-| `cursor` | `.cursor/rules/governance.mdc` | Cursor |
-| `gemini` | `GEMINI.md` | Gemini CLI |
-| `copilot` | `.github/copilot-instructions.md` | GitHub Copilot |
-| `cline` | `.clinerules` | Cline (VS Code) |
-| `continue` | `.continuerules` | Continue.dev |
-| `windsurf` | `.windsurfrules` | Windsurf |
-| `zed` | `.zed/rules.md` | Zed |
-| `cody` | `.sourcegraph/cody-instructions.md` | Sourcegraph Cody |
-
-Each compiler detects runtime versions from the manifest (`package.json`
-`engines.node`, `pyproject.toml` `requires-python`, `go.mod` directive,
-Gradle toolchain) so generated CI matrices match the project. All writes
-are atomic — partial failures leave prior state intact.
-
-### 3. A no-interview path from an existing codebase
-
-`crag analyze` reads the project and infers the governance file:
-
-- **Stack detection** — Node, Deno, Bun, Python, Rust, Go, Java (Maven,
-  Gradle), Kotlin, .NET (csproj/fsproj/sln/slnx/Directory.Build.props),
-  Swift, Elixir, Erlang, Ruby, PHP, Haskell (cabal, stack, hpack), OCaml
-  (dune), Zig, Crystal, Nim, Julia, Dart/Flutter, Lua, C/C++ (CMake,
-  autotools, Meson), Docker, Terraform, Helm.
-- **Gate inference per language** — pulls real commands from manifests
-  (e.g. `npm run test` from `scripts.test`, `ruff check .` when `tool.ruff`
-  exists in `pyproject.toml`, `./gradlew test build` when `gradlew` is
-  present).
-- **CI mining** — parses gate commands from 11 CI systems (list below).
-- **Task runner mining** — reads Makefile `.PHONY` targets, `Taskfile.yml`,
-  and `justfile` recipes; extracts canonical gate targets
-  (`test`, `lint`, `check`, `kselftest`, `integration`, etc.).
-- **Workspace detection** — 12 workspace types, with fixture-directory
-  filtering so examples/samples/benchmarks don't pollute the member list.
-- **Drift-safe normalization** — dedupes `npm test` vs `npm run test`,
-  filters shell noise (`echo`, `export`, `break`, `exit`, version probes
-  like `node --version`, variable assignments, backslash continuations,
-  `curl | bash` installers).
-
-### 4. Drift detection
-
-`crag diff` compares the governance file against the actual codebase:
-missing gates, CI workflow steps that aren't in governance, branch strategy
-mismatches between governance and git.
-
-`crag doctor` runs a 29-check deep diagnostic covering governance integrity,
-skill currency, hook validity (shebang, `rtk-hook-version` marker, executable
-bit), git drift, and a security smoke test for 8 secret patterns (Stripe,
-AWS, GitHub PAT/OAuth, Slack, PEM keys).
+| Hand-written `.cursorrules` (or equivalent) | You use exactly one AI tool, rules rarely change | You use more than one AI tool, **or** rules drift from CI |
+| Makefile + comments as the source of truth | Small repos, single-language, CI is Jenkins-shaped | Cross-stack projects, multiple compile targets, AI agents need their own formats |
+| Conftest / OPA | Runtime policy enforcement on cluster state | Dev-time gate definition *before* code reaches the cluster |
+| Pre-commit framework alone | Pre-commit is the only surface you care about | You also want the same rules to reach CI, AI agents, and contributor docs |
+| Copy-pasted `CONTRIBUTING.md` gates | You trust contributors to read and follow docs | You want the rules to be *enforced* mechanically, not documented |
 
 ---
 
-## Install
+## First 5 minutes
 
 ```bash
-npm install -g @whitehatd/crag        # global
-# or
-npx @whitehatd/crag <command>         # one-shot, no install
+# 1. Prove it works in 3 seconds (no install, no config)
+npx @whitehatd/crag demo
+
+# 2. Generate governance.md from your project
+cd your-repo
+npx @whitehatd/crag analyze
+
+# 3. Verify it matches reality
+npx @whitehatd/crag diff
+
+# 4. Compile to every AI agent + CI + hook config you use
+npx @whitehatd/crag compile --target all --dry-run   # preview
+npx @whitehatd/crag compile --target all             # write
+
+# 5. Health check (run before committing)
+npx @whitehatd/crag doctor
 ```
 
-**Requirements**
+These five commands carry 95 % of real-world crag usage. Everything
+else — workspace enumeration, per-target compile, merge mode, skills
+upgrade, governance v2 annotations, the Claude Code session loop — is
+in [`docs/`](./docs/index.md).
 
-- Node.js 18+ — uses only built-in modules (`fs`, `path`, `child_process`,
-  `https`, `crypto`). No transitive dependency tree to audit.
-- Git — for branch strategy inference and the discovery cache.
-- Claude Code CLI — only required for the optional interactive `crag init`
-  flow. All other commands run standalone.
-
-Package: `@whitehatd/crag`. Binary: `crag`.
+**Requirements**: Node.js 18+ and `git`. Zero runtime dependencies.
+Binary name is `crag` (package is `@whitehatd/crag`).
 
 ---
 
-## Quick start
+## Further reading
 
-```bash
-cd your-project
-crag analyze                  # writes .claude/governance.md
-crag diff                     # verify the generated file matches reality
-crag compile --target all     # compile to 12 downstream files (dry-run: --dry-run)
-```
+All deep reference material lives under [`docs/`](./docs/index.md):
 
-If analyze can't detect any gates (e.g. an empty repo or a mirror of another
-VCS), it still writes a valid governance.md with a `- true  # TODO:`
-placeholder under `### Test`. Downstream tools will accept the file; you
-replace the placeholder with real commands.
-
----
-
-## Supported languages and runtimes
-
-| Family | Detected from | Gates emitted |
-|---|---|---|
-| Node / Deno / Bun | `package.json`, `deno.json`, `bun.lockb`, `bunfig.toml`, `tsconfig.json` | `npm run test/lint/build`, `tsc --noEmit`, `eslint`, `biome check`, `xo`, `deno test/lint/fmt`, `bun test` |
-| Python | `pyproject.toml`, `setup.py`, `requirements.txt` | `uv run pytest`, `poetry run pytest`, `pdm run pytest`, `hatch run pytest`, `tox run`, `nox`, `ruff check/format`, `mypy`, `black --check`, `python -m build` — detected per runner |
-| Rust | `Cargo.toml` (incl. `[workspace]`) | `cargo test`, `cargo clippy -- -D warnings`, `cargo fmt --check` |
-| Go | `go.mod`, `.golangci.yml` | `go test ./...`, `go vet ./...`, `golangci-lint run` |
-| Java / Kotlin | `pom.xml`, `build.gradle(.kts)`, Kotlin plugin detection | `./mvnw test verify`, `./gradlew test build`, `checkstyle`, `detekt` |
-| Ruby | `Gemfile`, `*.gemspec`, `Rakefile` | `bundle exec rspec`, `bundle exec rake test`, `rubocop`, `standardrb`, `brakeman`, `bundle-audit` |
-| PHP | `composer.json`, `phpunit.xml(.dist)` | `composer test`, `vendor/bin/phpunit`, `vendor/bin/pest`, `vendor/bin/phpstan analyse`, `vendor/bin/psalm`, `vendor/bin/phpcs`, `composer validate --strict` |
-| .NET | `*.csproj`, `*.fsproj`, `*.vbproj`, `*.sln`, `*.slnx`, `Directory.Build.props`, `global.json` | `dotnet test`, `dotnet build --no-restore`, `dotnet format --verify-no-changes` |
-| Swift | `Package.swift` | `swift test`, `swift build`, `swiftlint` |
-| Elixir / Erlang | `mix.exs`, `rebar.config` | `mix test`, `mix format --check-formatted`, `mix credo --strict`, `mix dialyzer`, `rebar3 eunit`, `rebar3 ct`, `rebar3 dialyzer` |
-| Haskell | `*.cabal`, `cabal.project`, `stack.yaml`, `package.yaml` | `cabal test/build`, `stack test/build`, `hlint .` |
-| OCaml | `dune-project`, `*.opam` | `dune runtest`, `dune build` |
-| Zig | `build.zig`, `build.zig.zon` | `zig build test`, `zig build`, `zig fmt --check .` |
-| Crystal | `shard.yml` | `crystal spec`, `shards build`, `crystal tool format --check` |
-| Nim | `*.nimble`, `nim.cfg` | `nimble test`, `nimble build` |
-| Julia | `Project.toml` (uuid-sniffed) | `julia --project=. -e 'Pkg.test()'` |
-| Dart / Flutter | `pubspec.yaml` | `flutter test/analyze/build`, `dart test/analyze/compile`, `dart format --set-exit-if-changed .` |
-| C / C++ | `CMakeLists.txt`, `configure.ac`, `meson.build`, `Makefile` (with C sources) | `cmake -S . -B build && cmake --build build`, `ctest --test-dir build`, `meson setup/compile/test`, `./configure && make && make check` |
-| Lua | `*.rockspec`, `.luarc.json`, `.luacheckrc` | (task-runner mined) |
-| Infrastructure | `*.tf`, `Chart.yaml`, `Dockerfile`, `openapi.yaml`, `*.proto` | `terraform fmt/validate`, `tflint`, `helm lint`, `hadolint Dockerfile`, `spectral lint`, `buf lint` |
-
-False-positive guard: framework detection only fires when the dep is in
-runtime `dependencies`, not `devDependencies`. Projects that use Express as
-a test fixture don't get labeled as Express apps. Fixture directories
-(`examples/`, `samples/`, `fixtures/`, `docs/`, `testdata/`, `benchmarks/`,
-`node_modules/`, `target/`, `dist/`) are excluded from nested stack
-detection, so monorepos with example sub-projects report the primary stack
-only.
-
----
-
-## Supported CI systems
-
-`crag analyze` parses gate commands from the following CI formats. Each
-extractor handles inline scalars, block scalars (`run: |` / `run: >-`), list
-forms, and the system's equivalents. Output is normalized to drop shell
-plumbing, dedupe matrix expansions, and filter background processes.
-
-| System | File(s) |
-|---|---|
-| GitHub Actions | `.github/workflows/*.yml` (recursive) |
-| GitLab CI | `.gitlab-ci.yml` |
-| CircleCI | `.circleci/config.yml` |
-| Travis CI | `.travis.yml` |
-| Azure Pipelines | `azure-pipelines.yml`, `.azure-pipelines/**/*.yml` |
-| Buildkite | `.buildkite/pipeline.yml` |
-| Drone / Woodpecker | `.drone.yml`, `.woodpecker.yml`, `.woodpecker/*.yml` |
-| Bitbucket Pipelines | `bitbucket-pipelines.yml` |
-| Jenkins | `Jenkinsfile`, `jenkins/Jenkinsfile`, `ci/Jenkinsfile` (declarative + scripted) |
-| Cirrus CI | `.cirrus.yml` (`*_script:` keys) |
-| Ad-hoc shell CI | `ci/*.sh`, `.ci/*.sh`, `scripts/ci-*.sh` (canonical names only) |
-
-Task runners mined independently: Makefile (`.PHONY` + column-0 targets),
-`Taskfile.yml`, `justfile`. Makefile target detection recognises 30+
-canonical gate names including `test`, `lint`, `check`, `verify`,
-`kselftest`, `selftest`, `sanity`, `smoke`, `integration`, `e2e`.
-
----
-
-## Supported workspaces
-
-pnpm · npm / yarn · Cargo (`[workspace]`) · Go multi-module (`go.work`) ·
-Gradle multi-module · Maven reactor · Nx · Turborepo · Bazel · git submodules ·
-independent nested repos · subservices (polyglot microservices under
-`src/*`, `services/*`, `packages/*`, `apps/*`, `backend/`, `frontend/`, …
-with no root manifest — handled by nested stack detection).
-
-```bash
-crag workspace              # human-readable inspection
-crag workspace --json       # machine-readable
-crag analyze --workspace    # per-member governance sections
-```
-
-Symlink cycle protection is built in: `detectNestedStacks` tracks visited
-realpaths and skips symlinked directories so pathological monorepos can't
-blow up the scanner.
-
----
-
-## Commands
-
-```
-crag demo                        Self-contained proof-of-value (~500 ms)
-  --json                         Machine-readable summary
-  --keep                         Leave the synthetic project on disk for inspection
-
-crag analyze                     Generate .claude/governance.md from filesystem
-  --dry-run                      Print what would be generated, don't write
-  --workspace                    Analyze root + every workspace member
-  --merge                        Preserve existing governance, append inferred sections
-  --no-install-skills            Skip auto-install of universal skills
-
-crag init                        Interactive interview (requires Claude Code CLI)
-
-crag compile --target <name>     Compile governance to a single target
-  --target all                   Compile all 12 targets
-  --dry-run                      Print planned output paths, don't write
-crag compile                     List available targets
-
-crag diff                        Compare governance against codebase reality
-
-crag doctor                      Deep diagnostic
-  --ci                           CI mode: skip checks requiring runtime infra
-  --json                         Machine-readable output
-  --strict                       Treat warnings as failures
-  --workspace                    Run doctor on every workspace member
-
-crag check                       Verify infrastructure file presence
-  --json                         Machine-readable
-  --governance-only              Only require governance.md (post-analyze mode)
-
-crag workspace                   Inspect detected workspace
-  --json                         Machine-readable
-
-crag upgrade                     Update universal skills to latest version
-  --check                        Dry-run: show what would change
-  --workspace                    Update every workspace member
-  --force                        Overwrite modified skills (with backup)
-
-crag version
-crag help
-```
-
-Unknown flags are rejected with exit code 1 and a typo suggestion for close
-matches (e.g. `crag analyze --drty-run` → `did you mean --dry-run?`).
-
----
-
-## Session loop (Claude Code integration)
-
-When `crag init` sets up a Claude Code project, each session runs:
-
-```
-/pre-start-context       Discover project, load governance, cache runtimes
-   ↓
-   (the task)
-   ↓
-/post-start-validation   Run gates, auto-fix lint/format, commit
-```
-
-`/pre-start-context` reads `governance.md` fresh every session, classifies
-task intent (frontend / backend / infra / docs / full), and uses a content-
-hashed discovery cache to skip ~80% of redundant scans on unchanged code.
-
-`/post-start-validation` runs gates in the order declared in `governance.md`,
-stops on `[MANDATORY]` failure, retries mechanical errors (lint, format) up
-to twice with auto-fix, runs a security review, and creates a conventional
-commit when everything passes.
-
-Both skills are universal — they ship with crag, never get edited per
-project, and adapt to the current codebase via runtime discovery rather
-than hardcoded paths.
-
----
-
-## What crag does not do
-
-- Does not write or modify application code.
-- Does not call any LLM. Discovery, analysis, and compilation are pure
-  filesystem operations with deterministic output.
-- Does not replace CI providers, linters, or test runners. It generates
-  config for them.
-- Does not collect telemetry. The only network call is an optional
-  `crag upgrade --check` npm registry ping (24h cached, 3s timeout,
-  graceful offline).
-
----
-
-## Release pipeline
-
-Every push to `master` runs the CI matrix (Ubuntu / macOS / Windows × Node
-18 / 20 / 22). On green, the patch version auto-bumps and publishes to npm
-with SLSA provenance attestation. Tags and GitHub releases are created
-from `CHANGELOG.md` automatically. To skip a release on a specific push,
-add `crag:skip-release` on its own line in the commit body.
+- [`docs/commands.md`](./docs/commands.md) — every subcommand, every flag, every exit code
+- [`docs/compile-targets.md`](./docs/compile-targets.md) — the 12 compile targets, their outputs, their consumers
+- [`docs/governance-format.md`](./docs/governance-format.md) — the `governance.md` v2 format (annotations, sections, inheritance)
+- [`docs/languages.md`](./docs/languages.md) — the 25+ stack detectors and the gates each emits
+- [`docs/ci-systems.md`](./docs/ci-systems.md) — the 11 CI extractors and the files they parse
+- [`docs/workspaces.md`](./docs/workspaces.md) — the 12 workspace types, fixture filtering, symlink protection
+- [`docs/claude-code.md`](./docs/claude-code.md) — Claude Code session loop (pre-start / post-start skills)
+- [`docs/release-pipeline.md`](./docs/release-pipeline.md) — how the auto-release workflow publishes to npm
 
 ---
 
@@ -519,9 +261,9 @@ add `crag:skip-release` on its own line in the commit body.
 Issues and PRs at [github.com/WhitehatD/crag](https://github.com/WhitehatD/crag).
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the workflow.
 
-If `crag analyze` misses a language, CI system, or gate pattern on a public
-repo, file an issue with the repo URL and `crag analyze --dry-run` output.
-That's the most valuable bug report.
+If `crag analyze` misses a language, CI system, or gate pattern on a
+public repo, file an issue with the repo URL and `crag analyze
+--dry-run` output. That's the most valuable bug report.
 
 ---
 
