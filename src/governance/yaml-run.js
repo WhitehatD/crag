@@ -71,6 +71,47 @@ function extractRunCommands(content) {
  * (extra gates) are easier to spot than false negatives (missing gates).
  */
 function isGateCommand(cmd) {
+  if (typeof cmd !== 'string' || cmd.length === 0) return false;
+
+  // ---------------------------------------------------------------------
+  // Early excludes — NEVER gates, regardless of keyword substring matches.
+  //
+  // A workflow step like `echo "Install: npm install -g foo"` contains
+  // the substring "npm install" even though it's shell plumbing (emitting
+  // a string to stdout). The old isGateCommand relied entirely on positive
+  // regex matches and so flagged these as gates, which `crag diff` then
+  // reported as EXTRA — noisy false positives.
+  //
+  // This first pass rejects obvious non-gates: variable assignments,
+  // echoes, git plumbing, release-specific scripts, and GitHub Actions
+  // output-writing. If ANY of these match, the command is definitively
+  // not a gate regardless of what it mentions downstream.
+  // ---------------------------------------------------------------------
+  const excludePatterns = [
+    // Shell I/O plumbing
+    /^\s*echo(\s|$)/,
+    /^\s*printf(\s|$)/,
+    // Shell variable assignment: NAME=value or NAME=$(subshell)
+    /^\s*[A-Z_][A-Z0-9_]*=/,
+    // Git mutations and introspection (deploy/release, not gates)
+    /^\s*git\s+(config|push|pull|fetch|add|commit|tag|merge|rebase|reset|checkout|stash|clone|init|remote|log|status)\b/,
+    // npm release/distribution verbs — not gates
+    /^\s*npm\s+(publish|pack|view|audit|login|logout|adduser|deprecate|owner|team|whoami|access)\b/,
+    // Release scripts live under scripts/ and are NOT gates themselves
+    /^\s*node\s+scripts\/(bump-version|release|publish|sync-)/,
+    /^\s*npm\s+run\s+(release|publish|sync-|prepublish|postpublish|prepare)\b/,
+    // GitHub Actions output streams — these are CI plumbing, not gates
+    /\$GITHUB_(STEP_SUMMARY|OUTPUT|ENV|PATH)/,
+    // Conditional / control flow keywords on their own line
+    /^\s*(if|then|else|elif|fi|while|do|done|for|case|esac|break|continue|return)\s*$/,
+    /^\s*(if|for|while|case)\s+/,
+    // Filesystem setup that is not a gate
+    /^\s*(mkdir|rmdir|touch|ln|cp|mv|chmod|chown)\s/,
+  ];
+  for (const rx of excludePatterns) {
+    if (rx.test(cmd)) return false;
+  }
+
   const patterns = [
     // Node ecosystem
     /\bnpm (run |ci|test|install)/,

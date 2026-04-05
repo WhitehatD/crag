@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const { isGateCommand, mergeWithExisting } = require('../src/commands/analyze');
+const { isGateCommand, mergeWithExisting, sanitizeProjectName } = require('../src/commands/analyze');
 
 function test(name, fn) {
   try {
@@ -40,6 +40,43 @@ test('isGateCommand: rejects shell utilities', () => {
   assert.ok(!isGateCommand('echo hello'));
   assert.ok(!isGateCommand('cd src'));
   assert.ok(!isGateCommand('rm file.txt'));
+});
+
+// --- sanitizeProjectName ---
+
+test('sanitizeProjectName: strips leading non-alnum', () => {
+  // Real case: D:\- Leyoda basename is "- Leyoda"; project name should be "Leyoda".
+  assert.strictEqual(sanitizeProjectName('- Leyoda'), 'Leyoda');
+  assert.strictEqual(sanitizeProjectName('.hidden-project'), 'hidden-project');
+  assert.strictEqual(sanitizeProjectName('__myproject'), 'myproject');
+  assert.strictEqual(sanitizeProjectName('  space-prefix'), 'space-prefix');
+});
+
+test('sanitizeProjectName: preserves interior dashes/underscores', () => {
+  assert.strictEqual(sanitizeProjectName('my-cool-project'), 'my-cool-project');
+  assert.strictEqual(sanitizeProjectName('snake_case'), 'snake_case');
+  assert.strictEqual(sanitizeProjectName('dot.separated'), 'dot.separated');
+});
+
+test('sanitizeProjectName: collapses whitespace runs', () => {
+  assert.strictEqual(sanitizeProjectName('my    project'), 'my project');
+});
+
+test('sanitizeProjectName: falls back to basename for pathological input', () => {
+  // All non-alnum: do not produce empty string.
+  assert.strictEqual(sanitizeProjectName('---'), '---');
+  assert.strictEqual(sanitizeProjectName('   '), '   ');
+});
+
+test('sanitizeProjectName: handles non-string input', () => {
+  assert.strictEqual(sanitizeProjectName(null), 'unnamed');
+  assert.strictEqual(sanitizeProjectName(undefined), 'unnamed');
+});
+
+test('sanitizeProjectName: leaves normal names unchanged', () => {
+  assert.strictEqual(sanitizeProjectName('crag'), 'crag');
+  assert.strictEqual(sanitizeProjectName('@whitehatd/crag'), 'whitehatd/crag');
+  assert.strictEqual(sanitizeProjectName('infra-playbook'), 'infra-playbook');
 });
 
 // --- mergeWithExisting: section order preservation ---

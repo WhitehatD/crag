@@ -155,7 +155,7 @@ Create `.claude/hooks/`:
 
 **auto-post-start.sh** — always generate. Gate enforcement safety net. Reads tool input from stdin, checks if the command is a `git commit`, warns if `.claude/.gates-passed` sentinel doesn't exist. Non-blocking (warns, doesn't prevent). Same for all projects.
 
-**sandbox-guard.sh** — always generate. Security hardening. Reads tool input from stdin (PreToolUse on Bash), hard-blocks destructive system commands (rm -rf /, dd, mkfs, DROP TABLE, docker system prune, kubectl delete namespace, curl|bash, force-push to main). Warns on file operations targeting paths outside the project root. Same for all projects.
+**sandbox-guard.sh** — always generate. Security hardening. Reads tool input from stdin (PreToolUse on Bash), hard-blocks destructive system commands (rm -rf /, dd, mkfs, DROP TABLE, docker system prune, kubectl delete namespace, curl|bash, force-push to main). Warns on file operations targeting paths outside the project root. Same for all projects. **MUST include `# rtk-hook-version: 3` as line 2 (right after the shebang)** — without this marker in the first 5 lines, RTK prints "Hook outdated" warnings on every invocation and `crag doctor` flags the hook as warn. Also **strip single-quoted strings before the destructive-pattern grep** (`CHECK=$(echo "$COMMAND" | sed "s/'[^']*'/''/g")`) so data payloads that legitimately mention destructive verbs inside quoted strings (e.g. `python script.py '{"content":"rm -rf / is blocked"}'`) don't false-trip the guard.
 
 **pre-compact-snapshot.sh** — only if MemStack enabled. Use correct project name.
 

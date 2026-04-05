@@ -145,8 +145,18 @@ function detectStack(dir, result, options = {}) {
  */
 function detectNestedStacks(dir, result) {
   const containerDirs = [
+    // Classic containers (monorepos, microservice demos, VSCode-style editors)
     'src', 'services', 'packages', 'apps', 'cmd', 'projects', 'microservices',
     'sdk', 'sdks', 'web', 'ui', 'editors', 'extensions', 'clients',
+    // Monolith tier-naming (backend/frontend/mobile layouts are extremely
+    // common in single-repo full-stack projects — e.g. Leyoda, Metabase,
+    // many Y Combinator startups). Without these, `crag analyze` on a
+    // top-level monolith root reports `Stack: unknown` because no root
+    // manifest exists and none of the classic containers are present.
+    'backend', 'frontend', 'api', 'client', 'server', 'worker', 'workers',
+    'mobile', 'ios', 'android', 'desktop', 'cli', 'lib', 'libs', 'shared',
+    // Common AI / data pipeline layouts
+    'signal-engine', 'pipelines', 'ml', 'models', 'agents', 'notebooks',
   ];
 
   const rootHadStacks = result.stack.length > 0;

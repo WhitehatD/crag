@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { parseGovernance, flattenGates } = require('../governance/parse');
 const { extractRunCommands, isGateCommand } = require('../governance/yaml-run');
+const { detectBranchStrategy, classifyGitBranchStrategy } = require('../governance/drift-utils');
 const { cliError, EXIT_USER, EXIT_INTERNAL, readFileOrExit } = require('../cli-errors');
 
 /**
@@ -102,17 +103,12 @@ function checkGateReality(cwd, cmd) {
 }
 
 function checkBranchStrategy(cwd, content, results) {
-  const govStrategy = content.includes('Feature branches') || content.includes('feature branches')
-    ? 'feature-branches' : content.includes('Trunk-based') || content.includes('trunk-based')
-    ? 'trunk-based' : null;
-
+  const govStrategy = detectBranchStrategy(content);
   if (!govStrategy) return;
 
   try {
     const branches = execSync('git branch -a --format="%(refname:short)"', { cwd, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] });
-    const list = branches.trim().split('\n');
-    const featureBranches = list.filter(b => /^(feat|fix|docs|chore|feature|hotfix)\//.test(b));
-    const actual = featureBranches.length > 2 ? 'feature-branches' : 'trunk-based';
+    const actual = classifyGitBranchStrategy(branches);
 
     if (actual !== govStrategy) {
       console.log(`  \x1b[33mDRIFT\x1b[0m   Branch strategy: governance says ${govStrategy}, git shows ${actual}`);

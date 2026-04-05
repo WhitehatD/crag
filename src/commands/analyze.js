@@ -136,9 +136,24 @@ function filterFixtureMembers(members) {
   });
 }
 
+/**
+ * Sanitize a directory basename for use as a project name.
+ *
+ * Drops leading non-alphanumerics (`- Leyoda` → `Leyoda`), trims surrounding
+ * whitespace, and collapses internal whitespace runs. Leaves interior dashes
+ * and underscores intact (`my-cool-project` stays as-is). If the result is
+ * empty (pathological input like `---` or `   `), falls back to the literal
+ * basename so `crag analyze` never produces an empty `- Project:` line.
+ */
+function sanitizeProjectName(basename) {
+  if (typeof basename !== 'string') return String(basename || 'unnamed');
+  const trimmed = basename.trim().replace(/^[^A-Za-z0-9]+/, '').replace(/\s+/g, ' ').trim();
+  return trimmed.length > 0 ? trimmed : basename;
+}
+
 function analyzeProject(dir) {
   const result = {
-    name: path.basename(dir),
+    name: sanitizeProjectName(path.basename(dir)),
     description: '',
     stack: [],
     linters: [],
@@ -450,4 +465,4 @@ function mergeWithExisting(existing, generated) {
   return existing;
 }
 
-module.exports = { analyze, analyzeProject, isGateCommand, mergeWithExisting };
+module.exports = { analyze, analyzeProject, sanitizeProjectName, isGateCommand, mergeWithExisting };

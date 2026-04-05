@@ -21,8 +21,11 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { parseGovernance, flattenGates, extractSection } = require('../governance/parse');
+const { parseGovernance, flattenGates } = require('../governance/parse');
+const { detectBranchStrategy, countFeatureBranches } = require('../governance/drift-utils');
 const { isModified, readFrontmatter } = require('../update/integrity');
+const { detectWorkspace } = require('../workspace/detect');
+const { enumerateMembers } = require('../workspace/enumerate');
 const { EXIT_USER, EXIT_INTERNAL } = require('../cli-errors');
 
 const GREEN = '\x1b[32m';
@@ -45,15 +48,36 @@ const ICON_FAIL = `${RED}✗${RESET}`;
  *               hooks, file presence). Useful in CI where .claude/ is
  *               either absent or freshly generated via `crag analyze`.
  *   --strict    Treat warnings as failures (exit 1 on any warn).
+ *   --workspace Run doctor on every workspace member that has `.claude/`,
+ *               plus the root. Aggregates pass/warn/fail counts across
+ *               members and exits non-zero if ANY member failed.
  */
 function doctor(args) {
   const cwd = process.cwd();
   const jsonOutput = args.includes('--json');
   const ciMode = args.includes('--ci');
   const strict = args.includes('--strict');
+  const workspace = args.includes('--workspace');
+
+  // Workspace mode: run diagnostics on root + every member. Emits one
+  // combined report (JSON) or prints per-member sections (human).
+  if (workspace) {
+    const { reports, combined } = runWorkspaceDiagnostics(cwd, { ciMode });
+    const exitCode = computeExitCode(combined, strict);
+
+    if (jsonOutput) {
+      console.log(JSON.stringify({ mode: 'workspace', reports, combined }, null, 2));
+      process.exit(exitCode);
+    }
+
+    for (const r of reports) {
+      printReport(r, { ciMode, strict });
+    }
+    printWorkspaceSummary(combined);
+    process.exit(exitCode);
+  }
 
   const report = runDiagnostics(cwd, { ciMode });
-
   const exitCode = computeExitCode(report, strict);
 
   if (jsonOutput) {
@@ -63,6 +87,45 @@ function doctor(args) {
 
   printReport(report, { ciMode, strict });
   process.exit(exitCode);
+}
+
+/**
+ * Run doctor across a workspace.
+ *
+ * Always includes the root (cwd). Then, if the root is a workspace, runs
+ * against each enumerated member. Members without a `.claude/` directory
+ * are skipped — there's nothing for doctor to check in them.
+ *
+ * Returns { reports: Report[], combined: CombinedCounts }.
+ */
+function runWorkspaceDiagnostics(cwd, options = {}) {
+  const reports = [];
+  const rootReport = runDiagnostics(cwd, options);
+  reports.push(rootReport);
+
+  const ws = detectWorkspace(cwd);
+  if (ws.type !== 'none') {
+    const members = enumerateMembers(ws);
+    for (const m of members) {
+      if (!m.hasClaude) continue; // nothing for doctor to see in this member
+      const memberReport = runDiagnostics(m.path, options);
+      reports.push(memberReport);
+    }
+  }
+
+  const combined = reports.reduce(
+    (acc, r) => ({
+      cwd,
+      pass: acc.pass + r.pass,
+      warn: acc.warn + r.warn,
+      fail: acc.fail + r.fail,
+      memberCount: acc.memberCount + 1,
+      ciMode: r.ciMode,
+    }),
+    { cwd, pass: 0, warn: 0, fail: 0, memberCount: 0, ciMode: options.ciMode || false }
+  );
+
+  return { reports, combined };
 }
 
 function computeExitCode(report, strict) {
@@ -381,68 +444,6 @@ function diagnoseHooks(cwd) {
 // Section: Drift (reuses crag diff logic)
 // ============================================================================
 
-/**
- * Detect the branch strategy declared in a governance.md document.
- *
- * Scopes the text scan to the `## Branch Strategy` section (avoiding false
- * matches against unrelated prose). Within that section, the FIRST keyword
- * to appear wins — this matches human reading order where the opening
- * statement is the rule and later lines are qualifications.
- *
- * Returns 'feature-branches', 'trunk-based', or null.
- *
- * Exported for unit testing.
- */
-function detectBranchStrategy(content) {
-  if (typeof content !== 'string' || content.length === 0) return null;
-  const section = extractSection(content, 'Branch Strategy');
-  const scope = section || content; // fall back to whole file if section absent
-  const featureIdx = scope.search(/[Ff]eature branches/);
-  const trunkIdx = scope.search(/[Tt]runk-based/);
-  if (featureIdx === -1 && trunkIdx === -1) return null;
-  if (featureIdx === -1) return 'trunk-based';
-  if (trunkIdx === -1) return 'feature-branches';
-  return featureIdx < trunkIdx ? 'feature-branches' : 'trunk-based';
-}
-
-/**
- * Given the raw output of `git branch -a --format="%(refname:short)"`, return
- * the list of unique feature branches (by short name, after stripping any
- * remote prefix).
- *
- * This is the piece that decides whether a repo is practicing feature-branch
- * development. A repo whose LOCAL branches have all been merged+deleted but
- * whose REMOTE still has open feat/* branches is absolutely still practicing
- * feature-branch development — so we count remote-tracking refs as equivalent
- * to local branches, and we dedupe.
- *
- * Exported for unit testing — avoids the need to set up a real git fixture.
- */
-const FEATURE_PREFIXES = ['feat', 'fix', 'docs', 'chore', 'feature', 'hotfix'];
-
-function countFeatureBranches(gitBranchOutput) {
-  if (typeof gitBranchOutput !== 'string' || gitBranchOutput.length === 0) {
-    return [];
-  }
-  const rawList = gitBranchOutput
-    .split('\n')
-    .map(b => b.trim())
-    .filter(Boolean)
-    // Skip symbolic refs like "origin/HEAD" (no payload branch underneath).
-    .filter(b => !b.endsWith('/HEAD'));
-
-  const prefixGroup = FEATURE_PREFIXES.join('|');
-  const remoteStripRe = new RegExp(`^[A-Za-z0-9_.-]+/((?:${prefixGroup})/.+)$`);
-  const featureRe = new RegExp(`^(${prefixGroup})/`);
-
-  const normalized = rawList.map(b => {
-    const m = b.match(remoteStripRe);
-    return m ? m[1] : b;
-  });
-  const unique = [...new Set(normalized)];
-  return unique.filter(b => featureRe.test(b));
-}
-
 function diagnoseDrift(cwd) {
   const checks = [];
   const govPath = path.join(cwd, '.claude', 'governance.md');
@@ -644,4 +645,25 @@ function printReport(report, { ciMode = false, strict = false } = {}) {
   }
 }
 
-module.exports = { doctor, runDiagnostics, countFeatureBranches, detectBranchStrategy };
+/**
+ * Print a per-workspace summary after all individual reports have been
+ * printed. Shows the combined pass/warn/fail counts across the root and
+ * every member that was inspected.
+ */
+function printWorkspaceSummary(combined) {
+  const total = combined.pass + combined.warn + combined.fail;
+  const msg = `  Workspace total — ${combined.pass}/${total} pass, ${combined.warn} warn, ${combined.fail} fail (${combined.memberCount} target${combined.memberCount === 1 ? '' : 's'})`;
+  if (combined.fail > 0) console.log(`${RED}${BOLD}${msg}${RESET}\n`);
+  else if (combined.warn > 0) console.log(`${YELLOW}${BOLD}${msg}${RESET}\n`);
+  else console.log(`${GREEN}${BOLD}${msg}${RESET}\n`);
+}
+
+module.exports = {
+  doctor,
+  runDiagnostics,
+  runWorkspaceDiagnostics,
+  // Re-exported from drift-utils for backward compatibility with existing
+  // tests that import from './commands/doctor'.
+  countFeatureBranches,
+  detectBranchStrategy,
+};

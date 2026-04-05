@@ -4,7 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { runDiagnostics, countFeatureBranches, detectBranchStrategy } = require('../src/commands/doctor');
+const { runDiagnostics, runWorkspaceDiagnostics, countFeatureBranches, detectBranchStrategy } = require('../src/commands/doctor');
 
 function test(name, fn) {
   try {
@@ -387,6 +387,63 @@ test('doctor: summary counts add up correctly', () => {
     }
   }
   assert.strictEqual(report.pass + report.warn + report.fail, manual);
+});
+
+// --- runWorkspaceDiagnostics (doctor --workspace) ---
+
+test('runWorkspaceDiagnostics: non-workspace project returns just root report', () => {
+  const dir = mkProject({
+    '.claude/governance.md': `# Governance
+## Identity
+- Project: solo
+## Gates
+### Test
+- npm test
+## Branch Strategy
+- Trunk-based
+## Security
+- none
+`,
+  });
+  const { reports, combined } = runWorkspaceDiagnostics(dir, { ciMode: true });
+  assert.strictEqual(reports.length, 1, 'only root report');
+  assert.strictEqual(combined.memberCount, 1);
+  assert.strictEqual(combined.fail, reports[0].fail);
+});
+
+test('runWorkspaceDiagnostics: pnpm workspace runs on root and members with .claude', () => {
+  const dir = mkProject({
+    'pnpm-workspace.yaml': 'packages:\n  - "packages/*"\n',
+    'package.json': '{"name":"root","private":true}',
+    '.claude/governance.md': `## Identity\n- Project: root\n## Gates\n### t\n- npm test\n## Branch Strategy\n- Trunk-based\n## Security\n- none\n`,
+    'packages/a/package.json': '{"name":"a"}',
+    'packages/a/.claude/governance.md': `## Identity\n- Project: a\n## Gates\n### t\n- npm test\n## Branch Strategy\n- Trunk-based\n## Security\n- none\n`,
+    'packages/b/package.json': '{"name":"b"}',
+    // b has NO .claude/ — doctor should skip it
+  });
+  const { reports, combined } = runWorkspaceDiagnostics(dir, { ciMode: true });
+  assert.strictEqual(reports.length, 2, 'root + a (b skipped, no .claude)');
+  assert.strictEqual(combined.memberCount, 2);
+  // Combined counts equal the sum of per-report counts
+  const sumPass = reports.reduce((n, r) => n + r.pass, 0);
+  const sumWarn = reports.reduce((n, r) => n + r.warn, 0);
+  const sumFail = reports.reduce((n, r) => n + r.fail, 0);
+  assert.strictEqual(combined.pass, sumPass);
+  assert.strictEqual(combined.warn, sumWarn);
+  assert.strictEqual(combined.fail, sumFail);
+});
+
+test('runWorkspaceDiagnostics: propagates fail from any member into combined', () => {
+  const dir = mkProject({
+    'pnpm-workspace.yaml': 'packages:\n  - "packages/*"\n',
+    'package.json': '{"name":"root","private":true}',
+    '.claude/governance.md': `## Identity\n- Project: root\n## Gates\n### t\n- npm test\n## Branch Strategy\n- Trunk-based\n## Security\n- none\n`,
+    // Member has a broken governance.md — missing required sections — so it fails.
+    'packages/bad/package.json': '{"name":"bad"}',
+    'packages/bad/.claude/governance.md': '# just a heading, no required sections\n',
+  });
+  const { combined } = runWorkspaceDiagnostics(dir, { ciMode: true });
+  assert.ok(combined.fail > 0, 'member failures propagate into combined count');
 });
 
 // --- JSON output ---

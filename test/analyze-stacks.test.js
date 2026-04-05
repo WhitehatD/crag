@@ -332,3 +332,53 @@ test('detectNestedStacks: apps/ container pattern', () => {
   assert.ok(result.stack.includes('next.js'));
   assert.ok(result.stack.includes('go'));
 });
+
+// --- Monolith tier-naming (backend/frontend/mobile layouts) ---
+
+test('detectNestedStacks: backend/ + frontend/ monolith (Leyoda-style)', () => {
+  // Real case: Leyoda's layout is backend/ (Java+Gradle) + frontend/ (Next.js)
+  // + signal-engine/ (Python). Without `backend`/`frontend` in containerDirs,
+  // top-level analyze would report `Stack: unknown`.
+  const { result } = analyze({
+    'README.md': 'Leyoda — investor-startup matching',
+    'backend/build.gradle.kts': 'plugins { kotlin("jvm") version "1.9.0" }',
+    'backend/settings.gradle.kts': 'rootProject.name = "leyoda-backend"',
+    'frontend/package.json': '{"name":"leyoda-frontend","dependencies":{"next":"^16","react":"^19"}}',
+    'frontend/next.config.ts': 'export default {};',
+    'signal-engine/pyproject.toml': '[project]\nname = "signal-engine"',
+  });
+  assert.ok(result.stack.includes('java/gradle'), 'backend Gradle detected');
+  assert.ok(result.stack.includes('node'), 'frontend Node detected');
+  assert.ok(result.stack.includes('next.js'), 'Next.js detected');
+  assert.ok(result.stack.includes('python'), 'signal-engine Python detected');
+  assert.ok(result._manifests.subservices, 'subservices list populated');
+  assert.ok(result._manifests.subservices.length >= 3);
+});
+
+test('detectNestedStacks: api/ + client/ monolith', () => {
+  const { result } = analyze({
+    'api/go.mod': 'module example.com/api',
+    'client/package.json': '{"name":"client","dependencies":{"react":"^18"}}',
+  });
+  assert.ok(result.stack.includes('go'));
+  assert.ok(result.stack.includes('node'));
+  assert.ok(result.stack.includes('react'));
+});
+
+test('detectNestedStacks: mobile/ + server/ monolith', () => {
+  const { result } = analyze({
+    'server/pyproject.toml': '[project]\nname = "server"',
+    'mobile/package.json': '{"name":"mobile","dependencies":{"react-native":"^0.73"}}',
+  });
+  assert.ok(result.stack.includes('python'));
+  assert.ok(result.stack.includes('node'));
+});
+
+test('detectNestedStacks: ml/ + pipelines/ data monolith', () => {
+  const { result } = analyze({
+    'ml/pyproject.toml': '[project]\nname = "ml"',
+    'pipelines/pyproject.toml': '[project]\nname = "pipelines"',
+  });
+  assert.ok(result.stack.includes('python'));
+  assert.ok(result._manifests.subservices.length >= 2);
+});
