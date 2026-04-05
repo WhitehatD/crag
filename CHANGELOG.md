@@ -127,11 +127,7 @@ Renamed and expanded. First release under the `@whitehatd/crag` name.
 
 ## [0.1.0] — 2026-04-03 (pre-rename, as `scaffold-cli`)
 
-Initial release under the `scaffold-cli` name. Proven in production on:
-- **example-app** — multi-stack project
-- **example-app** — multi-service project
-- **example-app** — multi-language project
-- **scaffold-cli (self)** — full dogfooding
+Initial release under the `scaffold-cli` name.
 
 Initial capabilities: universal skills (pre-start-context, post-start-validation), interview-driven governance generation, 3 compile targets (github, husky, pre-commit), basic workspace support for monorepos via multi-level `governance.md`.
 

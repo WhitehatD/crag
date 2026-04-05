@@ -206,14 +206,13 @@ The only file you maintain. 20–30 lines. Everything else is universal or gener
 - Description: Example project using crag
 
 ## Gates (run in order, stop on failure)
-### Frontend (path: frontend/)
-- npx eslint frontend/ --max-warnings 0
-- cd frontend && npx vite build
+### Frontend (path: web/)
+- npx eslint web/ --max-warnings 0
+- cd web && npx vite build
 
 ### Backend
-- node --check scripts/server.js
-- cargo clippy --manifest-path api/Cargo.toml
-- cargo test --manifest-path api/Cargo.toml
+- cargo clippy --all-targets -- -D warnings
+- cargo test
 
 ### Infrastructure
 - docker compose config --quiet
@@ -223,7 +222,6 @@ The only file you maintain. 20–30 lines. Everything else is universal or gener
 - Auto-commit after gates pass
 
 ## Security
-- No hardcoded secrets
 - No hardcoded secrets or API keys
 ```
 
