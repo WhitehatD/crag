@@ -23,7 +23,9 @@ name: Release
 #   NPM_TOKEN — granular access token with bypass-2FA, published to `@whitehatd/crag`
 #
 # To opt out of auto-bump for a specific push (e.g. docs-only changes you
-# don't want shipped), include `[skip release]` in the commit message.
+# don't want shipped), put `crag:skip-release` on its own line in the
+# commit body. We use a distinctive marker (not [skip release]) because
+# commit bodies may legitimately mention the latter in prose.
 
 on:
   push:
@@ -52,6 +54,7 @@ jobs:
     outputs:
       version: ${{ steps.final_version.outputs.version }}
       should_publish: ${{ steps.check.outputs.should_publish }}
+      skipped: ${{ steps.skip_check.outputs.skipped }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,13 +64,20 @@ jobs:
           # The default GITHUB_TOKEN has this when `permissions: contents: write` is set.
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Skip if commit message says [skip release]
+      # Opt-out marker: put `crag:skip-release` on its OWN line in the commit
+      # body to tell this workflow not to publish. We intentionally use a
+      # distinctive marker (not the common "[skip release]" string) because
+      # feature commits may legitimately mention "[skip release]" in prose
+      # when documenting the marker itself.
+      - name: Check for crag:skip-release marker
+        id: skip_check
         shell: bash
         run: |
-          MSG=$(git log -1 --pretty=%B)
-          if echo "$MSG" | grep -qi '\[skip release\]'; then
-            echo "::notice::Commit contains [skip release] marker — exiting release workflow"
-            exit 78  # GitHub Actions treats exit 78 as neutral (skip)
+          if git log -1 --pretty=%B | grep -qxE '[[:space:]]*crag:skip-release[[:space:]]*'; then
+            echo "::notice::Commit contains 'crag:skip-release' line — skipping publish"
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skipped=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Setup Node.js
@@ -146,6 +156,7 @@ jobs:
 
       - name: Auto-bump patch if version already on npm
         id: autobump
+        if: steps.skip_check.outputs.skipped != 'true'
         shell: bash
         run: |
           VERSION="${{ steps.pkg.outputs.version }}"
@@ -197,13 +208,21 @@ jobs:
         id: final_version
         shell: bash
         run: |
-          FINAL="${{ steps.autobump.outputs.final_version }}"
+          # Fall back to pkg.outputs.version if autobump was skipped
+          FINAL="${{ steps.autobump.outputs.final_version || steps.pkg.outputs.version }}"
           echo "version=$FINAL" >> "$GITHUB_OUTPUT"
 
       - name: Check if version is already published
         id: check
         shell: bash
         run: |
+          # Honor the crag:skip-release marker
+          if [ "${{ steps.skip_check.outputs.skipped }}" = "true" ]; then
+            echo "Skipping publish — crag:skip-release marker present"
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           VERSION="${{ steps.final_version.outputs.version }}"
           PKG_NAME=$(node -p "require('./package.json').name")
           echo "Checking if $PKG_NAME@$VERSION is already on npm..."
@@ -228,7 +247,7 @@ jobs:
   publish:
     name: Publish to npm + create tag + GitHub release
     needs: gates
-    if: needs.gates.outputs.should_publish == 'true'
+    if: needs.gates.outputs.should_publish == 'true' && needs.gates.outputs.skipped != 'true'
     runs-on: ubuntu-latest
     environment:
       name: npm-publish
