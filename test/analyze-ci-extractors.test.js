@@ -4,7 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { extractCiCommands } = require('../src/analyze/ci-extractors');
+const { extractCiCommands, extractJenkinsfileCommands } = require('../src/analyze/ci-extractors');
 
 function test(name, fn) {
   try {
@@ -163,4 +163,181 @@ test('extractCiCommands: no CI returns null system and empty commands', () => {
   const { system, commands } = extractCiCommands(dir);
   assert.strictEqual(system, null);
   assert.deepStrictEqual(commands, []);
+});
+
+// --- Jenkinsfile ---
+
+test('extractCiCommands: Jenkinsfile declarative pipeline (inline sh)', () => {
+  const dir = mkFixture({
+    'Jenkinsfile': `pipeline {
+  agent any
+  stages {
+    stage('Build') {
+      steps {
+        sh 'mvn clean package'
+        sh 'npm test'
+      }
+    }
+    stage('Lint') {
+      steps {
+        sh 'npm run lint'
+      }
+    }
+  }
+}
+`,
+  });
+  const { system, commands } = extractCiCommands(dir);
+  assert.strictEqual(system, 'jenkins');
+  assert.ok(commands.includes('mvn clean package'));
+  assert.ok(commands.includes('npm test'));
+  assert.ok(commands.includes('npm run lint'));
+});
+
+test('extractJenkinsfileCommands: triple-single-quoted multi-line', () => {
+  const content = `pipeline {
+  stages {
+    stage('Test') {
+      steps {
+        sh '''
+          npm ci
+          npm run test
+          npm run lint
+        '''
+      }
+    }
+  }
+}`;
+  const cmds = extractJenkinsfileCommands(content);
+  assert.ok(cmds.includes('npm ci'));
+  assert.ok(cmds.includes('npm run test'));
+  assert.ok(cmds.includes('npm run lint'));
+});
+
+test('extractJenkinsfileCommands: triple-double-quoted multi-line with interpolation', () => {
+  const content = `pipeline {
+  stages {
+    stage('Build') {
+      steps {
+        sh """
+          export VERSION=\${env.BUILD_NUMBER}
+          mvn -Dversion=\${VERSION} package
+        """
+      }
+    }
+  }
+}`;
+  const cmds = extractJenkinsfileCommands(content);
+  assert.ok(cmds.some(c => c.includes('mvn')));
+});
+
+test('extractJenkinsfileCommands: bat and pwsh variants', () => {
+  const content = `pipeline {
+  stages {
+    stage('Windows') {
+      steps {
+        bat 'mvn clean package'
+        pwsh 'Get-ChildItem'
+        powershell 'dotnet test'
+      }
+    }
+  }
+}`;
+  const cmds = extractJenkinsfileCommands(content);
+  assert.ok(cmds.includes('mvn clean package'));
+  assert.ok(cmds.includes('Get-ChildItem'));
+  assert.ok(cmds.includes('dotnet test'));
+});
+
+test('extractJenkinsfileCommands: scripted pipeline (node block)', () => {
+  const content = `node {
+  stage('Build') {
+    sh 'cargo build --release'
+  }
+  stage('Test') {
+    sh 'cargo test'
+  }
+}`;
+  const cmds = extractJenkinsfileCommands(content);
+  assert.ok(cmds.includes('cargo build --release'));
+  assert.ok(cmds.includes('cargo test'));
+});
+
+test('extractJenkinsfileCommands: skips comments inside multi-line blocks', () => {
+  const content = `pipeline {
+  stages {
+    stage('Test') {
+      steps {
+        sh '''
+          # install deps
+          npm ci
+          // test
+          npm test
+        '''
+      }
+    }
+  }
+}`;
+  const cmds = extractJenkinsfileCommands(content);
+  assert.ok(cmds.includes('npm ci'));
+  assert.ok(cmds.includes('npm test'));
+  assert.ok(!cmds.includes('# install deps'));
+  assert.ok(!cmds.includes('// test'));
+});
+
+test('extractJenkinsfileCommands: credentials() calls are not captured as commands', () => {
+  const content = `pipeline {
+  environment {
+    DAGGER_CLOUD_TOKEN = credentials('DAGGER_CLOUD_TOKEN')
+  }
+  stages {
+    stage('Run') {
+      steps {
+        sh 'dagger call hello'
+      }
+    }
+  }
+}`;
+  const cmds = extractJenkinsfileCommands(content);
+  assert.ok(cmds.includes('dagger call hello'));
+  assert.ok(!cmds.some(c => c.includes('credentials(')));
+  assert.ok(!cmds.some(c => c.includes('DAGGER_CLOUD_TOKEN')));
+});
+
+test('extractCiCommands: Jenkinsfile with sh(script: ...) map form', () => {
+  const dir = mkFixture({
+    'Jenkinsfile': `pipeline {
+  stages {
+    stage('Build') {
+      steps {
+        sh(script: 'make build')
+        sh(script: "make test")
+      }
+    }
+  }
+}
+`,
+  });
+  const { system, commands } = extractCiCommands(dir);
+  assert.strictEqual(system, 'jenkins');
+  assert.ok(commands.includes('make build'));
+  assert.ok(commands.includes('make test'));
+});
+
+test('extractCiCommands: ci/Jenkinsfile subdirectory', () => {
+  const dir = mkFixture({
+    'ci/Jenkinsfile': `pipeline {
+  stages {
+    stage('Build') {
+      steps {
+        sh 'make release'
+      }
+    }
+  }
+}
+`,
+  });
+  const { system, commands } = extractCiCommands(dir);
+  assert.strictEqual(system, 'jenkins');
+  assert.ok(commands.includes('make release'));
 });

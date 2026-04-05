@@ -13,6 +13,7 @@
  *   - Drone              (.drone.yml)
  *   - Woodpecker         (.woodpecker.yml, .woodpecker/*.yml)
  *   - Bitbucket          (bitbucket-pipelines.yml)
+ *   - Jenkins            (Jenkinsfile — Groovy declarative + scripted)
  *
  * Each extractor returns a list of raw shell command strings. The CI
  * normalizer (normalize.js) dedups and filters them uniformly regardless
@@ -116,9 +117,15 @@ function extractCiCommands(dir) {
     commands.push(...extractBitbucketCommands(safeRead(bbFile)));
   }
 
-  // Jenkins — Jenkinsfiles are Groovy, not YAML. We do not try to parse them.
-  if (fs.existsSync(path.join(dir, 'Jenkinsfile'))) {
-    primary = primary || 'jenkins';
+  // Jenkins — Jenkinsfile is Groovy, not YAML. We parse `sh/bat/pwsh`
+  // step invocations from declarative and scripted pipelines.
+  const jenkinsFiles = ['Jenkinsfile', 'jenkins/Jenkinsfile', 'ci/Jenkinsfile'];
+  for (const jf of jenkinsFiles) {
+    const p = path.join(dir, jf);
+    if (fs.existsSync(p)) {
+      primary = primary || 'jenkins';
+      commands.push(...extractJenkinsfileCommands(safeRead(p)));
+    }
   }
 
   return { system: primary, commands };
@@ -253,6 +260,90 @@ function extractBitbucketCommands(content) {
   return extractYamlListField(content, ['script']);
 }
 
+// --- Jenkinsfile (Groovy) --------------------------------------------------
+
+/**
+ * Extract shell commands from a Jenkinsfile (declarative or scripted).
+ *
+ * Supported step invocations:
+ *   sh 'cmd'               (Unix inline, single-quoted)
+ *   sh "cmd"               (Unix inline, double-quoted)
+ *   sh '''...'''           (Unix multi-line, triple-single-quoted)
+ *   sh """..."""           (Unix multi-line, triple-double-quoted)
+ *   sh(script: 'cmd')      (map form — rare but valid)
+ *   bat 'cmd'              (Windows batch)
+ *   bat '''...'''          (Windows multi-line)
+ *   pwsh 'cmd' | powershell 'cmd' (PowerShell)
+ *
+ * Skipped constructs (not gates):
+ *   credentials(...)       (Jenkins credentials binding)
+ *   environment { ... }    (env block — not commands)
+ *   withCredentials { ... } (wrapper, but inner steps still parsed)
+ *
+ * Multi-line strings are split on newlines and each non-empty line returned
+ * as a separate command, matching the convention of other CI extractors.
+ */
+function extractJenkinsfileCommands(content) {
+  const commands = [];
+  const text = String(content);
+  const lines = text.split(/\r?\n/);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Skip comment lines
+    const trimmed = line.trim();
+    if (trimmed.startsWith('//') || trimmed.startsWith('#')) continue;
+
+    // Map form: sh(script: 'cmd') or sh(script: "cmd")
+    const mapMatch = line.match(/\b(sh|bat|pwsh|powershell)\s*\(\s*script\s*:\s*(['"])([^'"]*?)\2\s*\)/);
+    if (mapMatch) {
+      const cmd = mapMatch[3].trim();
+      if (cmd) commands.push(cmd);
+      continue;
+    }
+
+    // Inline: step 'cmd' or step "cmd" on a single line
+    // Matches: sh 'foo', sh "foo", bat 'bar', pwsh "baz"
+    const inlineMatch = line.match(/\b(sh|bat|pwsh|powershell)\s*\(?(['"])([^'"]*?)\2\)?/);
+    if (inlineMatch) {
+      // But only if the string is NOT the start of a triple-quoted block
+      // (triple quotes: the char after the match end should not be another
+      // matching quote)
+      const afterIdx = inlineMatch.index + inlineMatch[0].length;
+      const beforeIdx = line.indexOf(inlineMatch[2] + inlineMatch[3] + inlineMatch[2]);
+      if (line[afterIdx] !== inlineMatch[2] && line[beforeIdx - 1] !== inlineMatch[2]) {
+        const cmd = inlineMatch[3].trim();
+        if (cmd) commands.push(cmd);
+      }
+    }
+
+    // Multi-line triple-quoted: sh ''' ... ''' or sh """ ... """
+    const tripleMatch = line.match(/\b(sh|bat|pwsh|powershell)\s*\(?\s*(?:script:\s*)?('''|""")\s*$/);
+    if (tripleMatch) {
+      const delim = tripleMatch[2];
+      // Collect lines until the closing triple delimiter
+      for (let j = i + 1; j < lines.length; j++) {
+        const inner = lines[j];
+        if (inner.trim().startsWith(delim) || inner.includes(delim)) {
+          i = j; // skip past the closing delimiter
+          break;
+        }
+        const innerTrimmed = inner.trim();
+        if (innerTrimmed && !innerTrimmed.startsWith('#') && !innerTrimmed.startsWith('//')) {
+          commands.push(innerTrimmed);
+        }
+      }
+      continue;
+    }
+
+    // Triple-quote on a previous line was handled by the loop above — no
+    // additional handling needed here.
+  }
+
+  return commands;
+}
+
 // --- Generic YAML list field extractor -------------------------------------
 
 /**
@@ -314,4 +405,4 @@ function extractYamlListField(content, fields) {
   return commands;
 }
 
-module.exports = { extractCiCommands, walkYaml, extractYamlListField };
+module.exports = { extractCiCommands, walkYaml, extractYamlListField, extractJenkinsfileCommands };
