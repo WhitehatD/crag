@@ -37,7 +37,7 @@ npx @whitehatd/crag demo
 
 ![crag demo](assets/demo.gif)
 
-512 ms. No install, no config, no network, no LLM. Scaffolds a
+568 ms. No install, no config, no network, no LLM. Scaffolds a
 synthetic polyglot project (Node + TypeScript + Rust cargo workspace),
 analyzes it, diffs the governance against the CI workflow, compiles to
 all 12 targets, then runs a second analyze and SHA-verifies the output
