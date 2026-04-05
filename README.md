@@ -7,7 +7,8 @@
 [![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
 
-[![Tests](https://img.shields.io/badge/tests-498%20passing-brightgreen)](./test)
+[![Tests](https://img.shields.io/badge/tests-510%20passing-brightgreen)](./test)
+[![Deterministic](https://img.shields.io/badge/deterministic-SHA--verified-brightgreen)](#see-it-work-in-3-seconds)
 [![Stress test](https://img.shields.io/badge/stress%20test-101%20repos%20%C2%B7%204%2C400%20invocations%20%C2%B7%200%20crashes-brightgreen)](./benchmarks/stress-test.md)
 [![Reference benchmark](https://img.shields.io/badge/benchmark-40%2F40%20Grade%20A-brightgreen)](./benchmarks/results.md)
 [![Languages](https://img.shields.io/badge/languages%20detected-25%2B-blue)](#supported-languages-and-runtimes)
@@ -25,6 +26,87 @@ npx @whitehatd/crag compile --target all  # compile to 12 downstream files
 ```
 
 Zero runtime dependencies. Node 18+. Deterministic output (no LLM calls).
+
+---
+
+## See it work in 3 seconds
+
+```bash
+npx @whitehatd/crag demo
+```
+
+One command, no config, no network, no LLM. In ~500 ms `crag demo` does
+the following on a synthetic polyglot project it builds from scratch:
+
+```
+  crag demo — proof-of-value on a synthetic polyglot project
+
+  Stack: Node + TypeScript + Rust (cargo workspace with 2 crates)
+  CI: .github/workflows/ci.yml with 8 gates; hand-written governance has only 4
+
+  [1/6] scaffold                              82 ms   7 files across 3 stacks
+  [2/6] analyze --dry-run                    112 ms   stack=node, typescript, rust  workspace=cargo
+  [3/6] write minimal governance               0 ms   4 gates — the "human-written" baseline
+  [4/6] diff (governance vs CI reality)      105 ms   6 match, 0 drift, 0 missing, 3 extra
+  [5/6] compile --target all --dry-run        66 ms   12 files planned
+  [6/6] analyze --dry-run (second run)       115 ms   SHA-256 matches run 1 (17cd4969d74a…)
+
+  What this proves
+    ✓ crag analyzes a multi-stack project in one pass
+    ✓ crag diff catches real drift: 6 gates match, 3 gate(s) exist in CI but
+       NOT in the hand-written governance (this is what humans miss)
+    ✓ crag compile --target all produces 12 downstream files from one governance.md
+    ✓ Deterministic: two back-to-back runs produced byte-identical SHA-256 hashes
+       hash: 17cd4969d74a1996bfae0e99abd12b1fd20f715de1e5ca4d6b4d0f40fb1a1a0f
+
+  Total: 507 ms from empty directory to verified 12-target pipeline.
+```
+
+The demo is self-cleaning and runs entirely from a temp directory.
+`--json` emits structured output for scripting. `--keep` leaves the
+temp project behind for manual inspection. Source:
+[`src/commands/demo.js`](./src/commands/demo.js). Lock-in contract:
+[`test/demo.test.js`](./test/demo.test.js) (11 tests including a
+determinism SHA assertion).
+
+---
+
+## How it works at a glance
+
+```
+  Input                      crag                    Output
+  ─────                      ────                    ──────
+
+  your repo       ─►   crag analyze        ─►   governance.md  (one file, ~20 lines)
+  (any stack)          (detects stack,          ▲
+                        CI, gates,               │  Hand-edit ANY rule here
+                        workspaces)              │  when it changes.
+                                                 │
+                                                 ▼
+                       crag compile       ─►    .github/workflows/gates.yml
+                       --target all            .husky/pre-commit
+                                                .pre-commit-config.yaml
+                                                AGENTS.md
+                                                .cursor/rules/governance.mdc
+                                                GEMINI.md
+                                                .github/copilot-instructions.md
+                                                .clinerules
+                                                .continuerules
+                                                .windsurfrules
+                                                .zed/rules.md
+                                                .sourcegraph/cody-instructions.md
+                                                └─ 12 files, regenerated atomically
+
+                       crag diff          ─►   MATCH / DRIFT / MISSING / EXTRA
+                                                (governance.md vs your 11 supported
+                                                 CI systems, deduplicated, normalized)
+
+                       crag doctor        ─►   governance integrity + drift +
+                                                security smoke test + hook validity
+
+  Deterministic: same input → byte-identical output. No LLM. No network.
+  Verified via hash on every release by `crag demo`.
+```
 
 ---
 
@@ -336,6 +418,10 @@ blow up the scanner.
 ## Commands
 
 ```
+crag demo                        Self-contained proof-of-value (~500 ms)
+  --json                         Machine-readable summary
+  --keep                         Leave the synthetic project on disk for inspection
+
 crag analyze                     Generate .claude/governance.md from filesystem
   --dry-run                      Print what would be generated, don't write
   --workspace                    Analyze root + every workspace member

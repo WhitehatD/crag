@@ -8,6 +8,7 @@ const { diff } = require('./commands/diff');
 const { doctor } = require('./commands/doctor');
 const { upgrade } = require('./commands/upgrade');
 const { workspace } = require('./commands/workspace');
+const { demo } = require('./commands/demo');
 const { checkOnce } = require('./update/version-check');
 const { EXIT_USER } = require('./cli-errors');
 
@@ -17,6 +18,7 @@ function printUsage() {
   One governance.md. Any project. Never stale.
 
   Usage:
+    crag demo         Self-contained proof-of-value run (~3 s, no config)
     crag init         Interview → generate governance, hooks, agents
     crag analyze      Generate governance from existing project (no interview)
     crag check        Verify infrastructure is complete
@@ -98,6 +100,7 @@ function run(args) {
     case 'doctor':    doctor(args.slice(1)); break;
     case 'upgrade':   upgrade(args); break;
     case 'workspace': workspace(args); break;
+    case 'demo':      demo(args.slice(1)); break;
     case 'version': case '--version': case '-v':
       console.log(`  crag v${require('../package.json').version}`);
       break;

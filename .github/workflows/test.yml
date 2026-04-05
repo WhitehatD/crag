@@ -85,6 +85,32 @@ jobs:
           node bin/crag.js doctor --ci
           rm -rf .claude
 
+      - name: crag demo (self-contained proof-of-value + determinism check)
+        shell: bash
+        env:
+          CRAG_NO_UPDATE_CHECK: '1'
+          NO_COLOR: '1'
+        run: |
+          # Runs on every CI matrix slot: creates a synthetic polyglot project,
+          # exercises analyze/diff/compile, and SHA-256-verifies that two
+          # back-to-back analyze runs produce byte-identical output. If this
+          # ever fails, determinism is broken and the release must be blocked.
+          # Use RUNNER_TEMP which is defined on every GitHub runner (Linux,
+          # macOS, Windows) — plain /tmp is not portable to Windows bash.
+          node bin/crag.js demo --json > "$RUNNER_TEMP/demo-output.json"
+          node -e "
+            const d = JSON.parse(require('fs').readFileSync(process.env.RUNNER_TEMP + '/demo-output.json','utf-8'));
+            if (!d.deterministic || !d.deterministic.ok) {
+              console.error('DEMO DETERMINISM FAILED', d.deterministic);
+              process.exit(1);
+            }
+            if (d.totalMs > 10000) {
+              console.error('DEMO TOO SLOW:', d.totalMs, 'ms');
+              process.exit(1);
+            }
+            console.log('demo:', d.totalMs + 'ms', 'sha:' + d.deterministic.hash1.slice(0,12));
+          "
+
       - name: Run test suite
         run: node test/all.js
 
