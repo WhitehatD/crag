@@ -38,7 +38,9 @@ function checkOnce() {
         if (age < CACHE_TTL_MS) {
           if (cache.updateAvailable) {
             const current = require('../../package.json').version;
-            console.log(`  \x1b[33m↑\x1b[0m crag v${cache.latestVersion} available (you have v${current}). Run: npm update -g @whitehatd/crag`);
+            // Write update notices to stderr so they never contaminate
+            // `--json` stdout consumers (crag workspace --json | jq ...).
+            console.error(`  \x1b[33m↑\x1b[0m crag v${cache.latestVersion} available (you have v${current}). Run: npm update -g @whitehatd/crag`);
           }
           return;
         }
@@ -107,7 +109,8 @@ function checkRegistry() {
         }
 
         if (updateAvailable) {
-          console.log(`  \x1b[33m↑\x1b[0m crag v${latest} available (you have v${currentVersion}). Run: npm update -g @whitehatd/crag`);
+          // Stderr, not stdout — keep `--json` output clean for pipelines.
+          console.error(`  \x1b[33m↑\x1b[0m crag v${latest} available (you have v${currentVersion}). Run: npm update -g @whitehatd/crag`);
         }
       } catch {
         // Malformed response — ignore

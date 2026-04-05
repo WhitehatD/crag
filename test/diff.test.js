@@ -231,7 +231,10 @@ test('diff: deduplicates extras across multiple workflows', () => {
   let output;
   try {
     output = execFileSync('node', [cragBin, 'diff'], {
-      cwd: dir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+      cwd: dir,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
     });
   } catch (err) {
     // diff may exit non-zero if there are drifts; still captures stdout
@@ -269,7 +272,10 @@ test('diff: picks up gates from non-GitHub CI systems', () => {
   let output;
   try {
     output = execFileSync('node', [cragBin, 'diff'], {
-      cwd: dir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+      cwd: dir,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
     });
   } catch (err) {
     output = (err.stdout || '').toString();

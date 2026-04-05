@@ -29,7 +29,10 @@ const CRAG_BIN = path.join(__dirname, '..', 'bin', 'crag.js');
 
 function runCrag(cwd, args) {
   const r = spawnSync('node', [CRAG_BIN, ...args], {
-    cwd, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'],
+    cwd,
+    encoding: 'utf-8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
   });
   return {
     rc: r.status ?? (r.error ? 1 : 0),

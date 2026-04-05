@@ -21,7 +21,12 @@ const CRAG_BIN = path.join(__dirname, '..', 'bin', 'crag.js');
 
 function runCrag(cwd, args) {
   const r = spawnSync('node', [CRAG_BIN, ...args], {
-    cwd, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'],
+    cwd,
+    encoding: 'utf-8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    // Disable the npm registry update check so tests are hermetic and
+    // stdout is never contaminated by a "new version available" notice.
+    env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
   });
   return {
     rc: r.status ?? (r.error ? 1 : 0),
@@ -123,4 +128,52 @@ test('workspace: JSON output is always valid JSON', () => {
   assert.ok('root' in parsed);
   assert.ok('members' in parsed);
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+// Regression: the version-check update notice must go to stderr so it
+// never contaminates `--json` stdout. Previously `checkOnce()` used
+// `console.log` which wrote to stdout, breaking `crag workspace --json`
+// pipelines when an update was cached as available.
+test('workspace --json: stdout is pristine even when update notice fires', () => {
+  const dir = mkFixture({ 'package.json': '{"name":"x"}' });
+  // Prime the update-check cache with updateAvailable=true so checkOnce()
+  // will emit a notice. If the notice lands on stdout, JSON.parse will fail.
+  const os = require('os');
+  const home = process.env.HOME || process.env.USERPROFILE || os.tmpdir();
+  const cacheDir = path.join(home, '.claude', 'crag');
+  const cacheFile = path.join(cacheDir, 'update-check.json');
+  const cacheBackup = fs.existsSync(cacheFile)
+    ? fs.readFileSync(cacheFile, 'utf-8')
+    : null;
+  try {
+    fs.mkdirSync(cacheDir, { recursive: true });
+    fs.writeFileSync(cacheFile, JSON.stringify({
+      checkedAt: Date.now(),
+      latestVersion: '99.99.99',
+      currentVersion: '0.0.1',
+      updateAvailable: true,
+    }));
+
+    // Run without the CRAG_NO_UPDATE_CHECK env override so the notice fires
+    const r = require('child_process').spawnSync(
+      'node',
+      [CRAG_BIN, 'workspace', '--json'],
+      { cwd: dir, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    // stdout must parse as JSON
+    assert.doesNotThrow(
+      () => JSON.parse(r.stdout),
+      `stdout was contaminated: ${r.stdout.slice(0, 200)}`
+    );
+    // stderr SHOULD contain the update notice
+    assert.ok(
+      r.stderr.includes('crag v99.99.99'),
+      `expected notice on stderr, got: ${r.stderr.slice(0, 200)}`
+    );
+  } finally {
+    // Restore cache
+    if (cacheBackup !== null) fs.writeFileSync(cacheFile, cacheBackup);
+    else try { fs.unlinkSync(cacheFile); } catch {}
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
