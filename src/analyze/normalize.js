@@ -94,6 +94,22 @@ function isNoise(cmd) {
   // License checkers are typically gates, but their exact invocation is
   // long and project-specific. Keep them.
 
+  // Dev/maintenance scripts under a `scripts/` directory are one-off tasks,
+  // not gates. FastAPI runs its doc, sponsor, people, translation pipelines
+  // this way via `uv run ./scripts/*.py`. These are publishing automations,
+  // not quality checks.
+  if (/^(uv|poetry|pdm|hatch|rye|pipenv)\s+run\s+(\.\/)?scripts\//.test(trimmed)) return true;
+  if (/^python3?\s+(\.\/)?scripts\//.test(trimmed)) return true;
+  if (/^node\s+(\.\/)?scripts\//.test(trimmed)) return true;
+  if (/^(bash|sh)\s+(\.\/)?scripts\//.test(trimmed)) return true;
+  if (/^npx\s+(tsx?|ts-node)\s+(\.\/)?scripts\//.test(trimmed)) return true;
+
+  // Shell control-flow fragments leaked from block scalars. When a `run: |`
+  // wraps a multi-line if/for/while/case, our line-based extractor pulls out
+  // the control keyword line as a pseudo-command.
+  if (/^(if|then|else|elif|fi|for|do|done|while|until|case|esac)\s/.test(trimmed)) return true;
+  if (/^(then|else|fi|do|done|esac)$/.test(trimmed)) return true;
+
   return false;
 }
 

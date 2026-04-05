@@ -70,6 +70,47 @@ test('isNoise: rejects real gates', () => {
   assert.ok(!isNoise('vendor/bin/phpunit'));
 });
 
+test('isNoise: dev scripts under scripts/ (FastAPI-style)', () => {
+  // Python runners invoking scripts/ files — publishing/doc automations
+  assert.ok(isNoise('uv run ./scripts/docs.py update-languages'));
+  assert.ok(isNoise('uv run ./scripts/contributors.py'));
+  assert.ok(isNoise('uv run scripts/deploy_docs_status.py'));
+  assert.ok(isNoise('poetry run ./scripts/publish.py'));
+  assert.ok(isNoise('pdm run scripts/bump.py'));
+  assert.ok(isNoise('hatch run ./scripts/release.py'));
+  // Direct interpreters
+  assert.ok(isNoise('python ./scripts/gen.py'));
+  assert.ok(isNoise('python3 scripts/migrate.py'));
+  assert.ok(isNoise('node ./scripts/build.js'));
+  assert.ok(isNoise('node scripts/codegen.mjs'));
+  assert.ok(isNoise('bash ./scripts/setup.sh'));
+  assert.ok(isNoise('sh scripts/install.sh'));
+  assert.ok(isNoise('npx tsx scripts/migrate.ts'));
+  assert.ok(isNoise('npx ts-node ./scripts/gen.ts'));
+  // Must NOT reject real gates that look superficially similar
+  assert.ok(!isNoise('uv run pytest'));
+  assert.ok(!isNoise('uv run mypy .'));
+  assert.ok(!isNoise('poetry run tox run'));
+  assert.ok(!isNoise('python -m build'));
+  assert.ok(!isNoise('npx tsc --noEmit'));
+});
+
+test('isNoise: shell control-flow fragments from block scalars', () => {
+  // Leaked from `run: |` multi-line blocks in smokeshow.yml etc.
+  assert.ok(isNoise('if uv run smokeshow upload htmlcov; then'));
+  assert.ok(isNoise('for i in 1 2 3 4 5; do'));
+  assert.ok(isNoise('while read line; do'));
+  assert.ok(isNoise('case $VAR in'));
+  assert.ok(isNoise('then'));
+  assert.ok(isNoise('else'));
+  assert.ok(isNoise('fi'));
+  assert.ok(isNoise('done'));
+  assert.ok(isNoise('esac'));
+  // Must NOT reject commands that contain these words mid-string
+  assert.ok(!isNoise('make doifile'));
+  assert.ok(!isNoise('cargo test'));
+});
+
 // --- extractMainCommand ---
 test('extractMainCommand: strips leading cd and npm install', () => {
   assert.strictEqual(
