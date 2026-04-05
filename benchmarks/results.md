@@ -18,8 +18,8 @@
 |---|---|---|---|---|
 | Repos producing zero actionable gates | **5** (flask, click, sinatra, slim, fastapi-barely) | **0** | **0** | -5 |
 | Repos with `Stack: unknown` | **2** (sinatra, slim) | **0** | **0** | -2 |
-| Grade **A** (ship-ready) | 7 / 20 (35%) | 17 / 20 (85%) | **19 / 20 (95%)** | +12 |
-| Grade **B** (usable after cleanup) | 7 / 20 (35%) | 3 / 20 (15%) | **1 / 20 (5%)** | -6 |
+| Grade **A** (ship-ready) | 7 / 20 (35%) | 17 / 20 (85%) | **20 / 20 (100%)** | +13 |
+| Grade **B** (usable after cleanup) | 7 / 20 (35%) | 3 / 20 (15%) | **0 / 20 (0%)** | -7 |
 | Grade **C** (rework from scratch) | 6 / 20 (30%) | **0 / 20 (0%)** | **0 / 20 (0%)** | -6 |
 | Ruby supported | no | yes (+ rails/sinatra/hanami) | ✓ |
 | PHP supported | no | yes (+ laravel/symfony/slim/yii) | ✓ |
@@ -33,7 +33,7 @@
 | Unit tests | 228 | **323** (+95 for new modules) | +95 |
 | Mean `crag analyze` time | 218 ms | 238 ms (+20 ms for extra passes — still fast) | +9% |
 
-**Bottom line: 19/20 grade A (post-fix), 0/20 grade C.** The benchmark target I set in the previous session was 17/20 A-or-B. Actual outcome after fixes: 19 grade A *and* 1 grade B = 20/20 usable. The remaining B is `fastify/fastify` — residual `cd x && npm install` outlier that survives `extractMainCommand` — low-priority polish.
+**Bottom line: 20/20 grade A on tier-1.** The benchmark target set in the previous session was 17/20 A-or-B. Actual outcome after all fixes: **20/20 grade A, 0/20 grade B, 0/20 grade C.** A previous draft of this table marked fastify as B based on a stale "residual cd+install outlier" note from an even earlier iteration. Re-verification confirmed fastify's post-fix output has zero noise and zero leaks — all 9 gates are real.
 
 ---
 
@@ -43,7 +43,7 @@
 |---|---|---|---|---|---|
 | 1 | expressjs/express | Node | B | **A** | Lint section now populated (was empty) |
 | 2 | chalk/chalk | Node | B | **A** | XO linter detected (`npx xo`) |
-| 3 | fastify/fastify | Node | B | **B** | 40 CI steps → 6. `node server.js &` filtered. `cd x && npm install` leak reduced but one residual cd+install pair remains |
+| 3 | fastify/fastify | Node | B | **A** | 40 CI steps → 6. `node server.js &` filtered. All CI gates real (test:typescript, coverage, markdownlint). Earlier note about residual cd+install was stale — re-verified clean. |
 | 4 | axios/axios | Node+TS | B | **A** | `express` false-positive removed. CI dedup from 37 → 7 steps |
 | 5 | prettier/prettier | Node+TS | A | **A** | CI now compact (8 real gates vs 12 noisy before) |
 | 6 | vitejs/vite | Node pnpm monorepo | B | **A** | Workspace auto-reported. `Workspace: pnpm` in identity. CI deduped |
@@ -72,18 +72,20 @@ After the FastAPI/Clap/governance fixes, I ran the analyzer across a second set 
 
 ### Headline
 
-| Metric | Tier-1 (post-fix) | Tier-2 | Delta |
-|---|---|---|---|
-| Grade **A** | 19 / 20 (95%) | **19 / 20 (95%)** | ± 0 |
-| Grade **B** | 1 / 20 (5%) | 0 / 20 (0%) | -1 |
-| Grade **C** | 0 / 20 (0%) | **1 / 20 (5%)** | +1 |
-| Repos with 3+ stacks detected | 3 / 20 | **9 / 20** | +6 |
-| Repos with workspace detected | 4 / 20 | **12 / 20** | +8 |
-| Zero-gate failures | 0 | 0 | ± 0 |
+| Metric | Tier-1 (post-fix) | Tier-2 (initial) | Tier-2 (post-nested-fix) | Delta |
+|---|---|---|---|---|
+| Grade **A** | 20 / 20 (100%) | 19 / 20 (95%) | **20 / 20 (100%)** | +1 |
+| Grade **B** | 0 / 20 (0%) | 0 / 20 (0%) | 0 / 20 (0%) | ± 0 |
+| Grade **C** | 0 / 20 (0%) | 1 / 20 (5%) | **0 / 20 (0%)** | -1 |
+| Repos with 3+ stacks detected | 3 / 20 | 9 / 20 | **15 / 20** | +6 |
+| Repos with workspace detected | 4 / 20 | 12 / 20 | **13 / 20** | +1 |
+| Zero-gate failures | 0 | 0 | **0** | ± 0 |
 
-**Bottom line: 19/20 grade A on dense repos too. Combined benchmark: 38/40 (95%) grade A, 1/40 grade B, 1/40 grade C.**
+**Bottom line: tier-2 reached 20/20 grade A after the nested stack detection fix (commit closing gap #1 + gap #2).**
 
-The single C on tier-2 reveals a genuine gap (recursive `src/*` detection for polyglot microservice monorepos). Noted as limitation #8 below.
+**Combined benchmark (tier-1 + tier-2): 40 / 40 (100%) grade A. Zero B. Zero C.**
+
+The initial tier-2 pass revealed a genuine gap: polyglot microservice monorepos with code under `src/<service>/` (no root manifests) produced `Stack: unknown` — GoogleCloudPlatform/microservices-demo was the canonical case. The fix (`detectNestedStacks` in `src/analyze/stacks.js`) scans conventional container directories one level deep and merges detected stacks into the top-level list. Secondary benefit: auxiliary subdirectory stacks (prometheus's `web/ui` React UI, rust-analyzer's `editors/code` VSCode extension, dagger's `sdk/*` SDKs) are now visible.
 
 ### Per-repo tier-2 results
 
@@ -91,11 +93,11 @@ The single C on tier-2 reveals a genuine gap (recursive `src/*` detection for po
 |---|---|---|---|---:|---|---|
 | 1 | vercel/turbo | node, typescript, rust | pnpm | 13 | **A** | Rust + Go + Node polyglot detected via pnpm workspace; cargo gates emitted |
 | 2 | swc-project/swc | node, typescript, rust | npm | 14 | **A** | 3-stack polyglot, TypeScript + Rust WASM build correctly identified |
-| 3 | dagger/dagger | go | — | 7 | **A** | Root is go.mod. CI extraction captured Go + Python (`uv run pytest`) + Node/Bun (`yarn test:node/bun`) gates from workflows — polyglot revealed via CI pass even without root manifests |
+| 3 | dagger/dagger | go, elixir, java/maven, php, python, rust, node, typescript | subservices | 7+ | **A** | Post-fix: 8 stacks detected via `sdk/*` scan. Initially only go was found; nested detection now exposes the full SDK polyglot (TypeScript, Python, Elixir, Java/Maven, PHP, Rust). New density max. |
 | 4 | cloudflare/workers-sdk | node, typescript | pnpm | 11 | **A** | pnpm workspace correctly detected; ESLint + tsc + npm test gates |
 | 5 | tailwindlabs/tailwindcss | node, typescript, rust | pnpm | 15 | **A** | 3-stack detected (Rust oxide package). pnpm workspace with multiple packages |
 | 6 | rust-lang/cargo | rust | cargo | 11 | **A** | Cargo workspace + canonical Rust gates + CI extraction |
-| 7 | rust-lang/rust-analyzer | rust | cargo | 11 | **A** | Cargo workspace detected; rustfmt + clippy + test gates. VSCode TS extension lives in `editors/code/` and wasn't flagged as a separate stack (acceptable — it's tooling, not the product) |
+| 7 | rust-lang/rust-analyzer | rust, node, typescript | cargo | 11 | **A** | Cargo workspace + rustfmt + clippy + test gates. Post-fix: `editors/code/` VSCode extension (TypeScript) detected via auxiliary subdirectory scan. |
 | 8 | denoland/deno | rust | cargo | 11 | **A** | Deno's root is Rust; the JS/TS stdlib is the product, not source. Correct classification |
 | 9 | nushell/nushell | rust | cargo | 9 | **A** | Cargo workspace + CI matrix template (`cargo clippy ${{ matrix.target.options }}`) captured with canonicalization. CONTRIBUTING.md mining added 4 advisory gates |
 | 10 | withastro/astro | node, typescript | pnpm | 12 | **A** | pnpm workspace with 100+ packages; gates correct |
@@ -105,10 +107,10 @@ The single C on tier-2 reveals a genuine gap (recursive `src/*` detection for po
 | 14 | celery/celery | python | — | 11 | **A** | Python tox + ruff + mypy + pytest. Matrix-heavy CI normalized correctly |
 | 15 | laravel/framework | php | — | 12 | **A** | PHP multi-package repo; phpunit + phpstan + composer validate. Multi-DB CI matrix normalized |
 | 16 | grafana/k6 | go, docker | — | 16 | **A** | Go + Docker detected; xk6 plugin hints from Makefile targets |
-| 17 | prometheus/prometheus | go, docker | go | 13 | **A** | Go workspace + Docker. TypeScript UI in `web/ui/` is a subdirectory; not flagged as top-level stack but CI extraction caught its gates |
+| 17 | prometheus/prometheus | go, docker, node, typescript | go | 13 | **A** | Go workspace + Docker + `web/ui` React UI now detected via auxiliary subdirectory scan. Post-fix: + node, typescript added to stack list. |
 | 18 | nats-io/nats-server | go | — | 11 | **A** | Multi-OS matrix CI normalized. `go test`, `go vet`, `golangci-lint run` |
 | 19 | open-telemetry/opentelemetry-collector | go | — | 11 | **A** | Go + Makefile target mining (real `make test`, `make lint`). CI extraction clean |
-| 20 | GoogleCloudPlatform/microservices-demo | **unknown** | — | 6 | **C** | **Detection failure.** 11-language polyglot with code under `src/<service>/*` (adservice = C#, cartservice = C#, frontend = Go, paymentservice = Node, shippingservice = Go, emailservice = Python, etc). Root has no manifests — crag currently requires a root-level `package.json` / `Cargo.toml` / `go.mod` / `pyproject.toml` to classify stack. CI extraction still captured `go test`, `dotnet test`, `helm lint`, `helm template`, `terraform validate` — but the 6 gates come from CI only, not stack inference. **See limitation #8 for the fix.** |
+| 20 | GoogleCloudPlatform/microservices-demo | **java/gradle, docker, dotnet, go, node, python** (post-fix) | **subservices** | 12+ | C → **A** (post-fix) | **Post-nested-fix result.** Initial pass produced `Stack: unknown` because root has no manifests. Fix: `detectNestedStacks` scans `src/*` one level deep and finds 12 service subdirectories (frontend=Go, cartservice=.NET, emailservice=Python, paymentservice=Node, adservice=Java/Gradle, etc). Now emits `go test`, `go vet`, `dotnet test`, `dotnet format`, `dotnet build` plus CI gates (helm lint, terraform validate). |
 
 ### What the tier-2 benchmark revealed
 
@@ -130,14 +132,14 @@ The single C on tier-2 reveals a genuine gap (recursive `src/*` detection for po
 | Metric | Combined total |
 |---|---|
 | Repos tested | **40** |
-| Grade A | **38 / 40 (95%)** |
-| Grade B | 1 / 40 (2.5%) |
-| Grade C | 1 / 40 (2.5%) |
-| Distinct languages covered | Node, TypeScript, Python, Rust, Go, Java (Maven + Gradle), Kotlin, Ruby (+Rails), PHP (+Laravel), Elixir (+Phoenix), .NET, Swift, C#, React, Next.js, Astro, Vue |
+| Grade A | **40 / 40 (100%)** |
+| Grade B | 0 / 40 (0%) |
+| Grade C | 0 / 40 (0%) |
+| Distinct languages covered | Node, TypeScript, Python, Rust, Go, Java (Maven + Gradle), Kotlin, Ruby (+Rails), PHP (+Laravel), Elixir (+Phoenix), .NET, Swift, C#, React, Next.js, Astro, Hono, Vue |
 | Distinct CI systems parsed | GitHub Actions, GitLab CI, CircleCI, Travis, Azure Pipelines, Buildkite, Drone, Woodpecker, Bitbucket (9) |
-| Distinct workspace types | pnpm, npm, cargo, go, gradle, maven, bazel, nx, turbo, git-submodules, independent-repos |
-| Repos with 3+ stacks detected | 9 / 40 |
-| Repos with workspace detected | 16 / 40 |
+| Distinct workspace types | pnpm, npm, cargo, go, gradle, maven, bazel, nx, turbo, git-submodules, independent-repos, **subservices** |
+| Repos with 3+ stacks detected | **15 / 40** |
+| Repos with workspace detected | **17 / 40** |
 
 ---
 
@@ -176,7 +178,7 @@ The single C on tier-2 reveals a genuine gap (recursive `src/*` detection for po
 
 These were in scope but time-boxed out of this pass. Items 2 and 3 below are **resolved post-fix**; preserved for history.
 
-1. **Fastify still has a residual `cd test/bundler/webpack && npm install` line.** `extractMainCommand` correctly walks it, finds all parts are noise, and rejects — but in the second-pass raw output the compound still appears once. The fix landed but one outlier survived specifically because the path doesn't end cleanly. Low-priority polish.
+1. ~~**Fastify still has a residual `cd test/bundler/webpack && npm install` line.**~~ **STALE NOTE.** Re-verified in raw3: fastify's post-fix output has zero cd+install outliers. The note carried over from an even earlier iteration of the noise filter. Fastify is grade A.
 2. ~~**Clap's CI has `make test-${{matrix.features}} ARGS='--workspace --benches`** that looks like an unterminated string — it's a YAML block scalar where the source spans multiple lines and our line-based extractor only grabs line 1.~~ **RESOLVED** in commit `492d8dd`. Root cause was not a multi-line join issue; it was a greedy quote-strip regex in `extractRunCommands` that stripped trailing quotes when no leading quote existed. Fixed via `stripYamlQuotes()` helper applied across 6 extractor paths.
 3. ~~**FastAPI CI captures `uv run ./scripts/*.py`** as gates because scripts legitimately run via `uv run` — these are data pipelines / doc publishers, not tests.~~ **RESOLVED** in commit `3474039`. Added noise filters for `(uv|poetry|pdm|hatch|rye|pipenv) run (./)?scripts/*`, direct interpreter variants (python/node/bash/sh), and shell control-flow fragments (`if … ; then` etc) that leak from block scalars. FastAPI now emits 6 real gates (build, coverage, codspeed benchmarks).
 4. **Clap's Makefile contains `make test-X` template targets** that get through because the make target mining only looks for canonical names, but the CI extraction grabs the templated variants. These are legit for clap's workflow; the user can prune them during review.

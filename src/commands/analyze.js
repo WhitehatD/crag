@@ -60,6 +60,27 @@ function analyze(args) {
     } else {
       console.log(`  Workspace detected: ${ws.type}. Pass --workspace for per-member gates.\n`);
     }
+  } else if (analysis.subservices && analysis.subservices.length > 0) {
+    // No canonical workspace marker, but recursive stack detection found
+    // subservice manifests under src/ / services/ / packages/ / apps/ / etc.
+    // Treat as an independent-subservices workspace.
+    const count = analysis.subservices.length;
+    analysis.workspaceType = 'subservices';
+    if (workspaceFlag) {
+      console.log(`  Subservices detected: ${count} service${count === 1 ? '' : 's'} across src/ services/ packages/ apps/ directories\n`);
+      analysis.workspace = { type: 'subservices', members: [] };
+      for (const sub of analysis.subservices) {
+        const subPath = path.join(cwd, sub.path);
+        const subAnalysis = analyzeProject(subPath);
+        analysis.workspace.members.push({
+          name: sub.name,
+          relativePath: sub.path,
+          ...subAnalysis,
+        });
+      }
+    } else {
+      console.log(`  Subservices detected: ${count} service${count === 1 ? '' : 's'}. Pass --workspace for per-service gates.\n`);
+    }
   }
 
   const governance = generateGovernance(analysis, cwd);
@@ -164,6 +185,11 @@ function analyzeProject(dir) {
   if (result._advisories) {
     result.advisories.push(...result._advisories);
     delete result._advisories;
+  }
+  // Promote subservices (from recursive stack detection) to a public field
+  // so analyze command can print a hint and --workspace can enumerate them.
+  if (result._manifests && result._manifests.subservices) {
+    result.subservices = result._manifests.subservices;
   }
   // Drop the internal manifests attachment before returning
   delete result._manifests;

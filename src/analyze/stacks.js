@@ -85,8 +85,17 @@ function parseSimpleToml(content) {
  * Detect languages, frameworks, and package managers in `dir`.
  * Mutates `result.stack`, `result.name`, `result.description`, and attaches
  * `result._manifests` for downstream gate detection.
+ *
+ * When `recursive` is true (default), also scans conventional subservice
+ * directories (`src/`, `services/`, `packages/`, `apps/`, `cmd/`, `sdk/`,
+ * `web/`, `ui/`, `editors/`, `extensions/`, `projects/`, `microservices/`)
+ * to pick up polyglot microservice layouts (e.g. GoogleCloudPlatform's
+ * microservices-demo, or auxiliary subdirectories like prometheus's
+ * `web/ui` React app and rust-analyzer's `editors/code` VSCode extension).
+ * The recursive call is one level only to prevent infinite recursion.
  */
-function detectStack(dir, result) {
+function detectStack(dir, result, options = {}) {
+  const { recursive = true } = options;
   result._manifests = result._manifests || {};
 
   detectNode(dir, result);
@@ -104,6 +113,107 @@ function detectStack(dir, result) {
   detectPhp(dir, result);
   detectDocker(dir, result);
   detectInfrastructure(dir, result);
+
+  if (recursive) {
+    detectNestedStacks(dir, result);
+  }
+}
+
+/**
+ * Scan conventional subservice/auxiliary directories one level deep for
+ * manifests. Adds unique detected stacks to `result.stack` and stores the
+ * per-subservice breakdown in `result._manifests.subservices`.
+ *
+ * Two cases this handles:
+ *
+ *   1. Polyglot microservices monorepo (no root manifests):
+ *        root/src/adservice/pom.xml        → java/maven
+ *        root/src/cartservice/x.csproj     → dotnet
+ *        root/src/frontend/go.mod          → go
+ *        root/src/emailservice/pyproject.toml → python
+ *      → result.stack = [java/maven, dotnet, go, python, ...]
+ *      → workspaceType = subservices
+ *
+ *   2. Auxiliary subdirectory stack (root manifests present):
+ *        root/go.mod                       → go (primary)
+ *        root/web/ui/package.json          → node, react, typescript (aux)
+ *      → result.stack = [go, node, react, typescript]
+ *      → subservices list records the breakdown for reporting
+ *
+ * Scans two depths below each container: container/manifest (depth 1) and
+ * container/<child>/manifest (depth 2). Does NOT recurse further.
+ */
+function detectNestedStacks(dir, result) {
+  const containerDirs = [
+    'src', 'services', 'packages', 'apps', 'cmd', 'projects', 'microservices',
+    'sdk', 'sdks', 'web', 'ui', 'editors', 'extensions', 'clients',
+  ];
+
+  const rootHadStacks = result.stack.length > 0;
+  const subservices = [];
+
+  for (const container of containerDirs) {
+    const containerPath = path.join(dir, container);
+    if (!fs.existsSync(containerPath)) continue;
+
+    // Depth 1: container itself has a manifest (e.g. web/ui/package.json where
+    // the container is `ui` directly, or sdk/package.json)
+    scanOneSubdir(containerPath, container, result, subservices);
+
+    // Depth 2: container/<child>/manifest (the common microservices pattern)
+    let children;
+    try {
+      children = fs.readdirSync(containerPath, { withFileTypes: true })
+        .filter(e => e.isDirectory())
+        .map(e => e.name);
+    } catch { continue; }
+
+    // Cap children scan at a reasonable number to avoid pathological
+    // enumeration on huge directories (monorepos with hundreds of packages)
+    const capped = children.slice(0, 64);
+    for (const child of capped) {
+      const childPath = path.join(containerPath, child);
+      const relPath = container + '/' + child;
+      scanOneSubdir(childPath, relPath, result, subservices);
+    }
+  }
+
+  if (subservices.length > 0) {
+    result._manifests.subservices = subservices;
+    if (!rootHadStacks) {
+      // Root had no manifests — this is a subservice-only project (e.g.
+      // microservices-demo). Flag for downstream reporting.
+      result._manifests.workspaceType = result._manifests.workspaceType || 'subservices';
+    }
+  }
+}
+
+/**
+ * Run non-recursive stack detection on `subdir` and merge unique stacks into
+ * the main `result`. Records the subservice in `subservices` if any stacks
+ * were detected.
+ */
+function scanOneSubdir(subdir, relPath, result, subservices) {
+  if (!fs.existsSync(subdir)) return;
+  try {
+    const st = fs.statSync(subdir);
+    if (!st.isDirectory()) return;
+  } catch { return; }
+
+  const subResult = { stack: [], _manifests: {} };
+  detectStack(subdir, subResult, { recursive: false });
+
+  if (subResult.stack.length === 0) return;
+
+  subservices.push({
+    name: path.basename(subdir),
+    path: relPath,
+    stacks: subResult.stack,
+  });
+
+  for (const s of subResult.stack) {
+    if (!result.stack.includes(s)) result.stack.push(s);
+  }
 }
 
 // --- Node ------------------------------------------------------------------

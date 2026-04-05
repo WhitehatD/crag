@@ -236,3 +236,99 @@ test('detectStack: OpenAPI via openapi.yaml', () => {
   const { result } = analyze({ 'openapi.yaml': 'openapi: 3.0.0' });
   assert.strictEqual(result._manifests.infra.openapi, 'openapi.yaml');
 });
+
+// --- Nested stack detection (subservices + auxiliary subdirs) ---
+
+test('detectNestedStacks: polyglot microservices monorepo (no root manifests)', () => {
+  // Simulates GoogleCloudPlatform/microservices-demo layout
+  const { result } = analyze({
+    'README.md': 'microservices demo',
+    'src/frontend/go.mod': 'module github.com/example/frontend\ngo 1.21',
+    'src/cartservice/cart.csproj': '<Project Sdk="Microsoft.NET.Sdk"></Project>',
+    'src/emailservice/pyproject.toml': '[project]\nname = "emailservice"',
+    'src/paymentservice/package.json': '{"name":"paymentservice","dependencies":{"express":"^4"}}',
+    'src/adservice/pom.xml': '<project><artifactId>adservice</artifactId></project>',
+  });
+  assert.ok(result.stack.includes('go'), 'Go detected from src/frontend');
+  assert.ok(result.stack.includes('dotnet'), '.NET detected from src/cartservice');
+  assert.ok(result.stack.includes('python'), 'Python detected from src/emailservice');
+  assert.ok(result.stack.includes('node'), 'Node detected from src/paymentservice');
+  assert.ok(result.stack.includes('java/maven'), 'Maven detected from src/adservice');
+  assert.ok(result._manifests.subservices);
+  assert.strictEqual(result._manifests.subservices.length, 5);
+  assert.strictEqual(result._manifests.workspaceType, 'subservices');
+});
+
+test('detectNestedStacks: auxiliary subdirs alongside root stack', () => {
+  // Simulates prometheus layout: Go at root + React UI at web/ui
+  const { result } = analyze({
+    'go.mod': 'module github.com/example/prometheus\ngo 1.21',
+    'web/ui/package.json': '{"name":"prometheus-ui","dependencies":{"react":"^18","typescript":"^5"}}',
+  });
+  assert.ok(result.stack.includes('go'));
+  assert.ok(result.stack.includes('node'));
+  assert.ok(result.stack.includes('react'));
+  assert.ok(result.stack.includes('typescript'));
+  // Root had stacks, so this is NOT flagged as subservices workspace
+  assert.notStrictEqual(result._manifests.workspaceType, 'subservices');
+});
+
+test('detectNestedStacks: SDK subdirectories (dagger-style)', () => {
+  // Simulates dagger layout: Go core + sdk/typescript + sdk/python
+  const { result } = analyze({
+    'go.mod': 'module github.com/example/dagger\ngo 1.21',
+    'sdk/typescript/package.json': '{"name":"@dagger/sdk","devDependencies":{"typescript":"^5"}}',
+    'sdk/python/pyproject.toml': '[project]\nname = "dagger-sdk"',
+  });
+  assert.ok(result.stack.includes('go'));
+  assert.ok(result.stack.includes('node'));
+  assert.ok(result.stack.includes('typescript'));
+  assert.ok(result.stack.includes('python'));
+  assert.strictEqual(result._manifests.subservices.length, 2);
+});
+
+test('detectNestedStacks: does not recurse infinitely', () => {
+  // Sanity check: deeply nested manifests are NOT re-scanned beyond depth 2
+  const { result } = analyze({
+    'package.json': '{"name":"root"}',
+    'packages/a/package.json': '{"name":"a"}',
+    'packages/a/nested/deeply/package.json': '{"name":"deep"}', // should NOT register
+  });
+  assert.ok(result.stack.includes('node'));
+  // Only depth-2 subservices count (packages/a), not packages/a/nested/deeply
+  // Depth: root(0) → packages(1) → a(2) ← scanned. nested(3) → deeply(4) NOT scanned.
+  // So the subservice list has 1 entry (packages/a), not 2.
+  assert.ok(result._manifests.subservices && result._manifests.subservices.length >= 1);
+  const deeplyEntry = result._manifests.subservices.find(s => s.path.includes('deeply'));
+  assert.strictEqual(deeplyEntry, undefined, 'depth-4 manifest should not be scanned');
+});
+
+test('detectNestedStacks: empty containers are skipped', () => {
+  const { result } = analyze({
+    'package.json': '{"name":"root"}',
+    'src/README.md': 'no manifests here',
+  });
+  assert.ok(result.stack.includes('node'));
+  // src/ exists but has no manifests → no subservices recorded
+  assert.ok(!result._manifests.subservices || result._manifests.subservices.length === 0);
+});
+
+test('detectNestedStacks: services/ container pattern', () => {
+  const { result } = analyze({
+    'services/auth/go.mod': 'module auth',
+    'services/api/package.json': '{"name":"api"}',
+  });
+  assert.ok(result.stack.includes('go'));
+  assert.ok(result.stack.includes('node'));
+  assert.strictEqual(result._manifests.workspaceType, 'subservices');
+});
+
+test('detectNestedStacks: apps/ container pattern', () => {
+  const { result } = analyze({
+    'apps/web/package.json': '{"name":"web","dependencies":{"next":"^14"}}',
+    'apps/api/go.mod': 'module api',
+  });
+  assert.ok(result.stack.includes('node'));
+  assert.ok(result.stack.includes('next.js'));
+  assert.ok(result.stack.includes('go'));
+});
