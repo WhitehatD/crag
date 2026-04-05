@@ -81,5 +81,8 @@ coverage/
 
 # Benchmark harness — cloned OSS repos + raw outputs (not source)
 benchmarks/repos/
+benchmarks/repos2/
 benchmarks/raw/
 benchmarks/raw2/
+benchmarks/raw3/
+benchmarks/raw-tier2/
