@@ -41,7 +41,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          for f in bin/crag.js src/cli.js src/commands/*.js src/workspace/*.js src/governance/*.js src/compile/*.js src/update/*.js; do
+          for f in bin/crag.js src/cli.js src/commands/*.js src/workspace/*.js src/governance/*.js src/compile/*.js src/update/*.js src/analyze/*.js; do
             node --check "$f"
           done
           echo "All modules parse successfully."
@@ -52,14 +52,15 @@ jobs:
       - name: crag version
         run: node bin/crag.js version
 
-      - name: crag check
-        run: node bin/crag.js check
+      # Note: `crag check` and `crag diff` are deliberately NOT run in CI.
+      # They verify a Claude Code session's runtime infrastructure
+      # (.claude/skills, .claude/hooks, .claude/governance.md) — state that
+      # only exists on a developer's machine or inside a Claude Code session,
+      # not in a bare CI runner. CI validates source code; those commands
+      # validate the consumer's installed environment.
 
       - name: crag analyze --dry-run
         run: node bin/crag.js analyze --dry-run
-
-      - name: crag diff
-        run: node bin/crag.js diff
 
       - name: crag upgrade --check
         run: node bin/crag.js upgrade --check

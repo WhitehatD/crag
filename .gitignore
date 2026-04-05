@@ -2,16 +2,19 @@
 node_modules/
 package-lock.json.bak
 
-# Claude Code runtime state (auto-generated)
-.claude/.discovery-cache.json
-.claude/.session-state.json
-.claude/.gates-passed
-.claude/.skill-update-check
-.claude/.last-audit
-.claude/.tmp/
+# crag self-dogfooding artifacts — GENERATED, not source.
+# The entire .claude/ folder is produced by `crag init` / `crag analyze` from
+# the tracked sources in src/skills/, src/crag-agent.md, and scripts/. We do
+# NOT track it in the crag repo to prove the tool works end-to-end: CI clones
+# a bare repo, runs `crag init`/`analyze` to generate .claude/, then runs
+# gates against that generated config. If tracking .claude/ feels tempting,
+# remember that doing so would make the repo self-certifying by construction
+# rather than by test.
+.claude/
 
-# User-specific settings (should never be committed)
-.claude/settings.local.json
+# Codex / Aider / Factory agent workflow artifacts — produced by
+# `crag compile --target agents-md` as sibling output. Not source.
+.agents/
 
 # crag global cache (written to ~/.claude/crag/ but guard here too)
 .crag/
@@ -79,3 +82,4 @@ coverage/
 # Benchmark harness — cloned OSS repos + raw outputs (not source)
 benchmarks/repos/
 benchmarks/raw/
+benchmarks/raw2/

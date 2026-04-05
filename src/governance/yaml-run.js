@@ -60,28 +60,84 @@ function extractRunCommands(content) {
  */
 function isGateCommand(cmd) {
   const patterns = [
+    // Node ecosystem
     /\bnpm (run |ci|test|install)/,
     /\bnpx /,
     /\bnode /,
-    /\bcargo (test|build|check|clippy)/,
+    /\byarn (test|lint|build|check)/,
+    /\bpnpm (run |test|lint|build|check|install|i\b)/,
+    /\bbun (test|run)/,
+    /\bdeno (test|lint|fmt|check)/,
+    // Rust
+    /\bcargo (test|build|check|clippy|fmt)/,
     /\brustfmt/,
+    // Go
     /\bgo (test|build|vet)/,
     /\bgolangci-lint/,
+    // Python — direct + modern runner wrappers
     /\bpytest/,
     /\bpython -m/,
     /\bruff/,
     /\bmypy/,
     /\bflake8/,
+    /\bblack\b/,
+    /\bisort\b/,
+    /\bpylint\b/,
+    /\btox\s+(run|r)/,
+    /\buv run /,
+    /\bpoetry run /,
+    /\bpdm run /,
+    /\bhatch run /,
+    /\brye run /,
+    /\bnox\b/,
+    // JVM
     /\bgradle/,
     /\bmvn /,
     /\bmaven/,
+    /\.\/gradlew/,
+    /\.\/mvnw/,
+    // Ruby
+    /\bbundle exec /,
+    /\brake\b/,
+    /\brspec\b/,
+    /\brubocop/,
+    // PHP
+    /\bcomposer (test|lint|run|validate)/,
+    /\bvendor\/bin\/(phpunit|phpcs|phpstan|psalm|pest|php-cs-fixer|rector)/,
+    // .NET
+    /\bdotnet (test|build|format)/,
+    // Swift
+    /\bswift (test|build)/,
+    /\bswiftlint/,
+    // Elixir
+    /\bmix (test|format|credo|dialyzer)/,
+    // Node linters
     /\beslint/,
     /\bbiome/,
     /\bprettier/,
     /\btsc/,
-    /\bdocker (build|compose)/,
+    /\bxo\b/,
+    // Task runners
     /\bmake /,
     /\bjust /,
+    /\btask /,
+    // Containers / infra
+    /\bdocker (build|compose)/,
+    /\bterraform (fmt|validate|plan)/,
+    /\btflint/,
+    /\bhelm (lint|template)/,
+    /\bkubeconform/,
+    /\bkubeval/,
+    /\bhadolint/,
+    /\bactionlint/,
+    /\bmarkdownlint/,
+    /\byamllint/,
+    /\bbuf (lint|build)/,
+    /\bspectral lint/,
+    /\bshellcheck/,
+    /\bsemgrep/,
+    /\btrivy/,
+    /\bgitleaks/,
   ];
   return patterns.some((p) => p.test(cmd));
 }

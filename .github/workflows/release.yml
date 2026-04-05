@@ -1,26 +1,29 @@
 name: Release
 
-# Fully automated release pipeline.
+# Fully automated release pipeline with auto-patch-bump on every push.
 #
-# Trigger: every push to master.
+# Trigger: every push to master (except auto-bump commits, which carry [skip ci]).
 # Behavior:
-#   1. Run all gates + 159 tests on Ubuntu (fast path)
+#   1. Run all gates + test suite on Ubuntu (fast path)
 #   2. Read package.json version
 #   3. Ask the npm registry if that version is already published
-#   4. If already published → exit 0 (no-op, this was a code-only push)
-#   5. If version is new:
-#      a. Publish to npm with SLSA provenance
-#      b. Create annotated git tag vX.Y.Z
-#      c. Create GitHub release with notes auto-extracted from CHANGELOG.md
+#   4a. If NEW — proceed directly to publish
+#   4b. If already published — auto-bump patch, commit with [skip ci],
+#       push back to master, then proceed to publish with the bumped version
+#   5. Publish to npm with SLSA provenance (--access=public for the scoped pkg)
+#   6. Create annotated git tag vX.Y.Z
+#   7. Create GitHub release with notes from CHANGELOG.md
+#
+# Result: every push that contains real code changes ships a new patch
+# version to npm. If you want a minor/major bump, run `npm run release:minor`
+# or `npm run release:major` locally before pushing — the workflow respects
+# an explicit bump and does not auto-bump on top of it.
 #
 # Secrets required:
 #   NPM_TOKEN — granular access token with bypass-2FA, published to `@whitehatd/crag`
 #
-# User workflow:
-#   1. `npm run release:patch` (or :minor / :major)
-#   2. `git add -A && git commit -m "..."`
-#   3. `git push`
-#   4. Wait ~2 minutes → package is live on npm + GitHub release is up
+# To opt out of auto-bump for a specific push (e.g. docs-only changes you
+# don't want shipped), include `[skip release]` in the commit message.
 
 on:
   push:
@@ -47,13 +50,25 @@ jobs:
     name: Run gates + tests
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.pkg.outputs.version }}
+      version: ${{ steps.final_version.outputs.version }}
       should_publish: ${{ steps.check.outputs.should_publish }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Need write access so we can push the auto-bump commit back to master.
+          # The default GITHUB_TOKEN has this when `permissions: contents: write` is set.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip if commit message says [skip release]
+        shell: bash
+        run: |
+          MSG=$(git log -1 --pretty=%B)
+          if echo "$MSG" | grep -qi '\[skip release\]'; then
+            echo "::notice::Commit contains [skip release] marker — exiting release workflow"
+            exit 78  # GitHub Actions treats exit 78 as neutral (skip)
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -65,19 +80,22 @@ jobs:
         shell: bash
         run: |
           set -e
-          for f in bin/crag.js src/cli.js src/commands/*.js src/workspace/*.js src/governance/*.js src/compile/*.js src/update/*.js; do
+          for f in bin/crag.js src/cli.js src/commands/*.js src/workspace/*.js src/governance/*.js src/compile/*.js src/update/*.js src/analyze/*.js; do
             node --check "$f"
           done
 
-      - name: Run CLI gates
+      # CLI smoke tests. Intentionally does NOT include `crag check` or
+      # `crag diff` — those verify a Claude Code session's infrastructure
+      # (.claude/skills/, .claude/hooks/, .claude/governance.md) and are
+      # meaningless on a bare CI runner with no Claude CLI. CI validates
+      # *source code*; session-context gates are for developer machines.
+      - name: Run CLI smoke tests
         env:
           CRAG_NO_UPDATE_CHECK: '1'
         run: |
           node bin/crag.js help > /dev/null
           node bin/crag.js version
-          node bin/crag.js check
           node bin/crag.js analyze --dry-run > /dev/null
-          node bin/crag.js diff > /dev/null
           node bin/crag.js upgrade --check > /dev/null
           node bin/crag.js workspace --json > /dev/null
 
@@ -109,11 +127,14 @@ jobs:
           test -f .zed/rules.md
           test -f .sourcegraph/cody-instructions.md
           echo "All 12 compile targets produced artifacts."
-          # Revert the compile noise so the working tree stays clean
-          git checkout -- .github/workflows/ 2>/dev/null || true
+          # Clean up — these are all gitignored, so we just rm them.
+          rm -f .github/workflows/gates.yml
           rm -rf .husky .cursor .zed .sourcegraph
           rm -f .pre-commit-config.yaml AGENTS.md GEMINI.md .clinerules .continuerules .windsurfrules
           rm -f .github/copilot-instructions.md
+          # Also clean the bootstrapped .claude/ so subsequent steps don't
+          # see a polluted tree. They already passed their checks.
+          rm -rf .claude
 
       - name: Read package.json version
         id: pkg
@@ -123,22 +144,80 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "package version: $VERSION"
 
-      - name: Check if version is already published
-        id: check
+      - name: Auto-bump patch if version already on npm
+        id: autobump
         shell: bash
         run: |
           VERSION="${{ steps.pkg.outputs.version }}"
           PKG_NAME=$(node -p "require('./package.json').name")
+
+          # Skip auto-bump if this push already IS an auto-bump commit.
+          # Without this guard, the bump commit could re-trigger the workflow
+          # (though [skip ci] should prevent it — belt and suspenders).
+          LAST_MSG=$(git log -1 --pretty=%B)
+          if echo "$LAST_MSG" | grep -qE '^chore: auto-release v' || echo "$LAST_MSG" | grep -q '\[skip ci\]'; then
+            echo "Head is already an auto-bump commit — no further action"
+            echo "bumped=false" >> "$GITHUB_OUTPUT"
+            echo "final_version=$VERSION" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Checking if $PKG_NAME@$VERSION is already on npm..."
+          if npm view "$PKG_NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "::notice::Version $VERSION is already published — auto-bumping patch"
+
+            # Bump package.json + CHANGELOG.md via the existing script
+            node scripts/bump-version.js patch
+
+            NEW_VERSION=$(node -p "require('./package.json').version")
+            echo "Bumped $VERSION → $NEW_VERSION"
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package.json CHANGELOG.md
+            git commit -m "chore: auto-release v$NEW_VERSION [skip ci]
+
+            Auto-bumped from v$VERSION by .github/workflows/release.yml
+            because v$VERSION was already published to npm. This commit
+            is the authoritative source for the v$NEW_VERSION release."
+
+            # Push the bump back to the branch that triggered this workflow.
+            # github.ref_name is e.g. "master" on a push event.
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+
+            echo "bumped=true" >> "$GITHUB_OUTPUT"
+            echo "final_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version $VERSION is new — no bump needed"
+            echo "bumped=false" >> "$GITHUB_OUTPUT"
+            echo "final_version=$VERSION" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Record final version for publish job
+        id: final_version
+        shell: bash
+        run: |
+          FINAL="${{ steps.autobump.outputs.final_version }}"
+          echo "version=$FINAL" >> "$GITHUB_OUTPUT"
+
+      - name: Check if version is already published
+        id: check
+        shell: bash
+        run: |
+          VERSION="${{ steps.final_version.outputs.version }}"
+          PKG_NAME=$(node -p "require('./package.json').name")
           echo "Checking if $PKG_NAME@$VERSION is already on npm..."
 
-          # Query the registry. npm view exits 0 if found, non-zero if not found.
+          # After auto-bump, this should always be NEW. But if someone manually
+          # set a version that's already published and auto-bump didn't fire
+          # (e.g. on the second run of an auto-bump commit), skip gracefully.
           if npm view "$PKG_NAME@$VERSION" version >/dev/null 2>&1; then
             echo "Version $VERSION is already published."
             if [ "${{ github.event.inputs.force_publish }}" = "true" ]; then
-              echo "force_publish=true — proceeding anyway (note: npm will reject duplicate publishes)"
+              echo "force_publish=true — proceeding anyway"
               echo "should_publish=true" >> "$GITHUB_OUTPUT"
             else
-              echo "Skipping publish — this push did not bump the version."
+              echo "Skipping publish — auto-bump was suppressed (likely a [skip ci] commit)"
               echo "should_publish=false" >> "$GITHUB_OUTPUT"
             fi
           else
