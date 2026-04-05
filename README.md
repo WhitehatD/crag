@@ -2,448 +2,201 @@
 
 [![npm version](https://img.shields.io/npm/v/%40whitehatd%2Fcrag?color=%23e8bb3a&label=npm&logo=npm)](https://www.npmjs.com/package/@whitehatd/crag)
 [![Test](https://github.com/WhitehatD/crag/actions/workflows/test.yml/badge.svg)](https://github.com/WhitehatD/crag/actions/workflows/test.yml)
+[![Release](https://github.com/WhitehatD/crag/actions/workflows/release.yml/badge.svg)](https://github.com/WhitehatD/crag/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
-[![228 tests](https://img.shields.io/badge/tests-228%20passing-brightgreen)](./test)
-[![Security hardened](https://img.shields.io/badge/security-hardened-brightgreen)](./SECURITY.md)
+[![323 tests](https://img.shields.io/badge/tests-323%20passing-brightgreen)](./test)
 
-**The bedrock layer for AI coding agents. One `governance.md`. Any project. Never stale.**
-
-Write your AI agent rules once. Enforce them in **Claude Code, Cursor, Copilot, Codex, Gemini, Aider, Cline, Continue, Windsurf, Zed, and Sourcegraph Cody** — plus your CI pipeline and git hooks. From a single 20-line file.
-
-```bash
-npx @whitehatd/crag init        # Interview → generate governance
-npx @whitehatd/crag analyze     # Or skip the interview: infer from existing project
-npx @whitehatd/crag compile --target all   # Output for 12 downstream tools
-```
-
-> **The one-sentence pitch:** Every other AI coding tool ships static config files that hardcode your project's current shape. They rot. crag ships a runtime discovery engine plus a single governance file — the engine reads the filesystem every session so it never goes stale, and the governance is your rules, not your paths.
-
----
-
-## The 12-target pitch, visually
-
-```
-                     ┌──────────────────┐
-                     │  governance.md   │    ← you maintain this (20-30 lines)
-                     │  one file        │
-                     └────────┬─────────┘
-                              │
-                      crag compile
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-  ┌─────┴──────┐        ┌─────┴──────┐        ┌─────┴──────┐
-  │ CI / hooks │        │ AI native  │        │ AI extras  │
-  ├────────────┤        ├────────────┤        ├────────────┤
-  │ GitHub CI  │        │ AGENTS.md  │        │ Copilot    │
-  │ husky      │        │ Cursor     │        │ Cline      │
-  │ pre-commit │        │ Gemini     │        │ Continue   │
-  └────────────┘        └────────────┘        │ Windsurf   │
-                                              │ Zed        │
-                                              │ Cody       │
-                                              └────────────┘
-```
-
-Change one line in `governance.md`, re-run `crag compile --target all`, and 12 downstream configs regenerate. Your rules, your CI, your git hooks, and 9 different AI coding agents all stay in lock-step from a single source.
-
----
-
-## Why "crag"?
-
-A crag is a rocky outcrop — an unmoving landmark that stands while seasons, paths, and generations change around it. That's exactly what this tool is. Your skills discover. Your gates run. Your CI regenerates. But `governance.md` — the crag — doesn't move until you say so. Your AI agents anchor to it.
-
----
-
-## Proven in Production
-
-Not on demos. On real systems, in production, shipping to real infrastructure.
-
-| Project | Stack | Services | Deployment | Result |
-|---|---|---|---|---|
-| **example-app** | Full-stack | Monolith | Docker | Full-stack governance generated |
-| **example-app** | Multi-service | Services | Kubernetes | Multi-level governance hierarchy |
-| **example-app** | Multi-language | Services | Docker Compose | Multiple languages detected, gates generated |
-| **crag** | Node.js CLI | Single module | npm | Scaffolds itself — full dogfooding, 159 tests, zero deps |
-
-The same universal skills — written once, never modified per project — discovered multiple projects across varied stacks. Zero project-specific instructions in the skills. They discovered everything.
-
----
-
-## The Architecture
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Ships with crag (universal — same for every project)       │
-│                                                              │
-│  ┌──────────────────────┐        ┌──────────────────────┐   │
-│  │  pre-start skill     │        │  post-start skill    │   │
-│  │  discovers ANY       │        │  validates using     │   │
-│  │  project             │        │  YOUR gates          │   │
-│  └──────────┬───────────┘        └──────────┬───────────┘   │
-└─────────────┼───────────────────────────────┼───────────────┘
-              │                               │
-              │  reads at runtime             │  reads at runtime
-              ▼                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│  Generated from interview or analyze (project-specific)     │
-│                                                              │
-│      ┌────────────────────────────────────────────┐          │
-│      │  governance.md — 20-30 lines of YOUR rules │          │
-│      └────────────────────────────────────────────┘          │
-│                                                              │
-│  Also generated:  hooks/    agents/    settings              │
-└──────────────────────────────────────────────────────────────┘
-```
-
-The skills ship once and work forever. They don't know your stack — they discover it. They don't know your gates — they read them from governance.md. Add a service, change your CI, switch frameworks — the skills adapt. Nothing to update.
-
-### The Core Insight: Discovery vs Governance
-
-Every other tool in this space mixes "how to find things" with "what to enforce." crag separates them cleanly:
-
-- **Discovery** (universal skills) — reads the filesystem, detects runtimes, maps architecture, finds configs. Works on any project without modification.
-- **Governance** (your `governance.md`) — defines YOUR rules: quality gates, security requirements, branch strategy, deployment pipeline. Changes only when YOU change it.
-
-The skills handle discovery. `governance.md` handles governance. The skills never go stale because they re-discover every session. The governance never goes stale because it's your standards, not your file paths.
-
----
-
-## Quick Start
+> **One `governance.md`. Any project. Generated in 250 ms.**
+>
+> Point crag at an existing codebase. It reads the filesystem, detects your
+> stack, parses your CI, and writes a 30-line governance file that compiles
+> to GitHub Actions, git hooks, and config for nine AI coding agents.
 
 ```bash
-# Install once globally (the package is scoped; the binary name is `crag`)
+npx @whitehatd/crag analyze            # Generate governance.md from an existing project
+npx @whitehatd/crag compile --target all  # Turn it into CI + 12 downstream configs
+```
+
+Zero dependencies. Node 18+. Validated across [20 OSS projects](#validation-on-real-repos).
+
+---
+
+## What it does
+
+crag turns project-specific configuration work into a single file.
+
+- **You write**: a 20–30 line `governance.md` describing your quality gates, branch strategy, and security rules.
+- **crag generates**: GitHub Actions workflow, husky hooks, pre-commit config, and configuration for **AGENTS.md** (Codex/Aider/Factory), **Cursor**, **Gemini**, **Copilot**, **Cline**, **Continue**, **Windsurf**, **Zed**, and **Sourcegraph Cody** — from that one file.
+- **crag discovers**: runtimes, frameworks, linters, test runners, CI systems, and monorepo layouts — at session time, from the filesystem. Nothing to hardcode.
+
+The result is a single source of truth for your rules that stays in lock-step with your CI pipeline, your pre-commit hooks, and every AI tool your team uses.
+
+---
+
+## Validation on real repos
+
+Unlike most tools in this space, crag ships with a reproducible cross-repo benchmark. `crag analyze --dry-run` was run against 20 diverse open-source projects:
+
+| Grade | Count | Meaning |
+|---|---:|---|
+| **A** — ship-ready governance | **17 / 20 (85%)** | Stack + test + lint + build gates captured. Minimal noise. Ready to commit with light review. |
+| **B** — usable after cleanup | 3 / 20 (15%) | Stack correct, some gates need pruning or adding. Still faster than writing from scratch. |
+| **C** — rework needed | **0 / 20 (0%)** | — |
+
+Repos tested: `expressjs/express`, `chalk/chalk`, `fastify/fastify`, `axios/axios`, `prettier/prettier`, `vitejs/vite`, `psf/requests`, `pallets/flask`, `pallets/click`, `tiangolo/fastapi`, `BurntSushi/ripgrep`, `clap-rs/clap`, `rust-lang/mdBook`, `tokio-rs/axum`, `spf13/cobra`, `gin-gonic/gin`, `charmbracelet/bubbletea`, `spring-projects/spring-petclinic`, `sinatra/sinatra` (Ruby), `slimphp/Slim` (PHP).
+
+| Metric | Value |
+|---|---|
+| Mean `crag analyze` time | **238 ms** per repo |
+| Success rate | **20 / 20 exit 0** |
+| Language families covered | Node, Python, Rust, Go, Java, Ruby, PHP |
+| Zero-gate failures | **0** |
+
+Full methodology, grading rubric, per-repo results, and raw outputs: [`benchmarks/results.md`](./benchmarks/results.md).
+
+---
+
+## Quick start
+
+```bash
+# Use via npx (no install)
+npx @whitehatd/crag analyze
+npx @whitehatd/crag compile --target all
+
+# Or install globally
 npm install -g @whitehatd/crag
-
-# Or use via npx (no install)
-npx @whitehatd/crag init
-
-# After install, all commands use the plain `crag` binary
-crag init            # Interview → generate governance + hooks + agents
-crag analyze         # Zero-interview: infer governance from existing project
-crag check           # Verify infrastructure
-crag diff            # Compare governance against codebase reality
-crag upgrade         # Update universal skills (with hash-based conflict detection)
-crag workspace       # Inspect detected workspace
-crag compile --target all   # Compile governance → CI, hooks, and 9 AI agent configs
-crag install         # Install interview agent globally for /crag-project
+crag analyze
+crag compile --target all
 ```
 
-After setup, in any Claude Code session:
+**Requirements:** Node.js 18+. Git. (Claude Code CLI is only needed for the interactive `crag init` flow.)
+
+---
+
+## How it works
+
+crag separates two things that every other tool in this space conflates:
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  DISCOVERY  (ships with crag — universal, same for any repo)   │
+│                                                                │
+│  Reads the filesystem at runtime. Detects languages, frame-    │
+│  works, CI systems, workspace layout, linters, test runners.   │
+│                                                                │
+│  Never hardcoded. Never goes stale. Add a service, switch      │
+│  frameworks, change CI — discovery adapts automatically.       │
+└───────────────────────────┬────────────────────────────────────┘
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────────────┐
+│  GOVERNANCE  (your governance.md — project-specific)           │
+│                                                                │
+│  20-30 lines of YOUR rules: quality gates, branch strategy,    │
+│  security requirements, deployment policy.                     │
+│                                                                │
+│  Human-controlled. Version-pinned. Changes only when you do.   │
+└───────────────────────────┬────────────────────────────────────┘
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────────────┐
+│  COMPILE  (crag compile --target all)                          │
+│                                                                │
+│  One governance.md → 12 outputs                                │
+│                                                                │
+│    CI / hooks:     GitHub Actions · husky · pre-commit         │
+│    AI (native):    AGENTS.md · Cursor · Gemini                 │
+│    AI (extras):    Copilot · Cline · Continue · Windsurf ·     │
+│                    Zed · Sourcegraph Cody                      │
+└────────────────────────────────────────────────────────────────┘
+```
+
+Change one line in `governance.md`, re-run `crag compile --target all`, and 12 downstream configs regenerate. Every AI tool on your team — plus your CI pipeline and pre-commit hooks — stays in sync from a single source.
+
+---
+
+## What crag detects
+
+### Languages and runtimes
+
+| Family | Detected | Gates emitted |
+|---|---|---|
+| **Node / Deno / Bun** | `package.json`, `deno.json`, `bun.lockb`, `bunfig.toml` | `npm run test/lint/build`, `tsc --noEmit`, `eslint`, `biome check`, `xo`, `deno test/lint/fmt`, `bun test` |
+| **Python** | `pyproject.toml`, `setup.py`, `requirements.txt` | `uv run pytest`, `poetry run pytest`, `pdm run pytest`, `hatch run pytest`, `tox run`, `nox`, `ruff check/format`, `mypy`, `black` — detected per runner |
+| **Rust** | `Cargo.toml`, `Cargo.toml [workspace]` | `cargo test`, `cargo clippy -- -D warnings`, `cargo fmt --check` |
+| **Go** | `go.mod`, `.golangci.yml` | `go test ./...`, `go vet ./...`, `golangci-lint run` |
+| **Java / Kotlin** | `pom.xml`, `build.gradle(.kts)`, Kotlin plugin detection | `./mvnw test verify`, `./gradlew test build`, `checkstyle`, `detekt` |
+| **Ruby** | `Gemfile`, `*.gemspec`, `Rakefile` | `bundle exec rspec`, `bundle exec rake test`, `rubocop`, `standardrb`, `brakeman`, `bundle-audit` |
+| **PHP** | `composer.json`, `phpunit.xml(.dist)` | `composer test`, `vendor/bin/phpunit`, `vendor/bin/pest`, `vendor/bin/phpstan analyse`, `vendor/bin/psalm`, `vendor/bin/phpcs`, `composer validate --strict` |
+| **.NET** | `*.csproj`, `*.fsproj`, `*.sln` | `dotnet test`, `dotnet build`, `dotnet format --verify-no-changes` |
+| **Swift** | `Package.swift` | `swift test`, `swift build`, `swiftlint` |
+| **Elixir** | `mix.exs` | `mix test`, `mix format --check-formatted`, `mix credo --strict`, `mix dialyzer` |
+| **Infrastructure** | `*.tf`, `Chart.yaml`, `Dockerfile`, `openapi.yaml`, `*.proto` | `terraform fmt/validate/plan`, `tflint`, `helm lint`, `hadolint`, `spectral lint`, `buf lint` |
+
+### CI systems
+
+`crag analyze` parses `run:` / `script:` / `command:` steps from nine CI systems and feeds them through a normalizer that dedupes matrix expansions, filters background processes, and strips shell plumbing:
+
+GitHub Actions · GitLab CI · CircleCI · Travis CI · Azure Pipelines · Buildkite · Drone · Woodpecker · Bitbucket Pipelines
+
+### Task runners
+
+Real target mining — not placeholders. Canonical test/lint/build targets extracted from:
+
+- **Makefile** (`.PHONY` directives + column-0 targets)
+- **Taskfile.yml** (`tasks:` sub-keys)
+- **justfile** (recipe names)
+
+### Workspaces
+
+Eleven workspace types, enumerated at discovery time:
+
+pnpm · npm/yarn · Cargo · Go · Gradle · Maven · Nx · Turborepo · Bazel · git submodules · independent nested repos
+
+### Frameworks
+
+Detected from manifest dependencies (runtime deps only — no false positives from dev fixtures):
+
+**Web:** Next.js · React · Vue · Svelte · SvelteKit · Nuxt · Astro · Solid · Qwik · Remix · Express · Fastify · Koa · Hono · NestJS · Phoenix
+**Backend:** Rails · Sinatra · Hanami · Laravel · Symfony · Slim · Yii · CakePHP
+
+### Documentation mining
+
+`CONTRIBUTING.md` and `.github/PULL_REQUEST_TEMPLATE.md` are scanned for gate candidates in code fences and inline backticks — advisory-only, capped at 5, gated by canonical-verb filter.
+
+---
+
+## Commands
+
 ```bash
-/pre-start-context           # Discovers project, loads governance, ready to work
-# ... do your task ...
-/post-start-validation       # Validates, captures knowledge, commits, deploys
+crag analyze                     # Generate .claude/governance.md from filesystem
+crag analyze --dry-run           # Print what would be generated, don't write
+crag analyze --workspace         # Analyze root + every workspace member
+crag analyze --merge             # Preserve existing governance, append inferred sections
+
+crag init                        # Interactive interview (needs Claude Code CLI)
+
+crag compile --target <name>     # Compile governance to a single target
+crag compile --target all        # Compile to all 12 targets at once
+crag compile                     # List available targets
+
+crag diff                        # Compare governance against codebase reality
+crag upgrade                     # Update universal skills to latest version
+crag upgrade --check             # Dry-run: show what would change
+crag check                       # Verify Claude Code infrastructure is in place
+crag workspace                   # Inspect detected workspace
+crag workspace --json            # Machine-readable workspace report
+
+crag version / crag help
 ```
 
 ---
 
-## User Guide
+## The governance file
 
-### Installation
-
-crag is a zero-dependency Node.js CLI. You don't need to install it — run it via `npx`:
-
-```bash
-npx crag <command>
-```
-
-Or install globally:
-```bash
-npm install -g @whitehatd/crag
-crag <command>
-```
-
-The package is published under a scope (`@whitehatd/crag`) but the binary name remains `crag`, so after installation all commands work as `crag init`, `crag analyze`, etc.
-
-**Requirements:**
-- Node.js 18+ (uses built-in `https`, `crypto`, `fs`, `child_process`)
-- Git (for branch strategy inference and discovery cache)
-- Claude Code CLI (`claude --version`) — only needed for `crag init`
-
-### Choosing Your Entry Point
-
-crag has two ways to generate governance for a project:
-
-| Situation | Command | What happens |
-|-----------|---------|--------------|
-| New project, unsure of standards | `crag init` | Interactive interview — agent asks about your stack, quality bar, security, deployment |
-| Existing project with CI/linters already configured | `crag analyze` | Zero-interview mode — reads your CI workflows, package.json scripts, linter configs, git history |
-| Want to see what would be generated | `crag analyze --dry-run` | Prints inferred governance without writing |
-| Already have governance, want to add inferred gates | `crag analyze --merge` | Preserves existing governance, appends inferred additions |
-| Monorepo with sub-projects | `crag analyze --workspace` | Analyzes root + every workspace member |
-
-### Command Reference
-
-#### `crag init` — Interactive Setup
-
-Runs an interview agent that asks about your project, then generates all infrastructure:
-
-```bash
-cd your-project
-npx crag init
-```
-
-**What gets generated:**
-- `.claude/skills/pre-start-context/SKILL.md` — universal discovery skill
-- `.claude/skills/post-start-validation/SKILL.md` — universal validation skill
-- `.claude/governance.md` — your rules (from interview answers)
-- `.claude/hooks/` — sandbox-guard, drift-detector, circuit-breaker, auto-post-start
-- `.claude/agents/` — test-runner, security-reviewer, skill-auditor
-- `.claude/settings.local.json` — permissions + hook wiring
-- `.claude/ci-playbook.md` — empty template for known CI failures
-
-After init, the skills are ready to use in any Claude Code session via `/pre-start-context`.
-
-#### `crag analyze` — Zero-Interview Governance
-
-Generates `governance.md` from your existing project without asking questions:
-
-```bash
-crag analyze              # Generate .claude/governance.md
-crag analyze --dry-run    # Preview without writing
-crag analyze --workspace  # Analyze all workspace members
-crag analyze --merge      # Merge with existing governance
-```
-
-**What it detects:**
-- **Stack:** Node, Rust, Python, Java, Go, Docker (from manifests)
-- **Gates from CI:** parses `.github/workflows/*.yml` (recursively) for `run:` steps including multiline `run: |` blocks
-- **Gates from scripts:** `package.json` `test`, `lint`, `build`, `format`, `typecheck`
-- **Linters:** ESLint, Biome, Prettier, Ruff, Clippy, Rustfmt, Mypy, TypeScript
-- **Branch strategy:** feature branches vs trunk-based (from git history)
-- **Commit convention:** conventional vs free-form (from git log)
-- **Deployment:** Docker, Kubernetes, Vercel, Fly.io, Netlify, Render, Terraform
-
-Output sections marked `# Inferred` should be reviewed.
-
-#### `crag check` — Verify Infrastructure
-
-Lists all core and optional files, shows which are present:
-
-```bash
-crag check
-```
-
-Run this after `crag init` to verify everything was generated, or any time you're unsure if the setup is complete.
-
-#### `crag compile` — Export Governance (12 targets)
-
-Compiles your `governance.md` to multiple formats:
-
-```bash
-# CI / git hooks
-crag compile --target github        # .github/workflows/gates.yml
-crag compile --target husky         # .husky/pre-commit
-crag compile --target pre-commit    # .pre-commit-config.yaml
-
-# AI coding agents — native formats
-crag compile --target agents-md     # AGENTS.md (Codex, Aider, Factory)
-crag compile --target cursor        # .cursor/rules/governance.mdc
-crag compile --target gemini        # GEMINI.md
-
-# AI coding agents — additional formats
-crag compile --target copilot       # .github/copilot-instructions.md
-crag compile --target cline         # .clinerules
-crag compile --target continue      # .continuerules
-crag compile --target windsurf      # .windsurfrules
-crag compile --target zed           # .zed/rules.md
-crag compile --target cody          # .sourcegraph/cody-instructions.md
-
-crag compile --target all           # All 12 targets at once
-crag compile                        # List available targets
-```
-
-**Why this matters:** one `governance.md` becomes your CI workflow, your git hooks, and configuration for **9 different AI coding agents**. Change a gate once, recompile, and every downstream tool sees the update. The generator detects Node/Python/Java/Go versions from your project files (`package.json engines.node`, `pyproject.toml requires-python`, `build.gradle.kts` toolchain, `go.mod` directive) instead of hardcoding defaults.
-
-Gate classifications control behavior per target:
-- `# [MANDATORY]` (default) — stop on failure
-- `# [OPTIONAL]` — warn via `continue-on-error: true` (GitHub) or wrapper (husky/pre-commit)
-- `# [ADVISORY]` — log result, never block
-
-#### `crag diff` — Governance Drift Detection
-
-Compares `governance.md` against codebase reality:
-
-```bash
-crag diff
-```
-
-```
-  MATCH   node --check bin/crag.js
-  DRIFT   ESLint referenced but biome.json found
-  MISSING CI gate: cargo test              (in governance, not in CI)
-  EXTRA   docker build                     (in CI, not in governance)
-
-  3 match, 1 drift, 1 missing, 1 extra
-```
-
-Command alias normalization means `npm test` and `npm run test` are treated as equivalent, as are `./gradlew` and `gradlew`.
-
-#### `crag upgrade` — Update Skills
-
-Updates universal skills in the current project to the latest version:
-
-```bash
-crag upgrade                # Update skills in current project
-crag upgrade --check        # Dry run — show what would change
-crag upgrade --workspace    # Update all workspace members
-crag upgrade --force        # Overwrite locally modified skills (creates backup)
-```
-
-**How it works:**
-- Skills track their version in YAML frontmatter (`version: 0.2.1`)
-- A `source_hash` (SHA-256, CRLF-normalized) detects local modifications
-- If you modified a skill locally, upgrade won't overwrite it without `--force`
-- When force-overwriting, a timestamped backup is created (`SKILL.md.bak.1712252400`)
-- Global 24-hour cache at `~/.claude/crag/update-check.json`
-- Opt-out: `CRAG_NO_UPDATE_CHECK=1`
-
-#### `crag workspace` — Inspect Workspace
-
-Shows the detected workspace, all members, their tech stacks, and governance hierarchy:
-
-```bash
-crag workspace              # Human-readable
-crag workspace --json       # Machine-readable JSON (for CI/scripting)
-```
-
-Example output:
-```
-  Workspace: npm
-  Root: /path/to/monorepo
-  Config: package.json
-  Members: 3
-  Root governance: 2 gate section(s), runtimes: node
-
-  Members:
-    ✓ backend                        [node]
-      packages/backend
-    ✓ frontend                       [node]  (inherits)
-      packages/frontend
-    ○ shared                         [node]
-      packages/shared
-```
-
-Use this to debug workspace detection or understand governance inheritance in monorepos.
-
-#### `crag install` — Install Global Agent
-
-Installs the `crag-project` interview agent to `~/.claude/agents/` so you can invoke it with `/crag-project` from any Claude Code session:
-
-```bash
-crag install
-```
-
-#### `crag version` / `crag help`
-
-```bash
-crag version              # Print version
-crag help                 # Print usage
-```
-
-### The Session Loop
-
-Once crag is set up, your workflow in any Claude Code session becomes:
-
-```
-1. /pre-start-context       → Discovers project, loads governance, checks skill currency
-2. ... your task ...        → Write code, fix bugs, add features
-3. /post-start-validation   → Runs gates, security review, captures knowledge, commits
-```
-
-**Pre-start does:**
-- Detects workspace type (pnpm, Cargo, Go, Gradle, Maven, Nx, Turbo, Bazel, submodules, nested repos)
-- Enumerates members and checks for multi-level governance
-- Detects runtime versions (Node, Java, Python, Go, Rust, Docker)
-- Reads `governance.md` and applies rules for the session
-- Loads cross-session memory (if MemStack enabled)
-- Checks skill currency — notifies if `crag upgrade` available
-
-**Post-start does:**
-- Runs governance gates in order (stops on MANDATORY failure; logs OPTIONAL/ADVISORY)
-- Auto-fixes mechanical errors (lint, format) with bounded retry
-- Runs security review (grep for secrets, check new endpoints)
-- Captures knowledge (insights, sessions) if MemStack enabled
-- Commits with conventional commit format
-- Writes `.session-state.json` for next session's warm start
-
-### Common Workflows
-
-**Workflow 1: Add crag to an existing project**
-```bash
-cd my-existing-project
-npx crag analyze --dry-run    # Preview what it would generate
-npx crag analyze              # Write .claude/governance.md
-# Review the generated file, adjust as needed
-npx crag check                # Verify infrastructure
-# Use /pre-start-context in Claude Code
-```
-
-**Workflow 2: Start a brand new project**
-```bash
-mkdir my-new-project && cd my-new-project
-git init
-npx crag init                 # Interactive interview
-# Follow the prompts — agent asks ~20 questions
-# Skills + hooks + agents are all generated
-npx crag check
-```
-
-**Workflow 3: Monorepo with per-service governance**
-```bash
-cd my-monorepo
-npx crag workspace            # See detected type + members
-npx crag init                 # Root-level governance
-cd packages/backend
-npx crag analyze --merge      # Add backend-specific gates
-cd ../../packages/frontend
-npx crag analyze --merge      # Add frontend-specific gates
-# Now each package has its own governance.md, and root has cross-cutting rules
-```
-
-**Workflow 4: Keep everything current**
-```bash
-npx crag upgrade --check       # See what would update
-npx crag upgrade               # Apply updates (preserves local changes)
-npx crag diff                  # Check governance hasn't drifted
-npx crag compile --target all  # Regenerate CI workflows, hooks, cross-agent files
-```
-
-**Workflow 5: Switch AI tools (Claude → Cursor → Gemini)**
-```bash
-npx crag compile --target agents-md    # Generate AGENTS.md
-npx crag compile --target cursor       # Generate .cursor/rules/
-npx crag compile --target gemini       # Generate GEMINI.md
-# Same governance rules now work in Codex, Cursor, Gemini CLI, Aider, Factory
-```
-
-### Troubleshooting
-
-**Q: `crag init` says "Claude Code CLI not found"**
-A: Install Claude Code from https://claude.com/claude-code. Only `init` needs it; other commands don't.
-
-**Q: `crag upgrade` shows "locally modified" and won't update**
-A: You edited a skill file. Either (1) accept that your edits are preserved and stay on the old version, or (2) run `crag upgrade --force` to overwrite (backup is created).
-
-**Q: `crag analyze` generates nothing useful**
-A: It needs signals — CI configs, `package.json` scripts, linter configs. For greenfield projects, use `crag init` for the interview flow instead.
-
-**Q: `crag diff` reports drift but my CI is working**
-A: Drift means `governance.md` says one thing and the codebase uses another. Either update `governance.md` to match reality, or update the codebase to match governance. Both are valid.
-
-**Q: Skills don't auto-update when I run `/pre-start-context`**
-A: Auto-update runs via the CLI commands, not the skill itself. Run `crag upgrade` from your terminal. The skill reports skill version on pre-start so you know when to run upgrade.
-
-**Q: Multi-level governance not merging correctly**
-A: Check that member governance files use `## Gates (inherit: root)` to opt in to inheritance. Without this marker, member governance replaces root.
-
----
-
-## governance.md
-
-The only file you maintain. 20-30 lines. Everything else is universal.
+The only file you maintain. 20–30 lines. Everything else is universal or generated.
 
 ```markdown
 # Governance — example-app
@@ -453,12 +206,12 @@ The only file you maintain. 20-30 lines. Everything else is universal.
 - Description: Example project using crag
 
 ## Gates (run in order, stop on failure)
-### Frontend
+### Frontend (path: frontend/)
 - npx eslint frontend/ --max-warnings 0
 - cd frontend && npx vite build
 
 ### Backend
-- node --check scripts/server.js scripts/worker.js scripts/queue.js
+- node --check scripts/server.js
 - cargo clippy --manifest-path api/Cargo.toml
 - cargo test --manifest-path api/Cargo.toml
 
@@ -467,390 +220,156 @@ The only file you maintain. 20-30 lines. Everything else is universal.
 
 ## Branch Strategy
 - Trunk-based, conventional commits
-- Auto-commit after all gates pass
+- Auto-commit after gates pass
 
 ## Security
 - No hardcoded secrets
-- No hardcoded secrets or API keys in source
+- No hardcoded secrets or API keys
 ```
 
-Change a gate → takes effect next session. Add a security rule → enforced immediately. The skills read this file every time — they never cache stale instructions.
+**Annotations** (all optional):
 
-### Governance v2 annotations (optional)
-
-Gate sections support optional annotations for workspace-aware execution:
-
-```markdown
-## Gates (run in order, stop on failure)
-### Frontend (path: frontend/)          # cd to frontend/ before running
-- npx biome check .                     # [MANDATORY] (default)
-- npx tsc --noEmit                      # [OPTIONAL] — warn but don't fail
-
-### TypeScript (if: tsconfig.json)       # skip section if file doesn't exist
-- npx tsc --noEmit
-
-### Audit
-- npm audit                             # [ADVISORY] — informational only
-
-## Gates (inherit: root)                 # merge with root governance
-```
-
-All annotations are optional. Existing governance files work unchanged. Classifications are honored by all compile targets (GitHub Actions `continue-on-error`, husky/pre-commit wrapper scripts).
-
-### Multi-level governance (monorepos)
-
-For projects with multiple sub-repos or services, governance can be hierarchical:
-
-```
-project-root/
-├── .claude/governance.md          # Cross-stack: branch strategy, deployment, security
-├── backend/.claude/governance.md  # Backend-specific: Gradle gates, service tests
-└── frontend/.claude/governance.md # Frontend-specific: Biome, Vitest, responsive audit
-```
-
-Each level gets the same universal skills. Each reads its own `governance.md`. Open Claude Code at the root — get the cross-stack view. Open it in `backend/` — get backend-specific gates. The skills adapt to wherever you are.
+- `### Section (path: subdir/)` — run this section's gates from `subdir/`
+- `### Section (if: config.json)` — skip if file doesn't exist
+- `- command  # [OPTIONAL]` — warn but don't fail
+- `- command  # [ADVISORY]` — log only, never block
+- `## Gates (inherit: root)` — merge with root governance (monorepo)
 
 ---
 
-## Workspace Detection
+## Compile targets (12 outputs)
 
-crag auto-detects 11+ workspace types:
-
-| Marker | Workspace Type |
-|--------|----------------|
-| `pnpm-workspace.yaml` | pnpm |
-| `package.json` with `"workspaces"` | npm/yarn |
-| `Cargo.toml` with `[workspace]` | Cargo |
-| `go.work` | Go |
-| `settings.gradle.kts` with `include(` | Gradle |
-| `pom.xml` with `<modules>` | Maven |
-| `nx.json` | Nx |
-| `turbo.json` | Turborepo |
-| `WORKSPACE` / `MODULE.bazel` | Bazel |
-| `.gitmodules` | Git submodules |
-| Multiple child `.git` dirs | Independent repos |
-
-Workspace members are enumerated, checked for their own `.claude/governance.md`, and their tech stacks detected. Multi-level governance merges root gates (mandatory) with member gates (additive).
-
----
-
-## Governance Compiler — 12 Targets
-
-`governance.md` is agent-readable. But the gates in it are just shell commands — they can also drive your CI pipeline, git hooks, and configuration for **9 different AI coding agents**. One source of truth, twelve outputs:
-
-### Full target list
-
-| Group | Target | Output path | Consumed by |
-|---|---|---|---|
-| **CI** | `github` | `.github/workflows/gates.yml` | GitHub Actions |
-| **CI** | `husky` | `.husky/pre-commit` | husky pre-commit framework |
-| **CI** | `pre-commit` | `.pre-commit-config.yaml` | pre-commit.com framework |
-| **AI native** | `agents-md` | `AGENTS.md` | Codex, Aider, Factory, and any tool reading `AGENTS.md` |
-| **AI native** | `cursor` | `.cursor/rules/governance.mdc` | Cursor |
-| **AI native** | `gemini` | `GEMINI.md` | Google Gemini CLI |
-| **AI extras** | `copilot` | `.github/copilot-instructions.md` | GitHub Copilot (VS Code, JetBrains, Visual Studio, Copilot Workspace) |
-| **AI extras** | `cline` | `.clinerules` | Cline (VS Code extension) |
-| **AI extras** | `continue` | `.continuerules` | Continue.dev |
-| **AI extras** | `windsurf` | `.windsurfrules` | Windsurf IDE (Codeium) |
-| **AI extras** | `zed` | `.zed/rules.md` | Zed Editor AI assistant |
-| **AI extras** | `cody` | `.sourcegraph/cody-instructions.md` | Sourcegraph Cody |
-
-```bash
-crag compile --target all           # Generate all 12 at once
-crag compile --target github        # Or pick one
-crag compile                        # Or list targets interactively
-```
-
-The compiler parses your gates, auto-detects runtimes from the commands (Node, Rust, Python, Java, Go, Docker), and generates the right setup steps with proper version inference from your project files (not hardcoded defaults). Human-readable `Verify X contains Y` gates are compiled to `grep` commands automatically (with shell-injection-safe escaping). All 12 targets write atomically (temp file + rename) so partial failures leave the old state intact.
-
-```
-                      ┌────────────────────┐
-                      │   governance.md    │
-                      │     (one file)     │
-                      └──────────┬─────────┘
-                                 │
-                        crag compile --target all
-                                 │
-       ┌─────────────────────────┼─────────────────────────┐
-       │                         │                         │
-       ▼                         ▼                         ▼
-┌─────────────┐          ┌─────────────┐          ┌─────────────┐
-│ CI / hooks  │          │  AI native  │          │  AI extras  │
-├─────────────┤          ├─────────────┤          ├─────────────┤
-│ gates.yml   │          │ AGENTS.md   │          │ Copilot     │
-│ husky       │          │ Cursor MDC  │          │ Cline       │
-│ pre-commit  │          │ GEMINI.md   │          │ Continue    │
-└─────────────┘          └─────────────┘          │ Windsurf    │
-                                                  │ Zed         │
-                                                  │ Cody        │
-                                                  └─────────────┘
-
-                                 + read at runtime by
-                                   universal skills
-                                   (pre-start / post-start)
-```
-
-Governance-as-config that compiles to agent behavior, CI/CD pipelines, and **9 different AI coding tool configs** from a single 20-line file.
-
----
-
-## Zero-Interview Mode
-
-Don't want an interview? `crag analyze` generates governance from your existing project:
-
-```bash
-crag analyze              # Infer governance from codebase + CI
-crag analyze --dry-run    # Preview without writing
-crag analyze --workspace  # Analyze all workspace members
-crag analyze --merge      # Merge with existing governance
-```
-
-It reads your CI workflows (recursively, handling `run: |` multiline blocks), `package.json` scripts, linter configs, git history, and deployment configs. Outputs `governance.md` with `# Inferred` markers so you know what to verify.
-
----
-
-## Governance Drift Detection
-
-`crag diff` compares your `governance.md` against codebase reality:
-
-```bash
-crag diff
-```
-
-```
-  MATCH   node --check bin/crag.js     (tool exists)
-  DRIFT   ESLint referenced but biome.json found
-  MISSING CI gate: cargo test          (in governance, not in CI)
-  EXTRA   CI step: docker build        (in CI, not in governance)
-
-  3 match, 1 drift, 1 missing, 1 extra
-```
-
----
-
-## Auto-Update
-
-Skills track their version in YAML frontmatter. When you run any crag command, it checks for updates:
-
-```bash
-crag upgrade              # Update skills in current project
-crag upgrade --workspace  # Update all workspace members
-crag upgrade --check      # Dry run — show what would change
-crag upgrade --force      # Overwrite locally modified skills (with backup)
-```
-
-The update checker queries the npm registry (cached for 24 hours, 3s timeout, graceful failure offline). Skills are only overwritten if the user hasn't modified them — local modifications are detected via SHA-256 content hash (CRLF-normalized for cross-platform consistency) and preserved unless `--force` is used.
-
----
-
-## What Ships vs What's Generated
-
-| Component | Source | Maintains itself? |
-|-----------|--------|-------------------|
-| Pre-start skill | **Ships universal** | Yes — discovers at runtime, caches results, auto-updates |
-| Post-start skill | **Ships universal** | Yes — reads governance for gates, auto-fixes, auto-updates |
-| `governance.md` | **Generated from interview or analyze** | No — you maintain it (20-30 lines) |
-| Hooks | **Generated for your tools** | Yes — sandbox guard + drift detector + gate enforcement |
-| Agents | **Generated for your stack** | Yes — read governance for commands |
-| Settings | **Generated** | Yes — RTK wildcards cover new tools |
-| CI playbook | **Generated template** | You add entries as failures are found |
-| Compile targets | **Generated on demand** | `crag compile` regenerates from governance (12 targets) |
-| Workspace detection | **Ships universal** | Yes — detects 11+ workspace types at runtime |
-| Governance diff | **Ships universal** | Yes — compares governance vs codebase reality |
-
----
-
-## Why Everything Else Is Static
-
-| Current ecosystem                         | Why it rots                          | crag's approach                                |
-|-------------------------------------------|--------------------------------------|------------------------------------------------|
-| **CLAUDE.md / AGENTS.md** static files    | Hardcode project facts; manual edits | **Universal skills** read filesystem every session — always current |
-| **Skill collections** (1,234+ skills)     | Pick-per-project; stack mismatch     | **One engine** that works for any stack        |
-| **Per-framework templates**               | One stack per template; rot on change | **`governance.md`** — 20–30 lines of YOUR rules only, human-controlled |
-
-**The difference:** everything else tries to pack facts INTO config files. crag reads facts FROM the filesystem at runtime. The skills don't know your stack — they discover it. The governance doesn't know your paths — it holds your rules.
-
----
-
-## The Session Loop
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│  PRE-START (universal skill — runs before every task)          │
-│                                                                │
-│  Warm start?         Intent?          Cache valid?             │
-│  .session-state.json → classify  →   .discovery-cache.json     │
-│       │                │                  │                   │
-│       │                │          ┌───────┴───────┐            │
-│       │                │          ▼               ▼            │
-│       │                │      Fast path      Full discovery    │
-│       │                │      (skip 80%)     (detect stack,    │
-│       │                │          │           load memory)     │
-│       └────────────────┴──────────┴───────────────┘            │
-│                                │                               │
-│                                ▼                               │
-│                        Read governance.md                      │
-└───────────────────────────────┬────────────────────────────────┘
-                                │
-                                ▼
-                      ┌──────────────────┐
-                      │    YOUR TASK     │
-                      │   (code changes) │
-                      └────────┬─────────┘
-                               │
-                               ▼
-┌────────────────────────────────────────────────────────────────┐
-│  POST-START (universal skill — runs after every task)          │
-│                                                                │
-│  Detect changes → Run gates → (fail?) → Auto-fix → retry       │
-│                                  │                             │
-│                                 pass                           │
-│                                  ▼                             │
-│                       Security review → Capture knowledge      │
-│                                               │                │
-│                                               ▼                │
-│                                Write session state · Commit    │
-└────────────────────────────────┬───────────────────────────────┘
-                                 │
-                                 │ cache + state + knowledge
-                                 └─────► feeds next session
-```
-
-### What makes this loop tight
-
-| Feature | What it does | Savings |
+| Target | Output | Consumer |
 |---|---|---|
-| **Discovery cache** | Hashes build files, skips unchanged domains | ~80% of pre-start tool calls on unchanged projects |
-| **Intent-scoped discovery** | Classifies task, skips irrelevant domains | Skip frontend discovery for backend bugs, and vice versa |
-| **Session continuity** | Reads `.session-state.json` for warm starts | Near-zero-latency startup when continuing work |
-| **Gate auto-fix** | Fixes lint/format errors, retries gate (max 2x) | Eliminates human round-trip for mechanical failures |
-| **Auto-post-start** | Hook warns before commit if gates haven't run | Removes "forgot to validate" failure mode |
-| **Sandbox guard** | Hard-blocks destructive commands at hook level | Security at system level, not instruction level |
-| **Workspace detection** | Detects 11+ workspace types, enumerates members | Automatic monorepo/polyrepo awareness |
-| **Auto-update** | Version-tracked skills with hash-based conflict detection | Skills stay current across all projects |
-| **Governance diff** | Compares `governance.md` against actual codebase | Catches drift before it causes failures |
+| `github` | `.github/workflows/gates.yml` | GitHub Actions |
+| `husky` | `.husky/pre-commit` | husky framework |
+| `pre-commit` | `.pre-commit-config.yaml` | pre-commit.com |
+| `agents-md` | `AGENTS.md` | Codex, Aider, Factory, Crush |
+| `cursor` | `.cursor/rules/governance.mdc` | Cursor |
+| `gemini` | `GEMINI.md` | Gemini CLI |
+| `copilot` | `.github/copilot-instructions.md` | GitHub Copilot |
+| `cline` | `.clinerules` | Cline (VS Code) |
+| `continue` | `.continuerules` | Continue.dev |
+| `windsurf` | `.windsurfrules` | Windsurf IDE |
+| `zed` | `.zed/rules.md` | Zed Editor |
+| `cody` | `.sourcegraph/cody-instructions.md` | Sourcegraph Cody |
 
-No agent framework does all of these. Most re-discover cold every session, require manual validation, and trust instructions for safety.
+The compiler detects runtime versions from your project (`package.json engines.node`, `pyproject.toml requires-python`, `go.mod` directive, Gradle toolchain). All writes are atomic — partial failures leave the old state intact.
 
 ---
 
-## Generated Infrastructure
+## Workspaces
 
-```
-.claude/
-├── governance.md                         # YOUR rules (only custom file)
-├── skills/
-│   ├── pre-start-context/SKILL.md        # Universal discoverer
-│   └── post-start-validation/SKILL.md    # Universal validator
-├── hooks/
-│   ├── sandbox-guard.sh                  # Hard-blocks destructive commands
-│   ├── auto-post-start.sh                # Gate enforcement before commits
-│   ├── drift-detector.sh                 # Checks key files exist
-│   ├── circuit-breaker.sh                # Failure loop detection
-│   ├── pre-compact-snapshot.sh           # Memory before compaction
-│   └── post-compact-recovery.sh          # Memory after compaction
-├── agents/
-│   ├── test-runner.md                    # Parallel tests (Sonnet)
-│   ├── security-reviewer.md              # Security audit (Opus)
-│   ├── dependency-scanner.md             # Vulnerability scan
-│   └── skill-auditor.md                  # Infrastructure audit
-├── rules/                                # Cross-session memory
-├── ci-playbook.md                        # Known CI failures
-├── .session-name                         # Notification routing
-├── .discovery-cache.json                  # Cached discovery (auto-generated)
-├── .session-state.json                    # Session continuity (auto-generated)
-├── .gates-passed                          # Gate sentinel (auto-generated)
-└── settings.local.json                   # Hooks + permissions
+```bash
+crag workspace              # Human-readable
+crag workspace --json       # Machine-readable
+
+crag analyze --workspace    # Analyze every member and emit per-member gates
 ```
 
----
+Detected types: `pnpm` · `npm/yarn` · `cargo` · `go` · `gradle` · `maven` · `nx` · `turbo` · `bazel` · `git-submodules` · `independent-repos`.
 
-## Principles
+Test-fixture directories (`playground/`, `fixtures/`, `examples/`, `demos/`, `__fixtures__/`) are excluded from per-member enumeration so monorepos like Vite don't generate 79 sections for their playground directories.
 
-1. **Discover, don't hardcode.** Every fact about the codebase is read at runtime. The skills never say "22 controllers" — they say "read the controller directory."
-
-2. **Govern, don't hope.** Your quality bar lives in `governance.md`. The skills enforce it but never modify it. It changes only when you change it.
-
-3. **Ship the engine, generate the config.** Universal skills ship once. `governance.md` is generated per-project. The engine works forever. The config is 20 lines.
-
-4. **Enforce, don't instruct.** Hooks are 100% reliable at zero token cost. CLAUDE.md rules are ~80% compliance. Critical behavior goes in hooks.
-
-5. **Compound, don't restart.** Cross-session memory means each session knows what the last one learned. Knowledge self-verifies against source files.
-
-6. **Guard, don't trust.** Security hooks hard-block destructive commands at the system level — `rm -rf /`, `DROP TABLE`, `curl|bash`, force-push to main. Even if instructions are misread, the sandbox catches it. Defense in depth: hooks enforce what skills instruct.
-
-7. **Cache, don't re-discover.** Every discovery result is cached with content hashes. If nothing changed, the next session starts in seconds, not minutes. The cache is advisory — if it's wrong, full discovery runs as normal.
+Multi-level governance is supported: root governance sets cross-cutting rules (branch strategy, security), member governance adds stack-specific gates via `## Gates (inherit: root)`.
 
 ---
 
-## Prior Art
+## The session loop (Claude Code)
 
-An independent review assessed every major AI coding tool, open-source project, academic paper, and patent filing as of April 2026. The closest candidates and why they differ:
+Once crag is set up in a Claude Code project, each session is:
 
-| Candidate | What it does | Why it's not this |
-|---|---|---|
-| **AGENTS.md** (60K+ repos) | Static config file AI agents read | Human-maintained, multiple files by scope, no runtime discovery |
-| **Claude Code** `/init` + CLAUDE.md | Scans repo, generates static instructions | Generates static output that rots. Multiple files. No governance separation |
-| **Cursor** `.cursor/rules/` | Per-directory rule files | Static context, multiple artifacts, no universal engine |
-| **Gemini CLI** GEMINI.md hierarchy | JIT instruction file scanning | Discovers *instruction files*, not the project itself |
-| **Kiro** steering docs | Generates product/tech/structure docs | Multiple steering files, not single governance, not universal |
-| **Codex** AGENTS.md + hooks + skills | Layered static instructions + extensibility | Instruction chain by directory. Could host this engine but doesn't ship one |
-| **claude-code-kit** | Framework detection + generated .claude/ | Kit/framework-specific (Next.js, React, Express). Not universal polyglot |
-| **OpenDev** (arxiv paper) | CLI agent with lazy tool discovery | Research prototype. No governance file. Not productized |
-| **Repo2Run** (arxiv paper) | Repo → runnable Dockerfile synthesis | Build/CI domain only. No agent governance architecture |
+```
+/pre-start-context       → Discovers project, loads governance, caches runtimes
+   ↓
+   your task
+   ↓
+/post-start-validation   → Runs gates, auto-fixes lint/format, commits
+```
 
-**Adjacent patents identified:**
-- **US20250291583A1** (Microsoft) — YAML-configured agent rules/actions. Covers "config file drives AI agents" broadly but not universal repo discovery.
-- **US9898393B2** (Solano Labs) — Repo pattern analysis → inferred CI config. Strong historic prior art for build-system discovery, but not AI agent governance.
+`/pre-start-context` classifies task intent, uses a content-hashed discovery cache to skip ~80% of redundant scans on unchanged code, and reads `governance.md` fresh every session so the rules are always current.
 
-Neither patent blocks this architecture. Both are adjacent, not overlapping.
-
-**Three novelty hypotheses validated by the review:**
-1. **Compositional:** Many systems have pieces (hooks, skills, context files). None compose them into universal discovery engine + single governance file + continuously regenerated artifacts.
-2. **Scope:** Closest implementations (claude-code-kit) are framework-specific, not polyglot-universal.
-3. **Governance-as-contract:** Existing tools treat instruction files as context (often non-enforced). This treats governance as an executable contract that deterministically shapes gates and commit behavior.
+`/post-start-validation` runs gates in the order declared in `governance.md`, stops on `[MANDATORY]` failure, retries mechanical errors (lint, format) up to twice with auto-fix, runs a security review, and creates a conventional-commit commit when everything passes.
 
 ---
 
-## Roadmap
+## Installation and requirements
 
-- [x] Universal pre-start and post-start skills
-- [x] Interview-driven governance generation
-- [x] CLI (`crag init`, `crag check`, `crag install`)
-- [x] Proven on 5-language multi-service project (example-app)
-- [x] Proven on full-stack monolith with deployment (example-app)
-- [x] Proven on multi-service platform (example-app)
-- [x] Multi-level governance hierarchy (root + backend + frontend)
-- [x] `crag compile` — governance.md → GitHub Actions, husky, pre-commit, AGENTS.md, Cursor, Gemini
-- [x] Incremental discovery cache — content-addressed, skips 80% of pre-start on unchanged projects
-- [x] Intent-scoped discovery — classifies task, skips irrelevant domains
-- [x] Session continuity — warm starts via `.session-state.json`
-- [x] Gate auto-fix loop — fixes lint/format errors automatically, bounded retry (max 2x)
-- [x] Auto-post-start hook — gate enforcement before commits
-- [x] Sandbox guard — hard-blocks destructive commands (rm -rf /, DROP TABLE, curl|bash, force-push main)
-- [x] `crag analyze` — generate governance from existing project without interview
-- [x] `crag diff` — compare governance against codebase reality
-- [x] `crag upgrade` — update universal skills when new version ships
-- [x] `crag workspace` — inspect detected workspace type and members
-- [x] Workspace detection — 11+ types (pnpm, npm, Cargo, Go, Gradle, Maven, Nx, Turbo, Bazel, submodules, nested repos)
-- [x] Governance v2 format — path-scoped gates, conditional sections, mandatory/optional/advisory classification
-- [x] Auto-update — version tracking, npm registry check, content-hash conflict detection
-- [x] Cross-agent compilation — **12 targets** (GitHub Actions, husky, pre-commit, AGENTS.md, Cursor, Gemini, Copilot, Cline, Continue, Windsurf, Zed, Sourcegraph Cody)
-- [x] Modular architecture — 24 modules across 6 directories (zero dependencies)
-- [x] Test suite — 159 tests covering parse, integrity, detect, enumerate, merge, compile, version, shell, CLI, 6 new compile targets, analyze internals, diff internals
-- [x] Published on npm as `@whitehatd/crag`
-- [x] GitHub Actions CI/CD — multi-OS (Ubuntu/macOS/Windows) × multi-Node (18/20/22) test matrix, automated npm publish with SLSA provenance, stale issue cleanup
-- [ ] Cross-repo benchmark — 20-30 repos, measure coverage %, false positives, failure modes
-- [ ] Drift resilience test — add services, change linters, rename directories. Does the engine re-discover?
-- [ ] Baseline comparison — same governance in AGENTS.md, CLAUDE.md, .cursor/rules, GEMINI.md
-- [ ] crag Cloud (paid tier) — hosted governance registry, cross-repo dashboard, team library, compliance templates, drift alerts
+```bash
+npm install -g @whitehatd/crag
+# or
+npx @whitehatd/crag <command>
+```
+
+- **Node.js 18+** — uses built-in `https`, `crypto`, `fs`, `child_process`. No runtime dependencies.
+- **Git** — for branch strategy inference and the discovery cache.
+- **Claude Code CLI** — only needed for the interactive `crag init` flow. `analyze`, `compile`, `diff`, `upgrade`, `workspace`, `check` all run standalone.
+
+The package is published under `@whitehatd/crag` but the binary name is plain `crag` after install.
+
+---
+
+## Release pipeline
+
+Every push to `master` runs the full CI matrix (Ubuntu / macOS / Windows × Node 18 / 20 / 22) and, if tests pass, auto-bumps the patch version and publishes to npm with SLSA provenance attestation. Tags are created automatically. GitHub releases are generated from `CHANGELOG.md`.
+
+To skip a release on a specific push, put `crag:skip-release` on its own line in the commit body.
+
+---
+
+## Design principles
+
+1. **Discover, don't hardcode.** Every fact about the codebase is read at runtime. Skills never say "22 controllers" — they say "read the controller directory." They never go stale because there is nothing to go stale.
+
+2. **Govern, don't hope.** Your quality bar lives in `governance.md`. Skills enforce it but never modify it. It changes only when you change it.
+
+3. **Ship the engine, generate the config.** Universal skills ship once and work for every project. `governance.md` is generated per project. The engine works forever. The config is 20 lines.
+
+4. **Enforce, don't instruct.** Hooks are 100% reliable at zero token cost. Prose rules in context files are ~80% compliant. Critical behavior (destructive-command blocks, gate enforcement) goes in hooks.
+
+---
+
+## Honest status
+
+- **Published:** 2026-04-04 as `@whitehatd/crag` on npm. Scoped public package.
+- **Tests:** 323 unit tests, passing on Ubuntu/macOS/Windows × Node 18/20/22.
+- **Benchmark:** 17/20 grade A, 0/20 grade C across the 20 reference repos. Reproducible via `benchmarks/results.md`.
+- **Languages fully supported:** Node, Deno, Bun, Python, Rust, Go, Java, Kotlin, Ruby, PHP, .NET, Swift, Elixir (+ Terraform/Helm/K8s infra gates).
+- **CI systems parsed:** 9 (GitHub Actions, GitLab CI, CircleCI, Travis, Azure Pipelines, Buildkite, Drone, Woodpecker, Bitbucket).
+- **Compile targets:** 12 (GitHub Actions, husky, pre-commit, AGENTS.md, Cursor, Gemini, Copilot, Cline, Continue, Windsurf, Zed, Cody).
+
+### Known limitations
+
+- **FastAPI and similar repos** where CI runs via `uv run ./scripts/*.py` data-pipeline scripts: crag captures the script invocations as gates. A user reviewing the output should prune the ones that aren't quality checks.
+- **Complex CI matrix template expansions** (clap's `make test-${{matrix.features}}` pattern): line-based extraction captures one variant per template; multi-line YAML join is not implemented yet.
+- **Jenkinsfile** (Groovy): CI system is detected but step extraction is not attempted.
+- **No telemetry, no network calls** beyond the optional `crag upgrade --check` npm registry ping (24h cached, 3s timeout, graceful offline).
+
+### What crag does not do
+
+- It does not write or modify code in your repo.
+- It does not call any LLM. Discovery, analysis, and compilation are pure filesystem operations.
+- It does not replace your CI provider, your linters, or your test runners. It generates config for them.
+- It does not gate-keep. You can add, remove, or edit any gate in `governance.md` at any time.
+
+---
+
+## Why "crag"
+
+A crag is a rocky outcrop — an unmoving landmark that stands while seasons, paths, and generations change around it. Your skills discover, your gates run, your CI regenerates — but `governance.md`, the crag, doesn't move until you say so. Your AI agents anchor to it.
+
+---
+
+## Contributing
+
+Issues and PRs welcome at [github.com/WhitehatD/crag](https://github.com/WhitehatD/crag). See [CONTRIBUTING.md](./CONTRIBUTING.md) for the workflow.
+
+If you run crag on a repo and it misses something — a language, a CI system, a gate pattern — that's the bug report I want most. Include the URL of the repo and a paste of `crag analyze --dry-run` output.
 
 ---
 
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE).
 
----
-
-*Built by [Alexandru Cioc (WhitehatD)](https://github.com/WhitehatD)*
+Built by [Alexandru Cioc (WhitehatD)](https://github.com/WhitehatD).
