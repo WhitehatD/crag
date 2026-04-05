@@ -36,10 +36,12 @@ function checkOnce() {
       if (cache && typeof cache.checkedAt === 'number') {
         const age = Date.now() - cache.checkedAt;
         if (age < CACHE_TTL_MS) {
-          if (cache.updateAvailable) {
-            const current = require('../../package.json').version;
-            // Write update notices to stderr so they never contaminate
-            // `--json` stdout consumers (crag workspace --json | jq ...).
+          // Re-check against the CURRENT installed version, not the cached
+          // boolean. The cache may have been written by an older version
+          // (e.g. v0.2.14 wrote updateAvailable=true for v0.2.15, then
+          // the user upgraded to v0.2.15 — the cache's boolean is stale).
+          const current = require('../../package.json').version;
+          if (cache.latestVersion && compareVersions(cache.latestVersion, current) > 0) {
             console.error(`  \x1b[33m↑\x1b[0m crag v${cache.latestVersion} available (you have v${current}). Run: npm update -g @whitehatd/crag`);
           }
           return;
