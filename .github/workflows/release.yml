@@ -258,11 +258,16 @@ jobs:
       name: npm-publish
       url: https://www.npmjs.com/package/@whitehatd/crag
     steps:
-      - name: Checkout
+      - name: Checkout latest branch HEAD (includes auto-bump commit)
         uses: actions/checkout@v4
         with:
+          # IMPORTANT: Explicitly check out the BRANCH tip rather than the
+          # triggering SHA. If the gates job auto-bumped the patch version
+          # and pushed a new commit, that commit is on master but NOT at
+          # the SHA that triggered this workflow. Without `ref: ${{ github.ref_name }}`
+          # we'd re-publish the un-bumped version and fail with E403.
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
-          # Use a token that can push tags (default GITHUB_TOKEN can with permissions: contents: write)
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
