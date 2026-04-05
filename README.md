@@ -35,37 +35,14 @@ npx @whitehatd/crag compile       # regenerate every derived file
 npx @whitehatd/crag demo
 ```
 
-No install, no config, no network, no LLM. In ~500 ms `crag demo` does
-the following on a synthetic polyglot project it builds from scratch:
+![crag demo](assets/demo.gif)
 
-```
-  crag demo — proof-of-value on a synthetic polyglot project
-
-  Stack: Node + TypeScript + Rust (cargo workspace with 2 crates)
-  CI: .github/workflows/ci.yml with 8 gates; hand-written governance has only 4
-
-  [1/6] scaffold                              82 ms   7 files across 3 stacks
-  [2/6] analyze --dry-run                    112 ms   stack=node, typescript, rust  workspace=cargo
-  [3/6] write minimal governance               0 ms   4 gates — the "human-written" baseline
-  [4/6] diff (governance vs CI reality)      105 ms   6 match, 0 drift, 0 missing, 3 extra
-  [5/6] compile --target all --dry-run        66 ms   12 files planned
-  [6/6] analyze --dry-run (second run)       115 ms   SHA-256 matches run 1 (17cd4969d74a…)
-
-  What this proves
-    ✓ crag analyzes a multi-stack project in one pass
-    ✓ crag diff catches real drift: 6 gates match, 3 gate(s) exist in CI
-      but NOT in the hand-written governance (this is what humans miss)
-    ✓ crag compile --target all produces 12 downstream files from one governance.md
-    ✓ Deterministic: two back-to-back runs produced byte-identical SHA-256 hashes
-
-  Total: 507 ms from empty directory to verified 12-target pipeline.
-```
-
-The demo self-cleans. `--json` emits structured output. `--keep` leaves
-the temp project behind. The same determinism SHA is verified in CI on
-every push across 9 runner slots (Ubuntu + macOS + Windows × Node
-18/20/22), so the release tag you install from npm is proven to be
-reproducible on every supported platform.
+512 ms. No install, no config, no network, no LLM. Scaffolds a
+synthetic polyglot project (Node + TypeScript + Rust cargo workspace),
+analyzes it, diffs the governance against the CI workflow, compiles to
+all 12 targets, then runs a second analyze and SHA-verifies the output
+is byte-identical. The same SHA is verified on every CI push across 9
+runner slots (Ubuntu + macOS + Windows × Node 18/20/22).
 
 ---
 
