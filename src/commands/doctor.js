@@ -478,20 +478,25 @@ function diagnoseSecurity(cwd) {
     });
   }
 
-  // .env files should not be tracked in git
+  // Root-level .env files should not be tracked in git. This is the most
+  // common place for real secret leaks. Subdirectory .env files are typically
+  // build config (React CRA PUBLIC_URL, Vite VITE_*), monorepo package
+  // overrides, or test fixtures — too many legitimate uses to flag blindly.
+  // For those, rely on the secret-pattern scan below if they ever matter.
   try {
     const tracked = execSync('git ls-files', {
       cwd, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'],
     });
-    const envFiles = tracked.split('\n').filter(f =>
-      /(^|\/)\.env(\.|$)/.test(f) &&
-      !/\.env\.(example|template|sample|dist)/.test(f)
-    );
+    const files = tracked.split('\n');
+
+    // Only flag root-level .env / .env.local / .env.production (not sample).
+    const risky = files.filter(f => /^\.env(\.local|\.production)?$/.test(f));
+
     checks.push({
-      name: '.env files not tracked',
-      status: envFiles.length === 0 ? 'pass' : 'fail',
-      detail: envFiles.length === 0 ? null : `tracked: ${envFiles.slice(0, 3).join(', ')}${envFiles.length > 3 ? '...' : ''}`,
-      fix: envFiles.length === 0 ? null : `git rm --cached ${envFiles[0]} && add to .gitignore, then rotate any secrets inside`,
+      name: 'root .env files not tracked',
+      status: risky.length === 0 ? 'pass' : 'fail',
+      detail: risky.length === 0 ? null : `tracked: ${risky.join(', ')}`,
+      fix: risky.length === 0 ? null : `git rm --cached ${risky[0]} && add to .gitignore, then rotate any secrets inside`,
     });
   } catch { /* skip — not a git repo */ }
 
