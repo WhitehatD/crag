@@ -8,7 +8,8 @@
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
 
 [![Tests](https://img.shields.io/badge/tests-498%20passing-brightgreen)](./test)
-[![OSS repos](https://img.shields.io/badge/OSS%20repos%20tested-141-blue)](./benchmarks/results.md)
+[![Stress test](https://img.shields.io/badge/stress%20test-101%20repos%20%C2%B7%204%2C400%20invocations%20%C2%B7%200%20crashes-brightgreen)](./benchmarks/stress-test.md)
+[![Reference benchmark](https://img.shields.io/badge/benchmark-40%2F40%20Grade%20A-brightgreen)](./benchmarks/results.md)
 [![Languages](https://img.shields.io/badge/languages%20detected-25%2B-blue)](#supported-languages-and-runtimes)
 [![CI systems](https://img.shields.io/badge/CI%20systems-11-blue)](#supported-ci-systems)
 [![Workspace types](https://img.shields.io/badge/workspace%20types-12-blue)](#supported-workspaces)
@@ -27,29 +28,63 @@ Zero runtime dependencies. Node 18+. Deterministic output (no LLM calls).
 
 ---
 
-## Scale of validation
+## Validated on 141 open-source repositories
+
+`crag` is validated against **two independent OSS corpora**. Every release
+ships with both reports checked into the repo.
+
+### 1. Stress test — 101 repos, 4,400 invocations, 0 crashes
+
+The primary robustness metric. 101 open-source repos picked to span every
+supported language, every CI system, every workspace type, plus deliberate
+edge cases (mirror repos, dotfile repos, docs-only, kernel-style Makefiles,
+embedded CMake, multi-GB monorepos, non-English READMEs, Fossil and
+Mercurial mirrors). Each repo was exercised against a 21-command main
+matrix plus a 23-step edge-case matrix.
+
+| Metric | Value |
+|---|---:|
+| Repositories tested | **101** |
+| **Total command invocations** | **≈ 4,400** |
+| **Unexpected crashes / exit codes (`rc > 1`)** | **0** |
+| JSON contract violations on 303 `--json \| JSON.parse` calls | **0** |
+| Findings surfaced | **28** |
+| Findings resolved in v0.2.11 | **28 / 28** |
+| Regression tests added as guards | **141** (357 → 498) |
+
+Full report — corpus breakdown, 21-step + 23-step matrix definitions,
+per-step pass/fail aggregation, all 28 findings with resolutions, post-fix
+verification, and reproducibility scripts:
+[`benchmarks/stress-test.md`](./benchmarks/stress-test.md).
+
+### 2. Reference benchmark — 40 repos, 100% Grade A
+
+The output-quality metric. 40 well-known repos graded on whether
+`crag analyze` produces ship-ready governance (Stack + Test + Lint + Build
+gates captured with minimal noise). 20 Tier 1 libraries across 7 language
+families, 20 Tier 2 polyglot density repos, plus a full-capability run
+(every command × 10 hardest repos = 80 / 80 operations).
+
+| Metric | Value |
+|---|---:|
+| Repositories graded | **40** |
+| **Grade A (ship-ready)** | **40 / 40 (100 %)** |
+| Full-capability operations on 10 densest repos | **80 / 80** |
+| Mean `crag analyze` wall-clock | **≈ 250 ms** |
+
+Full methodology, per-repo grades, before/after comparisons, and raw
+outputs: [`benchmarks/results.md`](./benchmarks/results.md).
+
+### Shared foundation
 
 | | |
 |---|---:|
-| Open-source repositories `crag` has been run against | **141** |
-|   — reference benchmark (Tier 1 + Tier 2, reproducible, 100% Grade A) | 40 |
-|   — stress-test corpus (101 OSS repos × full command matrix) | 101 |
-| Total command invocations in the stress test | **≈ 4,400** |
-| Unexpected crashes / exit codes across the stress test | **0** |
-| Languages and build systems detected | **25+** |
+| Unit tests (Ubuntu + macOS + Windows × Node 18/20/22) | **498 passing** |
+| Runtime dependencies | **0** |
+| Languages / build systems detected | **25+** |
 | CI systems with native command extraction | **11** |
 | Workspace types recognised | **12** |
 | Compile targets (CI + hooks + AI agents) | **12** |
-| Unit tests passing (Ubuntu + macOS + Windows × Node 18/20/22) | **498** |
-| Runtime dependencies | **0** |
-| `crag analyze` wall-clock time (median) | **~250 ms** |
-
-Reference benchmark: [`benchmarks/results.md`](./benchmarks/results.md) — 40
-repos across 7 language families plus 20 polyglot density repos, every one
-graded A. Stress test: 101 OSS repos covering every CI system, workspace
-type, and language listed below; each repo exercised against 21 main
-commands plus 23 edge-case commands. Findings from that run drove the fixes
-in the current release.
 
 Self-audit — `crag` applies its own governance.md and passes its own gates:
 
