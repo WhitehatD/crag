@@ -127,6 +127,53 @@ The initial tier-2 pass revealed a genuine gap: polyglot microservice monorepos 
 **Partial gaps (acceptable for now):**
 - **Subdirectory UIs** (prometheus's React UI in `web/ui/`, rust-analyzer's VSCode extension in `editors/code/`) aren't flagged as top-level stacks. The project's primary language is correct, and CI extraction still picks up the UI-related gates. Flagging these as secondary stacks would require the same recursive scan as the fix above.
 
+### Full-capability run on the 10 hardest repos
+
+After tier-2 reached 20/20, the 10 densest repos across both tiers were
+exercised against the full crag command surface — not just `analyze`, but
+every command that touches generated or existing governance.
+
+**Repos selected** (by stack count, workspace complexity, and CI density):
+
+| # | Repo | Stacks | Workspace |
+|---|---|---|---|
+| 1 | dagger | 8 (go, elixir, java/maven, php, python, rust, node, ts) | subservices |
+| 2 | nx | 7 (node, next.js, ts, rust, java/maven, java/gradle, express) | pnpm |
+| 3 | microservices-demo | 6 (java/gradle, docker, dotnet, go, node, python) | subservices |
+| 4 | mastodon | 6 (node, react, ts, ruby, rails, docker) | npm |
+| 5 | turbo | 4 (node, ts, rust, next.js) | pnpm |
+| 6 | phoenix_live_view | 4 (node, ts, elixir, phoenix) | — |
+| 7 | prometheus | 4 (go, docker, node, ts) | go |
+| 8 | rust-analyzer | 3 (rust, node, ts) | cargo |
+| 9 | swc | 3 (node, ts, rust) | npm |
+| 10 | vite | node+ts (pnpm monorepo, 79 members) | pnpm |
+
+**Commands exercised per repo:**
+
+| Command | Result |
+|---|---|
+| `crag analyze --dry-run` | **10 / 10** ✓ |
+| `crag analyze` (writes `.claude/governance.md`) | **10 / 10** ✓ |
+| `crag analyze --workspace --dry-run` | **10 / 10** ✓ (133ms to 5.4s; nx longest at 5.4s; vite 322ms despite 79 members) |
+| `crag workspace --json` | **10 / 10** ✓ |
+| `crag diff` | **10 / 10** ✓ |
+| `crag doctor --ci` | **10 / 10** ✓ (after refining the `.env` check to root-level only) |
+| `crag compile --target github` → `.github/workflows/gates.yml` | **10 / 10** ✓ |
+| `crag compile --target agents-md` → `AGENTS.md` | **10 / 10** ✓ |
+
+**Total: 80 / 80 operations succeeded on the hardest 10 repos.**
+
+One finding surfaced during this run: the initial `.env files not tracked`
+check was too aggressive, flagging React CRA build config, Vite test
+fixtures, dev variants like `.env.development`, and GitHub Actions env
+files as secret leaks. Narrowed the check to root-level `.env` /
+`.env.local` / `.env.production` only — the actual risky locations.
+Committed the fix in the same session.
+
+Raw outputs: `benchmarks/full-capability/*.{analyze,workspace,diff,doctor,compile,workspace-analyze}.txt`.
+
+---
+
 ### Combined benchmark (tier-1 + tier-2)
 
 | Metric | Combined total |
