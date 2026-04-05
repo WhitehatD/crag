@@ -58,6 +58,11 @@ jobs:
       # only exists on a developer's machine or inside a Claude Code session,
       # not in a bare CI runner. CI validates source code; those commands
       # validate the consumer's installed environment.
+      #
+      # `crag doctor --ci` IS run below: it skips the Infrastructure/Skills/
+      # Hooks sections that need runtime infrastructure and only runs the
+      # checks that are meaningful in a bare CI (governance parses, no
+      # secrets, drift vs git, environment).
 
       - name: crag analyze --dry-run
         run: node bin/crag.js analyze --dry-run
@@ -69,6 +74,16 @@ jobs:
 
       - name: crag workspace --json
         run: node bin/crag.js workspace --json
+
+      - name: crag doctor --ci
+        shell: bash
+        run: |
+          # doctor --ci needs an on-disk governance.md; analyze --dry-run
+          # doesn't write one. Generate it, run doctor, then remove the
+          # generated dir (gitignored, but keeps later steps hermetic).
+          node bin/crag.js analyze > /dev/null
+          node bin/crag.js doctor --ci
+          rm -rf .claude
 
       - name: Run test suite
         run: node test/all.js

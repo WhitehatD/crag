@@ -38,28 +38,57 @@ const ICON_FAIL = `${RED}✗${RESET}`;
 
 /**
  * CLI entry point.
+ *
+ * Flags:
+ *   --json      Machine-readable output
+ *   --ci        Skip checks that require runtime infrastructure (skills,
+ *               hooks, file presence). Useful in CI where .claude/ is
+ *               either absent or freshly generated via `crag analyze`.
+ *   --strict    Treat warnings as failures (exit 1 on any warn).
  */
 function doctor(args) {
   const cwd = process.cwd();
   const jsonOutput = args.includes('--json');
+  const ciMode = args.includes('--ci');
+  const strict = args.includes('--strict');
 
-  const report = runDiagnostics(cwd);
+  const report = runDiagnostics(cwd, { ciMode });
+
+  const exitCode = computeExitCode(report, strict);
 
   if (jsonOutput) {
     console.log(JSON.stringify(report, null, 2));
-    process.exit(report.fail > 0 ? 1 : 0);
+    process.exit(exitCode);
   }
 
-  printReport(report);
-  process.exit(report.fail > 0 ? 1 : 0);
+  printReport(report, { ciMode, strict });
+  process.exit(exitCode);
+}
+
+function computeExitCode(report, strict) {
+  if (report.fail > 0) return 1;
+  if (strict && report.warn > 0) return 1;
+  return 0;
 }
 
 /**
  * Run all diagnostics and return a structured report.
  * Exported for testing.
+ *
+ * When `ciMode` is true, skips sections that rely on runtime infrastructure
+ * (Infrastructure, Skills, Hooks) — those checks require files that only
+ * exist on a developer's machine or after `crag init`/`crag compile`, not
+ * in a bare CI runner.
  */
-function runDiagnostics(cwd) {
-  const sections = [
+function runDiagnostics(cwd, options = {}) {
+  const { ciMode = false } = options;
+
+  const sections = ciMode ? [
+    diagnoseGovernance(cwd),
+    diagnoseDrift(cwd),
+    diagnoseSecurity(cwd),
+    diagnoseEnvironment(cwd),
+  ] : [
     diagnoseInfrastructure(cwd),
     diagnoseGovernance(cwd),
     diagnoseSkills(cwd),
@@ -78,7 +107,7 @@ function runDiagnostics(cwd) {
     }
   }
 
-  return { cwd, sections, pass, warn, fail };
+  return { cwd, sections, pass, warn, fail, ciMode };
 }
 
 // ============================================================================
@@ -519,8 +548,9 @@ function diagnoseEnvironment(cwd) {
 // Output
 // ============================================================================
 
-function printReport(report) {
-  console.log(`\n  ${BOLD}crag doctor${RESET} — ${report.cwd}\n`);
+function printReport(report, { ciMode = false, strict = false } = {}) {
+  const modeLabel = ciMode ? ' (--ci mode)' : '';
+  console.log(`\n  ${BOLD}crag doctor${RESET}${modeLabel} — ${report.cwd}\n`);
 
   for (const section of report.sections) {
     console.log(`  ${BOLD}${section.title}${RESET}`);

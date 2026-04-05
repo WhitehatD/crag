@@ -263,3 +263,71 @@ test('doctor: runDiagnostics returns serializable structure', () => {
   assert.ok(Array.isArray(roundTrip.sections));
   assert.strictEqual(typeof roundTrip.pass, 'number');
 });
+
+// --- --ci mode ---
+test('doctor: --ci mode skips Infrastructure/Skills/Hooks', () => {
+  const dir = mkProject({
+    '.claude/governance.md': `# Governance — ci-test
+## Identity
+- Project: ci-test
+## Gates (run in order, stop on failure)
+### Test
+- npm test
+## Branch Strategy
+- Trunk-based development
+- Conventional commits
+## Security
+- No hardcoded secrets
+`,
+  });
+  // No skills, no hooks, no settings.local.json — simulates bare CI runner
+  const report = runDiagnostics(dir, { ciMode: true });
+  // Should not include infrastructure/skills/hooks sections
+  const sectionTitles = report.sections.map(s => s.title);
+  assert.ok(!sectionTitles.includes('Infrastructure'));
+  assert.ok(!sectionTitles.includes('Skills'));
+  assert.ok(!sectionTitles.includes('Hooks'));
+  // Should still include the checks that work in CI
+  assert.ok(sectionTitles.includes('Governance'));
+  assert.ok(sectionTitles.includes('Security'));
+  assert.ok(sectionTitles.includes('Environment'));
+  // Should pass in a fresh CI state with analyze-generated governance
+  assert.strictEqual(report.fail, 0);
+  assert.strictEqual(report.ciMode, true);
+});
+
+test('doctor: --ci mode still fails on governance secrets', () => {
+  const dir = mkProject({
+    '.claude/governance.md': `# Governance — leaky
+## Identity
+- Project: leaky
+## Gates
+- test
+## Branch Strategy
+- Trunk-based
+## Security
+- API key: AKIAIOSFODNN7EXAMPLE
+`,
+  });
+  const report = runDiagnostics(dir, { ciMode: true });
+  assert.ok(report.fail > 0, 'should fail on embedded AWS key even in CI mode');
+});
+
+test('doctor: --ci mode still passes on minimal valid governance', () => {
+  const dir = mkProject({
+    '.claude/governance.md': `# Governance — x
+## Identity
+- Project: x
+## Gates
+### Test
+- npm test
+## Branch Strategy
+- Trunk-based
+## Security
+- No secrets
+`,
+  });
+  const report = runDiagnostics(dir, { ciMode: true });
+  // Only the check for identity/description quality might warn, all else pass
+  assert.strictEqual(report.fail, 0);
+});
