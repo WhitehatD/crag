@@ -1,6 +1,19 @@
 'use strict';
 
 /**
+ * Strip surrounding matching quotes from a YAML scalar value.
+ *
+ * Only strips when the ENTIRE string is wrapped in matching single or double
+ * quotes. Previously we used `replace(/^["']|["']$/g, '')` which stripped a
+ * trailing quote even when no leading quote existed — that truncated commands
+ * like `make test-X ARGS='--workspace --benches'` to `make test-X ARGS='--workspace --benches`.
+ */
+function stripYamlQuotes(str) {
+  const m = str.match(/^(['"])(.*)\1$/);
+  return m ? m[2] : str;
+}
+
+/**
  * Shared YAML `run:` command extraction for GitHub Actions workflows.
  *
  * Both `crag analyze` and `crag diff` need to enumerate the shell commands
@@ -42,8 +55,7 @@ function extractRunCommands(content) {
         if (trimmed && !trimmed.startsWith('#')) commands.push(trimmed);
       }
     } else if (rest && !rest.startsWith('#')) {
-      // Inline: strip surrounding single/double quotes if present
-      commands.push(rest.replace(/^["']|["']$/g, ''));
+      commands.push(stripYamlQuotes(rest));
     }
   }
 
@@ -142,4 +154,4 @@ function isGateCommand(cmd) {
   return patterns.some((p) => p.test(cmd));
 }
 
-module.exports = { extractRunCommands, isGateCommand };
+module.exports = { extractRunCommands, isGateCommand, stripYamlQuotes };

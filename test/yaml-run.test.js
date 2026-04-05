@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const { extractRunCommands, isGateCommand } = require('../src/governance/yaml-run');
+const { extractRunCommands, isGateCommand, stripYamlQuotes } = require('../src/governance/yaml-run');
 
 function test(name, fn) {
   try {
@@ -66,6 +66,34 @@ test('strips surrounding quotes from inline form', () => {
 `;
   const cmds = extractRunCommands(yaml);
   assert.deepStrictEqual(cmds, ['npm test']);
+});
+
+test('preserves inner quotes when only one end is quoted (clap-style ARGS)', () => {
+  // Regression: previously replace(/^["']|["']$/g, '') greedily stripped the
+  // trailing quote even when no leading quote existed, truncating
+  //   make test-X ARGS='--workspace --benches'
+  // to
+  //   make test-X ARGS='--workspace --benches
+  const yaml = `
+      - name: Test (benches)
+        run: make test-\${{matrix.features}} ARGS='--workspace --benches'
+`;
+  const cmds = extractRunCommands(yaml);
+  assert.deepStrictEqual(cmds, ["make test-${{matrix.features}} ARGS='--workspace --benches'"]);
+});
+
+test('stripYamlQuotes: only strips matching outer quotes', () => {
+  assert.strictEqual(stripYamlQuotes('"hello"'), 'hello');
+  assert.strictEqual(stripYamlQuotes("'hello'"), 'hello');
+  // No matching outer quotes — leave alone
+  assert.strictEqual(stripYamlQuotes("ARGS='--foo'"), "ARGS='--foo'");
+  assert.strictEqual(stripYamlQuotes("'--foo"), "'--foo");
+  assert.strictEqual(stripYamlQuotes("--foo'"), "--foo'");
+  // Mixed quotes — don't strip
+  assert.strictEqual(stripYamlQuotes(`"hello'`), `"hello'`);
+  // Empty and plain
+  assert.strictEqual(stripYamlQuotes(''), '');
+  assert.strictEqual(stripYamlQuotes('plain'), 'plain');
 });
 
 test('returns empty for yaml without run steps', () => {

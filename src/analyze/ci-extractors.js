@@ -21,7 +21,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { extractRunCommands } = require('../governance/yaml-run');
+const { extractRunCommands, stripYamlQuotes } = require('../governance/yaml-run');
 const { safeRead } = require('./stacks');
 
 /**
@@ -165,7 +165,7 @@ function extractCircleCommands(content) {
       const rest = inline[1].trim();
       if (rest && !rest.startsWith('#') && !rest.startsWith('|') && !rest.startsWith('>') &&
           !rest.startsWith('{') && !rest.startsWith('name:') && !rest.startsWith('command:')) {
-        commands.push(rest.replace(/^["']|["']$/g, ''));
+        commands.push(stripYamlQuotes(rest));
       }
     }
     // Nested: command: ...
@@ -173,7 +173,7 @@ function extractCircleCommands(content) {
     if (cmdMatch) {
       const rest = cmdMatch[1].trim();
       if (rest && !rest.startsWith('|') && !rest.startsWith('>') && !rest.startsWith('#')) {
-        commands.push(rest.replace(/^["']|["']$/g, ''));
+        commands.push(stripYamlQuotes(rest));
       } else if (rest === '|' || rest === '>-' || rest.startsWith('|') || rest.startsWith('>')) {
         // Block scalar — collect following lines with greater indent
         const baseIndent = (line.match(/^(\s*)/) || ['', ''])[1].length;
@@ -220,7 +220,7 @@ function extractAzureCommands(content) {
         commands.push(inner.trim());
       }
     } else if (rest && !rest.startsWith('#')) {
-      commands.push(rest.replace(/^["']|["']$/g, ''));
+      commands.push(stripYamlQuotes(rest));
     }
   }
   return commands;
@@ -287,7 +287,7 @@ function extractYamlListField(content, fields) {
         if (innerIndent <= baseIndent) break;
         const listItem = inner.match(/^\s*-\s*(.+)$/);
         if (listItem) {
-          commands.push(listItem[1].trim().replace(/^["']|["']$/g, ''));
+          commands.push(stripYamlQuotes(listItem[1].trim()));
         }
       }
     } else if (/^[|>][+-]?\s*$/.test(rest)) {
@@ -303,11 +303,11 @@ function extractYamlListField(content, fields) {
       // Inline list: script: [cmd1, cmd2]
       const inner = rest.slice(1, rest.indexOf(']') === -1 ? rest.length : rest.indexOf(']'));
       for (const item of inner.split(',')) {
-        const trimmed = item.trim().replace(/^["']|["']$/g, '');
+        const trimmed = stripYamlQuotes(item.trim());
         if (trimmed) commands.push(trimmed);
       }
     } else if (!rest.startsWith('#')) {
-      commands.push(rest.replace(/^["']|["']$/g, ''));
+      commands.push(stripYamlQuotes(rest));
     }
   }
 
