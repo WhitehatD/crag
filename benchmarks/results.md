@@ -1,24 +1,26 @@
-# crag analyze — cross-repo benchmark (before / after)
+# crag analyze — cross-repo benchmark (before / after / post-fix)
 
 **Before:** crag v0.2.3, baseline analyzer
 **After:** crag post-refactor with 6 new analyze/ modules, 10 new languages, multi-CI extraction, doc mining, CI normalization
+**Post-fix:** crag 2 commits after v0.2.5 — FastAPI script filter + Clap YAML quote-strip fix
 **Date:** 2026-04-05
 **Repos tested:** 20 (shallow clones — see list in per-repo table)
 **Raw outputs:**
 - `benchmarks/raw/*.analyze.txt`  — before
-- `benchmarks/raw2/*.analyze.txt` — after
+- `benchmarks/raw2/*.analyze.txt` — after (v0.2.5)
+- `benchmarks/raw3/*.analyze.txt` — post-fix
 
 ---
 
 ## Headline comparison
 
-| Metric | Before | After | Delta |
-|---|---|---|---|
-| Repos producing zero actionable gates | **5** (flask, click, sinatra, slim, fastapi-barely) | **0** | -5 |
-| Repos with `Stack: unknown` | **2** (sinatra, slim) | **0** | -2 |
-| Grade **A** (ship-ready) | 7 / 20 (35%) | **17 / 20 (85%)** | +10 |
-| Grade **B** (usable after cleanup) | 7 / 20 (35%) | 3 / 20 (15%) | -4 |
-| Grade **C** (rework from scratch) | 6 / 20 (30%) | **0 / 20 (0%)** | -6 |
+| Metric | Before | After | Post-fix | Delta (Before→Post-fix) |
+|---|---|---|---|---|
+| Repos producing zero actionable gates | **5** (flask, click, sinatra, slim, fastapi-barely) | **0** | **0** | -5 |
+| Repos with `Stack: unknown` | **2** (sinatra, slim) | **0** | **0** | -2 |
+| Grade **A** (ship-ready) | 7 / 20 (35%) | 17 / 20 (85%) | **19 / 20 (95%)** | +12 |
+| Grade **B** (usable after cleanup) | 7 / 20 (35%) | 3 / 20 (15%) | **1 / 20 (5%)** | -6 |
+| Grade **C** (rework from scratch) | 6 / 20 (30%) | **0 / 20 (0%)** | **0 / 20 (0%)** | -6 |
 | Ruby supported | no | yes (+ rails/sinatra/hanami) | ✓ |
 | PHP supported | no | yes (+ laravel/symfony/slim/yii) | ✓ |
 | Python `uv run`/`tox run`/`hatch`/`poetry`/`pdm` | no | yes | ✓ |
@@ -31,7 +33,7 @@
 | Unit tests | 228 | **323** (+95 for new modules) | +95 |
 | Mean `crag analyze` time | 218 ms | 238 ms (+20 ms for extra passes — still fast) | +9% |
 
-**Bottom line: 17/20 grade A, 0/20 grade C.** The benchmark target I set in the previous session was 17/20 A-or-B. Actual outcome: 17 grade A *and* 3 grade B = 20/20 usable.
+**Bottom line: 19/20 grade A (post-fix), 0/20 grade C.** The benchmark target I set in the previous session was 17/20 A-or-B. Actual outcome after fixes: 19 grade A *and* 1 grade B = 20/20 usable. The remaining B is `fastify/fastify` — residual `cd x && npm install` outlier that survives `extractMainCommand` — low-priority polish.
 
 ---
 
@@ -48,9 +50,9 @@
 | 7 | psf/requests | Python | C | **A** | Full lint (ruff) + test (tox + make) + build gates |
 | 8 | pallets/flask | Python | **C (0 gates)** | **A** | `uv run ruff check`, `uv run ruff format --check`, `uv run mypy .`, `uv run tox run`, `python -m build` — complete turnaround |
 | 9 | pallets/click | Python | **C (0 gates)** | **A** | Same complete turnaround as flask |
-| 10 | tiangolo/fastapi | Python | C | **B** | `uv run pytest`, `uv run mypy .`, `python -m build` captured. CI has script-oriented residue (`uv run scripts/*.py` leaked) |
+| 10 | tiangolo/fastapi | Python | C | B → **A** (post-fix) | `uv run pytest`, `uv run mypy .`, `python -m build` captured. CI script leaks filtered — now surfaces real gates: `uv run coverage report --fail-under=100`, `codspeed` benchmarks, `test-cov.sh`, `python -m build --sdist`. |
 | 11 | BurntSushi/ripgrep | Rust | A | **A** | `cargo fmt --check` added. Workspace detected (cargo) |
-| 12 | clap-rs/clap | Rust workspace | B | **B** | Workspace detected. Make template noise still present (harder to fully filter without template expansion) |
+| 12 | clap-rs/clap | Rust workspace | B | B → **A** (post-fix) | Workspace detected. Quote-strip bug fixed — `make test-${{matrix.features}} ARGS='--workspace --benches'` now extracts with closing quote intact. |
 | 13 | rust-lang/mdBook | Rust+Node | A | **A** | Same |
 | 14 | tokio-rs/axum | Rust workspace | A | **A** | Workspace detected. CONTRIBUTING.md `cargo test --doc` mined |
 | 15 | spf13/cobra | Go | A | **A** | `make fmt`, `make lint`, `make test` — Makefile target mining working |
@@ -95,14 +97,15 @@
 
 ## Known remaining limitations
 
-These were in scope but time-boxed out of this pass.
+These were in scope but time-boxed out of this pass. Items 2 and 3 below are **resolved post-fix**; preserved for history.
 
 1. **Fastify still has a residual `cd test/bundler/webpack && npm install` line.** `extractMainCommand` correctly walks it, finds all parts are noise, and rejects — but in the second-pass raw output the compound still appears once. The fix landed but one outlier survived specifically because the path doesn't end cleanly. Low-priority polish.
-2. **Clap's CI has `make test-${{matrix.features}} ARGS='--workspace --benches`** that looks like an unterminated string — it's a YAML block scalar where the source spans multiple lines and our line-based extractor only grabs line 1. Fixing would require a more YAML-aware multi-line join in `yaml-run.js`. Low-priority.
-3. **FastAPI CI captures `uv run ./scripts/*.py`** as gates because scripts legitimately run via `uv run` — these are data pipelines / doc publishers, not tests. Distinguishing script invocations from gate invocations without a hard-coded list would need a dev-script heuristic (e.g., "reject if target path ends in `.py` under `scripts/`"). Medium-priority, would bump fastapi from B to A.
+2. ~~**Clap's CI has `make test-${{matrix.features}} ARGS='--workspace --benches`** that looks like an unterminated string — it's a YAML block scalar where the source spans multiple lines and our line-based extractor only grabs line 1.~~ **RESOLVED** in commit `492d8dd`. Root cause was not a multi-line join issue; it was a greedy quote-strip regex in `extractRunCommands` that stripped trailing quotes when no leading quote existed. Fixed via `stripYamlQuotes()` helper applied across 6 extractor paths.
+3. ~~**FastAPI CI captures `uv run ./scripts/*.py`** as gates because scripts legitimately run via `uv run` — these are data pipelines / doc publishers, not tests.~~ **RESOLVED** in commit `3474039`. Added noise filters for `(uv|poetry|pdm|hatch|rye|pipenv) run (./)?scripts/*`, direct interpreter variants (python/node/bash/sh), and shell control-flow fragments (`if … ; then` etc) that leak from block scalars. FastAPI now emits 6 real gates (build, coverage, codspeed benchmarks).
 4. **Clap's Makefile contains `make test-X` template targets** that get through because the make target mining only looks for canonical names, but the CI extraction grabs the templated variants. These are legit for clap's workflow; the user can prune them during review.
 5. **Kotlin via `.kt` source files only (no Gradle kotlin plugin)** isn't detected. Most Kotlin projects use Gradle + the plugin, so this is rare in practice.
 6. **`crag analyze --workspace` still needs to be opted in.** We detect and *report* the workspace automatically, but do not emit per-member governance unless the user passes the flag. Auto-enabling felt surprising for large fixture-heavy monorepos like vite (79 members, mostly playground/).
+7. **Jenkinsfile Groovy parsing** — we detect Jenkins (`ci: jenkins`) but do not extract commands from Jenkinsfiles. Last CI system not covered by `ci-extractors.js`.
 
 ---
 
