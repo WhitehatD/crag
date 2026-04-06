@@ -36,8 +36,8 @@ const lines = output.split('\n');
 
 // Step 2: Build asciicast v2 file
 // Header
-const width = 120;
-const height = 24; // Fewer rows than output → natural scroll as lines appear
+const width = 92;
+const height = 23; // tight fit: no trailing empty space
 const header = JSON.stringify({
   version: 2,
   width,
@@ -57,7 +57,7 @@ let t = 0;
 // macOS-style title bar with traffic light dots
 events.push([t, 'o', ' \x1b[31m\u25cf\x1b[0m \x1b[33m\u25cf\x1b[0m \x1b[32m\u25cf\x1b[0m\r\n']);
 t += 0.1;
-events.push([t, 'o', '\x1b[90m' + '\u2500'.repeat(118) + '\x1b[0m\r\n']);
+events.push([t, 'o', '\x1b[90m' + '\u2500'.repeat(90) + '\x1b[0m\r\n']);
 t += 0.1;
 
 // Typing animation: show prompt then type command
@@ -76,8 +76,20 @@ t += 0.1;
 // Output lines with premium scroll timing
 for (const line of lines) {
   // Truncate long lines to fit terminal width (wrap looks messy in GIFs)
+  // Measure visible width (strip ANSI escape codes before checking)
+  const visible = line.replace(/\x1b\[[0-9;]*m/g, '');
   const maxCol = width - 4;
-  const trimmed = line.length > maxCol ? line.slice(0, maxCol - 1) + '\u2026' : line;
+  let trimmed = line;
+  if (visible.length > maxCol) {
+    // Cut at visible char boundary, preserving ANSI sequences
+    let vis = 0, cut = 0;
+    for (let j = 0; j < line.length; j++) {
+      if (line[j] === '\x1b') { while (j < line.length && line[j] !== 'm') j++; continue; }
+      vis++;
+      if (vis >= maxCol - 1) { cut = j + 1; break; }
+    }
+    trimmed = line.slice(0, cut) + '\x1b[0m\u2026';
+  }
   if (line.trim() === '') {
     events.push([t, 'o', '\r\n']);
     t += 0.06;
@@ -115,13 +127,13 @@ const aggResult = spawnSync(aggBin, [
   castFile,
   gifFile,
   '--theme', 'dracula',
-  '--font-size', '22',
+  '--font-size', '28',
   '--line-height', '1.3',
   '--speed', '1',
   '--fps-cap', '30',
   '--last-frame-duration', '2',
-  '--cols', '120',
-  '--rows', '24',
+  '--cols', '92',
+  '--rows', '23',
 ], {
   stdio: 'inherit',
   encoding: 'utf-8',

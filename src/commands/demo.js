@@ -312,7 +312,7 @@ function demo(args) {
     const t1 = process.hrtime.bigint();
     scaffoldDemoProject(root);
     const ms1 = Math.round(Number(process.hrtime.bigint() - t1) / 1_000_000);
-    summary.steps.push({ step: 'scaffold', ms: ms1, detail: '9 files across 3 stacks + web/ frontend' });
+    summary.steps.push({ step: 'scaffold', ms: ms1, detail: '9 files, 3 stacks + web/' });
 
     // --- Step 2: analyze --dry-run (RUN #1) ---
     const t2 = process.hrtime.bigint();
@@ -373,7 +373,7 @@ function demo(args) {
     summary.steps.push({
       step: 'write minimal governance',
       ms: ms3a,
-      detail: '6 gates + path-scoped web/ section — the "human-written" baseline',
+      detail: '6 gates + path-scoped web/',
     });
     summary.steps.push({
       step: 'diff (governance vs CI reality)',
@@ -393,7 +393,7 @@ function demo(args) {
     summary.steps.push({
       step: 'compile --target all --dry-run',
       ms: ms4,
-      detail: `${plannedFiles} files planned (+ per-path glob-scoped for web/)`,
+      detail: `${plannedFiles} files + per-path for web/`,
     });
 
     // --- Step 5: determinism check (RUN #2 of analyze --dry-run) ---
@@ -444,46 +444,41 @@ function printHumanReport(summary, samples) {
   const step = (i, label, ms, detail) => {
     const num = `${CYAN}[${i}/${summary.steps.length}]${RESET}`;
     const timing = `${DIM}${String(ms).padStart(4)} ms${RESET}`;
-    line(`  ${num} ${BOLD}${label.padEnd(34)}${RESET} ${timing}   ${detail}`);
+    line(`  ${num} ${BOLD}${label.padEnd(28)}${RESET} ${timing}  ${detail}`);
   };
 
   line('');
-  line(`  ${BOLD}crag demo${RESET} — proof-of-value on a synthetic polyglot project`);
+  line(`  ${BOLD}crag demo${RESET} — polyglot proof-of-value`);
   line('');
-  line(`  ${DIM}Project: ${summary.tempDir}${RESET}`);
-  line(`  ${DIM}Stack: Node + TypeScript + Rust (cargo workspace with 2 crates) + web/ frontend${RESET}`);
-  line(`  ${DIM}CI: .github/workflows/ci.yml with 8 gates; hand-written governance has 6 + path-scoped section${RESET}`);
+  line(`  ${DIM}Node + TypeScript + Rust workspace + web/ frontend${RESET}`);
+  line(`  ${DIM}CI has 8 gates, governance has 6 + path-scoped section${RESET}`);
   line('');
 
   summary.steps.forEach((s, i) => step(i + 1, s.step, s.ms, s.detail));
 
   line('');
   line(`  ${BOLD}What this proves${RESET}`);
-  line(`    ${GREEN}✓${RESET} crag analyzes a multi-stack project in one pass (node + ts + rust + cargo workspace)`);
+  line(`    ${GREEN}✓${RESET} Multi-stack analysis in one pass (node + ts + rust + cargo)`);
 
   const diffStep = summary.steps.find(s => s.diffCounts);
   if (diffStep && diffStep.diffCounts) {
     const { match, extra } = diffStep.diffCounts;
     if (extra > 0) {
-      line(`    ${GREEN}✓${RESET} crag diff catches real drift: ${match} gates match, ${extra} gate(s) exist in CI but NOT in the hand-written governance (${BOLD}this is what humans miss${RESET})`);
+      line(`    ${GREEN}✓${RESET} Drift detection: ${match} match, ${BOLD}${extra} in CI but missing from governance${RESET}`);
     } else {
-      line(`    ${GREEN}✓${RESET} crag diff surfaced ${match} matching gates against the hand-written governance`);
+      line(`    ${GREEN}✓${RESET} Drift detection: ${match} gates match governance`);
     }
   }
 
-  line(`    ${GREEN}✓${RESET} crag compile --target all produces 12 root files from one governance.md`);
-  line(`    ${GREEN}✓${RESET} Path-scoped sections (web/) emit per-path glob-scoped files for Cursor, Windsurf, Copilot, and Continue`);
+  line(`    ${GREEN}✓${RESET} 12 files compiled from one governance.md`);
+  line(`    ${GREEN}✓${RESET} Per-path glob-scoped files for Cursor, Windsurf, Copilot`);
 
   if (summary.deterministic && summary.deterministic.ok) {
-    line(`    ${GREEN}✓${RESET} Deterministic: two back-to-back runs produced byte-identical SHA-256 hashes`);
-    line(`         ${DIM}hash: ${summary.deterministic.hash1}${RESET}`);
+    line(`    ${GREEN}✓${RESET} Deterministic: SHA-256 identical across both runs`);
   }
 
   line('');
-  line(`  ${BOLD}Total:${RESET} ${summary.totalMs} ms from empty directory to verified 12-target pipeline.`);
-  line('');
-  line(`  Try it on YOUR project next: ${CYAN}crag analyze --dry-run${RESET}`);
-  line('');
+  line(`  ${BOLD}${summary.totalMs} ms${RESET} from empty directory to verified pipeline.`);
 }
 
 module.exports = { demo, scaffoldDemoProject, extractSummaryCounts, extractDiffCounts, sha256 };
