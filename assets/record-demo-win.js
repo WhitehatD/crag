@@ -36,8 +36,8 @@ const lines = output.split('\n');
 
 // Step 2: Build asciicast v2 file
 // Header
-const width = 140;
-const height = lines.length + 5; // +2 for title bar, +1 command, +1 prompt, +1 padding
+const width = 92;
+const height = 24; // Fewer rows than output → natural scroll as lines appear
 const header = JSON.stringify({
   version: 2,
   width,
@@ -57,7 +57,7 @@ let t = 0;
 // macOS-style title bar with traffic light dots
 events.push([t, 'o', ' \x1b[31m\u25cf\x1b[0m \x1b[33m\u25cf\x1b[0m \x1b[32m\u25cf\x1b[0m\r\n']);
 t += 0.1;
-events.push([t, 'o', '\x1b[90m' + '\u2500'.repeat(width - 2) + '\x1b[0m\r\n']);
+events.push([t, 'o', '\x1b[90m' + '\u2500'.repeat(90) + '\x1b[0m\r\n']);
 t += 0.1;
 
 // Typing animation: show prompt then type command
@@ -73,22 +73,29 @@ t += 0.3; // pause after typing
 events.push([t, 'o', '\r\n']);
 t += 0.1;
 
-// Output lines with realistic timing
+// Output lines with premium scroll timing
 for (const line of lines) {
+  // Truncate long lines to fit terminal width (wrap looks messy in GIFs)
+  const trimmed = line.length > width - 2 ? line.slice(0, width - 3) + '\u2026' : line;
   if (line.trim() === '') {
     events.push([t, 'o', '\r\n']);
-    t += 0.02;
+    t += 0.06;
   } else {
-    events.push([t, 'o', line + '\r\n']);
-    // Steps take longer, summary is fast
-    if (/\[\d\/\d\]/.test(line)) t += 0.15;
-    else if (/✓/.test(line)) t += 0.08;
-    else t += 0.04;
+    events.push([t, 'o', trimmed + '\r\n']);
+    // Pacing: steps appear with weight, proof lines build anticipation
+    if (/crag demo/.test(line)) t += 0.5;          // title pause
+    else if (/Project:|Stack:|CI:/.test(line)) t += 0.2;  // context lines
+    else if (/\[\d\/\d\]/.test(line)) t += 0.25;   // each step lands
+    else if (/What this proves/.test(line)) t += 0.4;  // section pause
+    else if (/✓/.test(line)) t += 0.35;            // each proof builds
+    else if (/Total:/.test(line)) t += 0.5;         // landing moment
+    else if (/Try it/.test(line)) t += 0.3;         // CTA
+    else t += 0.08;
   }
 }
 
-// Final pause to let viewer read
-t += 2.5;
+// Final hold so viewer can absorb
+t += 3.0;
 
 // Write cast file
 const castContent = header + '\n' + events.map(e => JSON.stringify(e)).join('\n') + '\n';
@@ -107,10 +114,13 @@ const aggResult = spawnSync(aggBin, [
   castFile,
   gifFile,
   '--theme', 'dracula',
-  '--font-size', '16',
-  '--speed', '1.2',
-  '--fps-cap', '24',
-  '--last-frame-duration', '3',
+  '--font-size', '26',
+  '--line-height', '1.3',
+  '--speed', '1',
+  '--fps-cap', '30',
+  '--last-frame-duration', '4',
+  '--cols', '92',
+  '--rows', '24',
 ], {
   stdio: 'inherit',
   encoding: 'utf-8',
