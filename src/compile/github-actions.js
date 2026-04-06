@@ -158,7 +158,9 @@ function generateGitHubActions(cwd, parsed) {
   ].join('\n');
 
   const outPath = path.join(dir, 'gates.yml');
-  atomicWrite(outPath, yaml);
+  const { preserveCustomSections } = require('./preserve');
+  const final = preserveCustomSections(outPath, yaml, 'comment');
+  atomicWrite(outPath, final);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
 }
 

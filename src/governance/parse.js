@@ -76,9 +76,14 @@ function parseGovernance(content) {
   const result = {
     name: '',
     description: '',
+    stack: [],
     gates: {},
     runtimes: [],
     inherit: null,
+    branchStrategy: '',
+    commitConvention: '',
+    commitTrailer: '',
+    security: '',
     warnings: [],
   };
 
@@ -106,6 +111,23 @@ function parseGovernance(content) {
 
   const descMatch = content.match(/- Description:\s*(.+)/);
   if (descMatch) result.description = descMatch[1].trim();
+
+  const stackMatch = content.match(/- Stack:\s*(.+)/);
+  if (stackMatch) result.stack = stackMatch[1].trim().split(/,\s*/);
+
+  // Extract Branch Strategy section
+  const branchBody = extractSection(content, 'Branch Strategy');
+  if (branchBody) {
+    result.branchStrategy = branchBody.trim();
+    if (/conventional\s+commits/i.test(branchBody)) result.commitConvention = 'conventional';
+    else if (/free.form\s+commits/i.test(branchBody)) result.commitConvention = 'free-form';
+    const trailerMatch = branchBody.match(/Commit trailer:\s*(.+)/);
+    if (trailerMatch) result.commitTrailer = trailerMatch[1].trim();
+  }
+
+  // Extract Security section
+  const securityBody = extractSection(content, 'Security');
+  if (securityBody) result.security = securityBody.trim();
 
   // Check for inheritance marker: ## Gates (inherit: root)
   const inheritMatch = content.match(/## Gates[^\n]*\(inherit:\s*(\w+)\)/);

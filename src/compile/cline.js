@@ -3,6 +3,7 @@
 const path = require('path');
 const { flattenGatesRich } = require('../governance/parse');
 const { atomicWrite } = require('./atomic-write');
+const { preserveCustomSections } = require('./preserve');
 
 /**
  * Compile governance.md to Cline rules.
@@ -38,7 +39,7 @@ Generated from governance.md by crag. Regenerate with: \`crag compile --target c
 
 ${parsed.description || '(No description)'}
 
-Runtimes: ${parsed.runtimes.join(', ') || 'auto-detected'}
+${parsed.stack.length > 0 ? `Stack: ${parsed.stack.join(', ')}\n` : ''}Runtimes: ${parsed.runtimes.join(', ') || 'auto-detected'}
 
 ## Mandatory behavior
 
@@ -57,9 +58,7 @@ ${gatesList}
 
 ## Security
 
-- Never commit hardcoded secrets (grep for sk_live, sk_test, AKIA, password=)
-- Validate all user input at system boundaries
-- Use parameterized queries for database access
+${parsed.security || '- Never commit hardcoded secrets (grep for sk_live, sk_test, AKIA, password=)'}
 
 ## Workflow
 
@@ -76,7 +75,8 @@ This project uses **crag** — the bedrock layer for AI coding agents. https://w
 `;
 
   const outPath = path.join(cwd, '.clinerules');
-  atomicWrite(outPath, content);
+  const final = preserveCustomSections(outPath, content, 'markdown');
+  atomicWrite(outPath, final);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
 }
 

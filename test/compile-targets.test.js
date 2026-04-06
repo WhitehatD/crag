@@ -42,7 +42,12 @@ function sampleParsed() {
   return {
     name: 'test-project',
     description: 'A test project for compile target unit tests',
+    stack: ['node', 'typescript', 'rust'],
     runtimes: ['node', 'rust'],
+    branchStrategy: '- Trunk-based development\n- Conventional commits\n- Commit trailer: Co-Authored-By: Claude <noreply@anthropic.com>',
+    commitConvention: 'conventional',
+    commitTrailer: 'Co-Authored-By: Claude <noreply@anthropic.com>',
+    security: '- No hardcoded secrets — grep for sk_live, AKIA, password= before commit',
     gates: {
       code: {
         commands: [
@@ -84,7 +89,12 @@ test('generates .github/copilot-instructions.md', () => {
     assert.ok(content.includes('npm test'));
     assert.ok(content.includes('OPTIONAL'));
     assert.ok(content.includes('ADVISORY'));
-    assert.ok(content.includes('frontend/'));
+    // frontend/ gates are now in a per-path scoped file
+    const scopedPath = path.join(dir, '.github', 'instructions', 'frontend.instructions.md');
+    assert.ok(fs.existsSync(scopedPath), 'per-path copilot instructions file exists');
+    const scopedContent = fs.readFileSync(scopedPath, 'utf-8');
+    assert.ok(scopedContent.includes('applyTo'));
+    assert.ok(scopedContent.includes('biome'));
   });
 });
 
@@ -161,7 +171,12 @@ test('windsurf output has YAML frontmatter with trigger: always_on', () => {
     const content = fs.readFileSync(path.join(dir, '.windsurf', 'rules', 'governance.md'), 'utf-8');
     assert.ok(content.startsWith('---'));
     assert.ok(content.includes('trigger: always_on'));
-    assert.ok(content.includes('in frontend/'));
+    // frontend/ gates are now in a per-path glob-scoped file
+    const scopedPath = path.join(dir, '.windsurf', 'rules', 'frontend.md');
+    assert.ok(fs.existsSync(scopedPath), 'per-path windsurf rule exists');
+    const scopedContent = fs.readFileSync(scopedPath, 'utf-8');
+    assert.ok(scopedContent.includes('trigger: glob'));
+    assert.ok(scopedContent.includes('biome'));
   });
 });
 
@@ -277,12 +292,17 @@ test('generates .cursor/rules/governance.mdc with MDC frontmatter', () => {
   });
 });
 
-test('cursor rules output contains gate commands', () => {
+test('cursor rules output contains gate commands and per-path files', () => {
   withTempDir((dir) => {
     generateCursorRules(dir, sampleParsed());
     const content = fs.readFileSync(path.join(dir, '.cursor', 'rules', 'governance.mdc'), 'utf-8');
     assert.ok(content.includes('npm test'));
-    assert.ok(content.includes('npx biome check .'));
+    // frontend/ gates are in a per-path scoped .mdc
+    const scopedPath = path.join(dir, '.cursor', 'rules', 'frontend.mdc');
+    assert.ok(fs.existsSync(scopedPath), 'per-path cursor rule exists');
+    const scopedContent = fs.readFileSync(scopedPath, 'utf-8');
+    assert.ok(scopedContent.includes('biome'));
+    assert.ok(scopedContent.includes('alwaysApply: false'));
   });
 });
 

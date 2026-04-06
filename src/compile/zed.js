@@ -3,6 +3,7 @@
 const path = require('path');
 const { flattenGatesRich } = require('../governance/parse');
 const { atomicWrite } = require('./atomic-write');
+const { preserveCustomSections } = require('./preserve');
 
 /**
  * Compile governance.md to Zed Editor rules.
@@ -32,6 +33,14 @@ function generateZed(cwd, parsed) {
         })
         .join('\n');
 
+  const securityLine = parsed.security
+    ? '- ' + parsed.security.split('\n').filter(l => l.trim())[0]
+    : '- Never commit hardcoded secrets. Grep for `sk_live`, `sk_test`, `AKIA`, `password=` before commit.';
+
+  const commitLine = parsed.commitConvention === 'conventional'
+    ? '- Use conventional commits (`feat:`, `fix:`, `docs:`, etc.).' + (parsed.commitTrailer ? `\n- Commit trailer: ${parsed.commitTrailer}` : '')
+    : '- Follow project commit conventions.';
+
   const content = `# Zed Assistant Rules — ${parsed.name || 'project'}
 
 > Generated from governance.md by crag. Regenerate: \`crag compile --target zed\`
@@ -40,7 +49,7 @@ function generateZed(cwd, parsed) {
 
 ${parsed.description || '(No description)'}
 
-**Runtimes:** ${parsed.runtimes.join(', ') || 'polyglot'}
+${parsed.stack.length > 0 ? `**Stack:** ${parsed.stack.join(', ')}\n\n` : ''}**Runtimes:** ${parsed.runtimes.join(', ') || 'polyglot'}
 
 ## Rules for Zed AI Assistant
 
@@ -67,8 +76,8 @@ ${gatesList}
 
 - All file operations must stay within this repository.
 - Never run destructive system commands (\`rm -rf /\`, \`DROP TABLE\`, \`curl|bash\`, force-push to main).
-- Never commit hardcoded secrets. Grep for \`sk_live\`, \`sk_test\`, \`AKIA\`, \`password=\` before commit.
-- Use conventional commits (\`feat:\`, \`fix:\`, \`docs:\`, etc.).
+${securityLine}
+${commitLine}
 
 ### 5. Authoritative Source
 
@@ -82,7 +91,8 @@ To update these rules, edit \`.claude/governance.md\` and re-run \`crag compile 
 `;
 
   const outPath = path.join(cwd, '.rules');
-  atomicWrite(outPath, content);
+  const final = preserveCustomSections(outPath, content, 'markdown');
+  atomicWrite(outPath, final);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
 }
 

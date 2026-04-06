@@ -60,7 +60,9 @@ function generateHusky(cwd, parsed) {
   ].join('\n');
 
   const outPath = path.join(dir, 'pre-commit');
-  atomicWrite(outPath, script);
+  const { preserveCustomSections } = require('./preserve');
+  const final = preserveCustomSections(outPath, script, 'comment');
+  atomicWrite(outPath, final);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
 }
 

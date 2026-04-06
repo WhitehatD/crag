@@ -3,6 +3,7 @@
 const path = require('path');
 const { flattenGatesRich } = require('../governance/parse');
 const { atomicWrite } = require('./atomic-write');
+const { preserveCustomSections } = require('./preserve');
 
 /**
  * Compile governance.md to Amazon Q Developer rules.
@@ -39,7 +40,7 @@ function generateAmazonQ(cwd, parsed) {
 
 ${parsed.description || '(No description)'}
 
-**Runtimes detected:** ${parsed.runtimes.join(', ') || 'polyglot'}
+${parsed.stack.length > 0 ? `**Stack:** ${parsed.stack.join(', ')}\n\n` : ''}**Runtimes detected:** ${parsed.runtimes.join(', ') || 'polyglot'}
 
 ## How Amazon Q Should Behave on This Project
 
@@ -48,7 +49,7 @@ ${parsed.description || '(No description)'}
 1. **Run governance gates before suggesting commits.** The gates below define the quality bar.
 2. **Respect classifications:** MANDATORY (default) blocks on failure; OPTIONAL warns; ADVISORY is informational only.
 3. **Respect scopes:** Path-scoped gates run from that directory. Conditional gates skip when their file does not exist.
-4. **No secrets.** Never generate code containing \`sk_live\`, \`sk_test\`, \`AKIA\`, or plaintext credentials.
+4. **No secrets.** ${parsed.security ? parsed.security.split('\n').filter(l => l.trim())[0] : 'Never generate code containing `sk_live`, `sk_test`, `AKIA`, or plaintext credentials.'}
 5. **Minimal diffs.** Prefer editing existing code over creating new files. Do not refactor unrelated areas.
 
 ### Quality Gates
@@ -57,7 +58,7 @@ ${gatesList}
 
 ### Commit Style
 
-Use conventional commits: \`feat(scope): description\`, \`fix(scope): description\`, \`docs: description\`, etc.
+${parsed.commitConvention === 'conventional' ? `Use conventional commits: \`feat(scope): description\`, \`fix(scope): description\`, \`docs: description\`, etc.${parsed.commitTrailer ? `\nCommit trailer: ${parsed.commitTrailer}` : ''}` : 'Follow project commit conventions.'}
 
 ### Boundaries
 
@@ -75,7 +76,8 @@ When these instructions seem to conflict with something in the repo, **\`.claude
 `;
 
   const outPath = path.join(cwd, '.amazonq', 'rules', 'governance.md');
-  atomicWrite(outPath, content);
+  const final = preserveCustomSections(outPath, content, 'markdown');
+  atomicWrite(outPath, final);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
 }
 
