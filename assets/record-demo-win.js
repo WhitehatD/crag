@@ -37,7 +37,7 @@ const lines = output.split('\n');
 // Step 2: Build asciicast v2 file
 // Header
 const width = 140;
-const height = lines.length + 3;
+const height = lines.length + 5; // +2 for title bar, +1 command, +1 prompt, +1 padding
 const header = JSON.stringify({
   version: 2,
   width,
@@ -53,6 +53,12 @@ const header = JSON.stringify({
 
 const events = [];
 let t = 0;
+
+// macOS-style title bar with traffic light dots
+events.push([t, 'o', ' \x1b[31m\u25cf\x1b[0m \x1b[33m\u25cf\x1b[0m \x1b[32m\u25cf\x1b[0m\r\n']);
+t += 0.1;
+events.push([t, 'o', '\x1b[90m' + '\u2500'.repeat(width - 2) + '\x1b[0m\r\n']);
+t += 0.1;
 
 // Typing animation: show prompt then type command
 events.push([t, 'o', '> ']);
