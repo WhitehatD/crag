@@ -138,14 +138,14 @@ jobs:
           test -f .github/copilot-instructions.md
           test -f .clinerules
           test -f .continuerules
-          test -f .windsurfrules
-          test -f .zed/rules.md
-          test -f .sourcegraph/cody-instructions.md
+          test -f .windsurf/rules/governance.md
+          test -f .rules
+          test -f .amazonq/rules/governance.md
           echo "All 12 compile targets produced artifacts."
           # Clean up — these are all gitignored, so we just rm them.
           rm -f .github/workflows/gates.yml
-          rm -rf .husky .cursor .zed .sourcegraph
-          rm -f .pre-commit-config.yaml AGENTS.md GEMINI.md .clinerules .continuerules .windsurfrules
+          rm -rf .husky .cursor .windsurf .amazonq
+          rm -f .pre-commit-config.yaml AGENTS.md GEMINI.md .clinerules .continuerules .rules
           rm -f .github/copilot-instructions.md
           # Also clean the bootstrapped .claude/ so subsequent steps don't
           # see a polluted tree. They already passed their checks.
