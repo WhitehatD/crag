@@ -14,9 +14,9 @@ failures leave prior state intact (temp-file + rename).
 | `copilot` | `.github/copilot-instructions.md` | GitHub Copilot |
 | `cline` | `.clinerules` | Cline (VS Code) |
 | `continue` | `.continuerules` | Continue.dev |
-| `windsurf` | `.windsurfrules` | Windsurf |
-| `zed` | `.zed/rules.md` | Zed |
-| `cody` | `.sourcegraph/cody-instructions.md` | Sourcegraph Cody |
+| `windsurf` | `.windsurf/rules/governance.md` | Windsurf |
+| `zed` | `.rules` | Zed |
+| `amazonq` | `.amazonq/rules/governance.md` | Amazon Q Developer |
 
 Each compiler detects runtime versions from the manifest
 (`package.json` `engines.node`, `pyproject.toml` `requires-python`,
@@ -29,7 +29,7 @@ project automatically.
 targets when the governance has zero gates — these targets produce valid
 YAML but broken artifacts in that state. Doc-only targets (`cursor`,
 `agents-md`, `gemini`, `copilot`, `cline`, `continue`, `windsurf`, `zed`,
-`cody`) still work with zero gates because they're reference material,
+`amazonq`) still work with zero gates because they're reference material,
 not executable.
 
 ## Atomicity

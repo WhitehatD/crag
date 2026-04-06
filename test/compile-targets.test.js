@@ -9,7 +9,7 @@ const { generateCline } = require('../src/compile/cline');
 const { generateContinue } = require('../src/compile/continue');
 const { generateWindsurf } = require('../src/compile/windsurf');
 const { generateZed } = require('../src/compile/zed');
-const { generateCody } = require('../src/compile/cody');
+const { generateAmazonQ } = require('../src/compile/amazonq');
 const { generateAgentsMd } = require('../src/compile/agents-md');
 const { generateCursorRules } = require('../src/compile/cursor-rules');
 const { generateGeminiMd } = require('../src/compile/gemini-md');
@@ -144,10 +144,10 @@ test('continue output mentions MANDATORY, OPTIONAL, ADVISORY classifications', (
 
 console.log('\n  compile/windsurf.js');
 
-test('generates .windsurfrules at repo root', () => {
+test('generates .windsurf/rules/governance.md', () => {
   withTempDir((dir) => {
     generateWindsurf(dir, sampleParsed());
-    const out = path.join(dir, '.windsurfrules');
+    const out = path.join(dir, '.windsurf', 'rules', 'governance.md');
     assert.ok(fs.existsSync(out));
     const content = fs.readFileSync(out, 'utf-8');
     assert.ok(content.includes('Windsurf Rules'));
@@ -155,50 +155,53 @@ test('generates .windsurfrules at repo root', () => {
   });
 });
 
-test('windsurf output lists gates with path scopes', () => {
+test('windsurf output has YAML frontmatter with trigger: always_on', () => {
   withTempDir((dir) => {
     generateWindsurf(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.windsurfrules'), 'utf-8');
+    const content = fs.readFileSync(path.join(dir, '.windsurf', 'rules', 'governance.md'), 'utf-8');
+    assert.ok(content.startsWith('---'));
+    assert.ok(content.includes('trigger: always_on'));
     assert.ok(content.includes('in frontend/'));
   });
 });
 
 console.log('\n  compile/zed.js');
 
-test('generates .zed/rules.md', () => {
+test('generates .rules at repo root', () => {
   withTempDir((dir) => {
     generateZed(dir, sampleParsed());
-    const out = path.join(dir, '.zed', 'rules.md');
+    const out = path.join(dir, '.rules');
     assert.ok(fs.existsSync(out));
     const content = fs.readFileSync(out, 'utf-8');
     assert.ok(content.includes('Zed Assistant Rules'));
   });
 });
 
-test('zed output creates .zed directory if missing', () => {
+test('zed .rules includes gate commands and classifications', () => {
   withTempDir((dir) => {
     generateZed(dir, sampleParsed());
-    assert.ok(fs.existsSync(path.join(dir, '.zed')));
-    assert.ok(fs.statSync(path.join(dir, '.zed')).isDirectory());
+    const content = fs.readFileSync(path.join(dir, '.rules'), 'utf-8');
+    assert.ok(content.includes('npm test'));
+    assert.ok(content.includes('OPTIONAL'));
   });
 });
 
-console.log('\n  compile/cody.js');
+console.log('\n  compile/amazonq.js');
 
-test('generates .sourcegraph/cody-instructions.md', () => {
+test('generates .amazonq/rules/governance.md', () => {
   withTempDir((dir) => {
-    generateCody(dir, sampleParsed());
-    const out = path.join(dir, '.sourcegraph', 'cody-instructions.md');
+    generateAmazonQ(dir, sampleParsed());
+    const out = path.join(dir, '.amazonq', 'rules', 'governance.md');
     assert.ok(fs.existsSync(out));
     const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('Cody Instructions'));
+    assert.ok(content.includes('Amazon Q Rules'));
   });
 });
 
-test('cody output creates .sourcegraph directory if missing', () => {
+test('amazonq output creates .amazonq/rules directory if missing', () => {
   withTempDir((dir) => {
-    generateCody(dir, sampleParsed());
-    assert.ok(fs.existsSync(path.join(dir, '.sourcegraph')));
+    generateAmazonQ(dir, sampleParsed());
+    assert.ok(fs.existsSync(path.join(dir, '.amazonq', 'rules')));
   });
 });
 
@@ -212,15 +215,15 @@ test('every new target honors gate classifications in output', () => {
     generateContinue(dir, parsed);
     generateWindsurf(dir, parsed);
     generateZed(dir, parsed);
-    generateCody(dir, parsed);
+    generateAmazonQ(dir, parsed);
     // Each target should reference OPTIONAL or ADVISORY or MANDATORY
     const outputs = [
       fs.readFileSync(path.join(dir, '.github', 'copilot-instructions.md'), 'utf-8'),
       fs.readFileSync(path.join(dir, '.clinerules'), 'utf-8'),
       fs.readFileSync(path.join(dir, '.continuerules'), 'utf-8'),
-      fs.readFileSync(path.join(dir, '.windsurfrules'), 'utf-8'),
-      fs.readFileSync(path.join(dir, '.zed', 'rules.md'), 'utf-8'),
-      fs.readFileSync(path.join(dir, '.sourcegraph', 'cody-instructions.md'), 'utf-8'),
+      fs.readFileSync(path.join(dir, '.windsurf', 'rules', 'governance.md'), 'utf-8'),
+      fs.readFileSync(path.join(dir, '.rules'), 'utf-8'),
+      fs.readFileSync(path.join(dir, '.amazonq', 'rules', 'governance.md'), 'utf-8'),
     ];
     for (const out of outputs) {
       const hasClassification =

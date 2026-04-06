@@ -43,9 +43,9 @@ function printUsage() {
       crag compile --target copilot      .github/copilot-instructions.md
       crag compile --target cline        .clinerules
       crag compile --target continue     .continuerules
-      crag compile --target windsurf     .windsurfrules
-      crag compile --target zed          .zed/rules.md
-      crag compile --target cody         .sourcegraph/cody-instructions.md
+      crag compile --target windsurf     .windsurf/rules/governance.md
+      crag compile --target zed          .rules
+      crag compile --target amazonq      .amazonq/rules/governance.md
     crag compile --target all            All ${ALL_TARGETS.length} targets at once
 
   Analyze options:

@@ -1,15 +1,23 @@
 # crag
 
-**Your AI coding rules and your CI will never disagree again.**
+**Governance compiler for AI-assisted codebases.**
+
+You tighten a lint rule in `.cursor/rules/`. The Copilot file still has
+the old one. CI enforces a third version. Your AI agent writes code that
+CI rejects — and nobody knows which config is the source of truth.
+
+`crag` fixes this. Write your rules once in a ~20-line `governance.md`.
+Compile to all 12 targets — CI workflow, pre-commit hook, and 10 AI
+agent configs — in one command. Change a rule, recompile, done.
 
 ![crag demo](assets/demo.gif)
 
-404 ms, no install, no config, no network, no LLM — SHA-verified on every CI push.
+> 404 ms · zero dependencies · no LLM · no network · SHA-verified deterministic output
 
 ```bash
 npx @whitehatd/crag demo          # see it work (no install needed)
 npx @whitehatd/crag analyze       # generate governance.md from your project
-npx @whitehatd/crag compile       # regenerate every derived file
+npx @whitehatd/crag compile       # regenerate all 12 files
 ```
 
 [![npm version](https://img.shields.io/npm/v/%40whitehatd%2Fcrag?color=%23e8bb3a&label=npm&logo=npm)](https://www.npmjs.com/package/@whitehatd/crag)
@@ -17,14 +25,6 @@ npx @whitehatd/crag compile       # regenerate every derived file
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
-
----
-
-Write your quality rules once in a ~20-line `governance.md`. `crag` keeps
-them in sync with your CI workflow, pre-commit hooks, and whichever AI
-coding tool you use — Cursor, Copilot, Gemini, Cline, Continue, Zed,
-Windsurf, Cody, and more. Change one line, regenerate everything.
-Deterministic — no LLM, no network.
 
 ---
 
@@ -36,7 +36,7 @@ Deterministic — no LLM, no network.
 $ crag compile --target all --dry-run --verbose
 
   Compiling governance.md → github, husky, pre-commit, agents-md, cursor,
-  gemini, copilot, cline, continue, windsurf, zed, cody
+  gemini, copilot, cline, continue, windsurf, zed, amazonq
   9 gates, 1 runtimes detected (dry-run)
 
   plan .github/workflows/gates.yml                  1.57 KB
@@ -48,28 +48,16 @@ $ crag compile --target all --dry-run --verbose
   plan .github/copilot-instructions.md              1.86 KB
   plan .clinerules                                  1.58 KB
   plan .continuerules                               1.70 KB
-  plan .windsurfrules                               1.72 KB
-  plan .zed/rules.md                                1.69 KB
-  plan .sourcegraph/cody-instructions.md            1.75 KB
+  plan .windsurf/rules/governance.md                 1.80 KB
+  plan .rules                                       1.69 KB
+  plan .amazonq/rules/governance.md                 1.75 KB
 
-  Total: 17.9 KB across 12 target(s)
+  Total: 18.0 KB across 12 target(s)
   Dry-run complete — no files written.
 ```
 
 Same rules, 12 files, zero copy-paste. Change one gate, recompile, all
 12 update together.
-
----
-
-## Why this exists
-
-Every project duplicates quality rules across CI workflows, pre-commit
-hooks, and a growing list of AI agent config files — up to 12 places to
-keep in sync. They drift: someone tightens lint rules in `.cursor/rules/`,
-misses the Copilot file; someone updates CI, forgets the hook.
-
-`crag` removes the duplication. One `governance.md`, one `crag compile`,
-12 files regenerated atomically.
 
 ---
 
@@ -91,31 +79,19 @@ Deterministic: same input → byte-identical output. No LLM. No network.
 
 ---
 
-## Validated on 141 open-source repositories
+## Proof
 
-[![Tests](https://img.shields.io/badge/tests-510%20passing-brightgreen)](./test)
-[![Deterministic](https://img.shields.io/badge/deterministic-SHA--verified-brightgreen)](#how-it-works)
-[![Stress test](https://img.shields.io/badge/stress%20test-101%20repos%20%C2%B7%204%2C400%20invocations%20%C2%B7%200%20crashes-brightgreen)](./benchmarks/stress-test.md)
-[![Reference benchmark](https://img.shields.io/badge/benchmark-40%2F40%20Grade%20A-brightgreen)](./benchmarks/results.md)
+| Metric | Result |
+|---|---|
+| Stress test | [101 repos · 4,400 invocations · 0 crashes](./benchmarks/stress-test.md) |
+| Benchmark | [40/40 Grade A](./benchmarks/results.md) across 7 language families |
+| Determinism | SHA-verified, byte-identical across Ubuntu + macOS + Windows × Node 18/20/22 |
+| Tests | 510 passing |
+| Dependencies | 0 |
+| Self-audit | `crag doctor` 29/29 pass · `crag diff` 0 drift · `crag check` 9/9 files |
 
-**Stress test** — 101 repos, 4,400 invocations, 0 crashes. Every
-supported language, CI system, and workspace type, plus edge cases
-(mirror repos, dotfile repos, multi-GB monorepos, non-English READMEs).
-28 findings surfaced, 28 resolved, 141 regression tests added.
-Full report: [`benchmarks/stress-test.md`](./benchmarks/stress-test.md).
-
-**Reference benchmark** — 40 repos, 100 % Grade A. 7 language families,
-polyglot density repos. Full methodology:
-[`benchmarks/results.md`](./benchmarks/results.md).
-
-**Self-audit**: `crag` applies its own governance and passes its own gates
-on every commit.
-
-```
-crag doctor   29/29 pass, 0 warn, 0 fail
-crag diff     12 match, 0 drift, 0 missing, 0 extra
-crag check    9/9 core files present
-```
+Full methodology: [`benchmarks/stress-test.md`](./benchmarks/stress-test.md) ·
+[`benchmarks/results.md`](./benchmarks/results.md)
 
 ---
 

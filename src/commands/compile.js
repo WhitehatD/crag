@@ -14,7 +14,7 @@ const { generateCline } = require('../compile/cline');
 const { generateContinue } = require('../compile/continue');
 const { generateWindsurf } = require('../compile/windsurf');
 const { generateZed } = require('../compile/zed');
-const { generateCody } = require('../compile/cody');
+const { generateAmazonQ } = require('../compile/amazonq');
 const { cliError, readFileOrExit, EXIT_USER, EXIT_INTERNAL } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 
@@ -32,7 +32,7 @@ const ALL_TARGETS = [
   'continue',
   'windsurf',
   'zed',
-  'cody',
+  'amazonq',
 ];
 
 function compile(args) {
@@ -86,9 +86,9 @@ function compile(args) {
     console.log('    crag compile --target copilot      .github/copilot-instructions.md');
     console.log('    crag compile --target cline        .clinerules');
     console.log('    crag compile --target continue     .continuerules');
-    console.log('    crag compile --target windsurf     .windsurfrules');
-    console.log('    crag compile --target zed          .zed/rules.md');
-    console.log('    crag compile --target cody         .sourcegraph/cody-instructions.md\n');
+    console.log('    crag compile --target windsurf     .windsurf/rules/governance.md');
+    console.log('    crag compile --target zed          .rules');
+    console.log('    crag compile --target amazonq      .amazonq/rules/governance.md\n');
     console.log('  Combined:');
     console.log(`    crag compile --target all          All ${ALL_TARGETS.length} targets at once`);
     console.log('    crag compile --target <t> --dry-run  Preview paths without writing\n');
@@ -181,7 +181,7 @@ function runGenerator(target, cwd, parsed) {
     case 'continue':   generateContinue(cwd, parsed); break;
     case 'windsurf':   generateWindsurf(cwd, parsed); break;
     case 'zed':        generateZed(cwd, parsed); break;
-    case 'cody':       generateCody(cwd, parsed); break;
+    case 'amazonq':    generateAmazonQ(cwd, parsed); break;
     default:
       console.error(`  Unknown target: ${target}`);
       console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
@@ -247,9 +247,9 @@ function planOutputPath(cwd, target) {
     'copilot':    path.join(cwd, '.github', 'copilot-instructions.md'),
     'cline':      path.join(cwd, '.clinerules'),
     'continue':   path.join(cwd, '.continuerules'),
-    'windsurf':   path.join(cwd, '.windsurfrules'),
-    'zed':        path.join(cwd, '.zed', 'rules.md'),
-    'cody':       path.join(cwd, '.sourcegraph', 'cody-instructions.md'),
+    'windsurf':   path.join(cwd, '.windsurf', 'rules', 'governance.md'),
+    'zed':        path.join(cwd, '.rules'),
+    'amazonq':    path.join(cwd, '.amazonq', 'rules', 'governance.md'),
   };
   return map[target] || null;
 }

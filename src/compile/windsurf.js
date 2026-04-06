@@ -6,13 +6,16 @@ const { atomicWrite } = require('./atomic-write');
 
 /**
  * Compile governance.md to Windsurf rules.
- * Output: .windsurfrules
+ * Output: .windsurf/rules/governance.md
  *
  * Windsurf (by Codeium) is an AI-native IDE with a Cascade agent mode.
- * It reads `.windsurfrules` at the workspace root for project-level guidance.
+ * The current format uses `.windsurf/rules/*.md` with YAML frontmatter
+ * specifying trigger mode, description, and optional globs.
+ * Legacy `.windsurfrules` is still supported but deprecated.
+ * Total budget: 12,000 characters across all workspace rules.
  *
  * Reference:
- *   https://docs.windsurf.com/windsurf/cascade/memories#rules
+ *   https://docs.windsurf.com/windsurf/cascade/memories
  */
 function generateWindsurf(cwd, parsed) {
   const gates = flattenGatesRich(parsed.gates);
@@ -27,7 +30,12 @@ function generateWindsurf(cwd, parsed) {
         })
         .join('\n');
 
-  const content = `# Windsurf Rules — ${parsed.name || 'project'}
+  const content = `---
+trigger: always_on
+description: Governance rules for ${parsed.name || 'project'} — compiled from governance.md by crag
+---
+
+# Windsurf Rules — ${parsed.name || 'project'}
 
 Generated from governance.md by crag. Regenerate: \`crag compile --target windsurf\`
 
@@ -68,7 +76,7 @@ ${gatesList}
 **Tool:** crag — https://www.npmjs.com/package/@whitehatd/crag
 `;
 
-  const outPath = path.join(cwd, '.windsurfrules');
+  const outPath = path.join(cwd, '.windsurf', 'rules', 'governance.md');
   atomicWrite(outPath, content);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
 }

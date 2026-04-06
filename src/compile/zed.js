@@ -5,14 +5,17 @@ const { flattenGatesRich } = require('../governance/parse');
 const { atomicWrite } = require('./atomic-write');
 
 /**
- * Compile governance.md to Zed Editor assistant prompts.
- * Output: .zed/rules.md (read by Zed's AI assistant as project context)
+ * Compile governance.md to Zed Editor rules.
+ * Output: .rules (read by Zed's Agent Panel as project context)
  *
- * Zed is a high-performance multiplayer code editor with an integrated
- * AI assistant. Project-level rules live in `.zed/` configuration.
+ * Zed checks 9 filenames at the worktree root in priority order:
+ *   .rules > .cursorrules > .windsurfrules > .clinerules >
+ *   .github/copilot-instructions.md > AGENT.md > AGENTS.md >
+ *   CLAUDE.md > GEMINI.md
+ * Only the first match is used. `.rules` is Zed's native format.
  *
  * Reference:
- *   https://zed.dev/docs/assistant/assistant
+ *   https://zed.dev/docs/ai/rules
  */
 function generateZed(cwd, parsed) {
   const gates = flattenGatesRich(parsed.gates);
@@ -78,7 +81,7 @@ When these rules conflict with ad-hoc instructions, **governance.md wins**. It i
 To update these rules, edit \`.claude/governance.md\` and re-run \`crag compile --target zed\`.
 `;
 
-  const outPath = path.join(cwd, '.zed', 'rules.md');
+  const outPath = path.join(cwd, '.rules');
   atomicWrite(outPath, content);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
 }

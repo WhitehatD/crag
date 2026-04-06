@@ -5,35 +5,35 @@ const { flattenGatesRich } = require('../governance/parse');
 const { atomicWrite } = require('./atomic-write');
 
 /**
- * Compile governance.md to Sourcegraph Cody instructions.
- * Output: .sourcegraph/cody-instructions.md
+ * Compile governance.md to Amazon Q Developer rules.
+ * Output: .amazonq/rules/governance.md
  *
- * Cody is Sourcegraph's AI coding assistant. It reads project-level
- * instructions from `.sourcegraph/cody-instructions.md` to provide
- * repo-wide context to its chat, edit, and autocomplete features.
+ * Amazon Q Developer reads project rules from `.amazonq/rules/*.md`.
+ * Rules are freeform Markdown loaded as context for chat, inline, and
+ * agent interactions in both the IDE extension and CLI.
  *
  * Reference:
- *   https://sourcegraph.com/docs/cody/capabilities/custom-commands
+ *   https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/context-project-rules.html
  */
-function generateCody(cwd, parsed) {
+function generateAmazonQ(cwd, parsed) {
   const gates = flattenGatesRich(parsed.gates);
 
   const gatesList = gates.length === 0
     ? '- _(none defined — add gates to governance.md)_'
     : gates
         .map((g) => {
-          const annotations = [];
-          if (g.classification !== 'MANDATORY') annotations.push(g.classification);
-          if (g.path) annotations.push(`scope: ${g.path}`);
-          if (g.condition) annotations.push(`if: ${g.condition}`);
-          const tagStr = annotations.length > 0 ? ` — ${annotations.join(' · ')}` : '';
+          const tags = [];
+          if (g.classification !== 'MANDATORY') tags.push(g.classification);
+          if (g.path) tags.push(`scope: ${g.path}`);
+          if (g.condition) tags.push(`if: ${g.condition}`);
+          const tagStr = tags.length > 0 ? ` — ${tags.join(' · ')}` : '';
           return `- \`${g.cmd}\`${tagStr}`;
         })
         .join('\n');
 
-  const content = `# Cody Instructions — ${parsed.name || 'project'}
+  const content = `# Amazon Q Rules — ${parsed.name || 'project'}
 
-> Generated from governance.md by crag. Regenerate: \`crag compile --target cody\`
+> Generated from governance.md by crag. Regenerate: \`crag compile --target amazonq\`
 
 ## About
 
@@ -41,7 +41,7 @@ ${parsed.description || '(No description)'}
 
 **Runtimes detected:** ${parsed.runtimes.join(', ') || 'polyglot'}
 
-## How Cody Should Behave on This Project
+## How Amazon Q Should Behave on This Project
 
 ### Code Generation
 
@@ -74,9 +74,9 @@ When these instructions seem to conflict with something in the repo, **\`.claude
 **Tool:** crag — https://www.npmjs.com/package/@whitehatd/crag
 `;
 
-  const outPath = path.join(cwd, '.sourcegraph', 'cody-instructions.md');
+  const outPath = path.join(cwd, '.amazonq', 'rules', 'governance.md');
   atomicWrite(outPath, content);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
 }
 
-module.exports = { generateCody };
+module.exports = { generateAmazonQ };
