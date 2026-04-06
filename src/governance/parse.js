@@ -129,6 +129,16 @@ function parseGovernance(content) {
   const securityBody = extractSection(content, 'Security');
   if (securityBody) result.security = securityBody.trim();
 
+  // Extract enriched sections (produced by project-mining)
+  result.architecture = extractSection(content, 'Architecture') || '';
+  result.keyDirectories = extractSection(content, 'Key Directories') || '';
+  result.testing = extractSection(content, 'Testing') || '';
+  result.codeStyleSection = extractSection(content, 'Code Style') || '';
+  result.importConventions = extractSection(content, 'Import Conventions') || '';
+  result.dependencyPolicy = extractSection(content, 'Dependencies') || '';
+  result.antiPatterns = extractSection(content, 'Anti-Patterns') || '';
+  result.frameworkConventions = extractSection(content, 'Framework Conventions') || '';
+
   // Check for inheritance marker: ## Gates (inherit: root)
   const inheritMatch = content.match(/## Gates[^\n]*\(inherit:\s*(\w+)\)/);
   if (inheritMatch) result.inherit = inheritMatch[1].trim();

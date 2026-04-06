@@ -13,6 +13,10 @@ const { inferGates } = require('../analyze/gates');
 const { normalizeCiGates } = require('../analyze/normalize');
 const { extractCiCommands } = require('../analyze/ci-extractors');
 const { mineTaskTargets } = require('../analyze/task-runners');
+const {
+  mineKeyDirectories, mineArchitecture, mineTestingProfile, mineCodeStyle,
+  mineImportConventions, mineDependencyPolicy, mineAntiPatterns, mineFrameworkConventions,
+} = require('../analyze/project-mining');
 const { mineDocGates } = require('../analyze/doc-mining');
 const { normalizeCmd } = require('./diff');
 const { drainMalformedJsonFiles } = require('../analyze/stacks');
@@ -292,6 +296,17 @@ function analyzeProject(dir) {
   if (result._manifests && result._manifests.subservices) {
     result.subservices = result._manifests.subservices;
   }
+
+  // Mine project metadata BEFORE dropping _manifests (miners need the data)
+  result.keyDirs = mineKeyDirectories(dir);
+  result.architecture = mineArchitecture(dir, result);
+  result.testingProfile = mineTestingProfile(dir, result);
+  result.codeStyle = mineCodeStyle(dir);
+  result.importConventions = mineImportConventions(dir, result);
+  result.dependencyPolicy = mineDependencyPolicy(dir, result);
+  result.antiPatterns = mineAntiPatterns(result);
+  result.frameworkConventions = mineFrameworkConventions(dir, result);
+
   // Drop the internal manifests attachment before returning
   delete result._manifests;
 
@@ -524,6 +539,93 @@ function generateGovernance(analysis, cwd) {
     sections.push('## Deployment');
     sections.push(`- Target: ${[...new Set(analysis.deployment)].join(', ')}`);
     if (analysis.ci) sections.push(`- CI: ${analysis.ci}`);
+    sections.push('');
+  }
+
+  // Architecture
+  if (analysis.architecture && analysis.architecture.type) {
+    sections.push('## Architecture');
+    const a = analysis.architecture;
+    let typeLine = `- Type: ${a.type}`;
+    if (a.workspaceLayout) typeLine += ` (${a.workspaceLayout})`;
+    sections.push(typeLine);
+    if (a.entryPoints.length > 0) sections.push(`- Entry: ${a.entryPoints.join(', ')}`);
+    if (a.services.length > 0) sections.push(`- Services: ${a.services.join(', ')}`);
+    sections.push('');
+  }
+
+  // Key Directories
+  if (analysis.keyDirs && analysis.keyDirs.length > 0) {
+    sections.push('## Key Directories');
+    for (const d of analysis.keyDirs) {
+      sections.push(`- \`${d.dir}\` — ${d.role}`);
+    }
+    sections.push('');
+  }
+
+  // Testing
+  if (analysis.testingProfile && analysis.testingProfile.framework) {
+    sections.push('## Testing');
+    const t = analysis.testingProfile;
+    sections.push(`- Framework: ${t.framework}`);
+    sections.push(`- Layout: ${t.layout}`);
+    if (t.namingPattern) sections.push(`- Naming: ${t.namingPattern}`);
+    if (t.hasSnapshots) sections.push('- Snapshot testing: yes');
+    if (t.hasCoverage) sections.push('- Coverage: configured');
+    sections.push('');
+  }
+
+  // Code Style
+  const cs = analysis.codeStyle;
+  if (cs && (cs.indent || cs.formatter || cs.linter)) {
+    sections.push('## Code Style');
+    if (cs.indent) sections.push(`- Indent: ${cs.indent}`);
+    if (cs.lineLength) sections.push(`- Line length: ${cs.lineLength}`);
+    if (cs.formatter) sections.push(`- Formatter: ${cs.formatter}`);
+    if (cs.linter) sections.push(`- Linter: ${cs.linter}`);
+    sections.push('');
+  }
+
+  // Dependencies
+  const dp = analysis.dependencyPolicy;
+  if (dp && dp.packageManager) {
+    sections.push('## Dependencies');
+    sections.push(`- Package manager: ${dp.packageManager}${dp.lockfile ? ` (${dp.lockfile})` : ''}`);
+    for (const [eng, ver] of Object.entries(dp.engines || {})) {
+      sections.push(`- ${eng.charAt(0).toUpperCase() + eng.slice(1)}: ${ver}`);
+    }
+    sections.push('');
+  }
+
+  // Import Conventions
+  const ic = analysis.importConventions;
+  if (ic && ic.moduleSystem) {
+    sections.push('## Import Conventions');
+    sections.push(`- Module system: ${ic.moduleSystem}`);
+    if (ic.tsModule) sections.push(`- TypeScript module: ${ic.tsModule}`);
+    if (ic.pathAliases.length > 0) sections.push(`- Path aliases: ${ic.pathAliases.join(', ')}`);
+    sections.push('');
+  }
+
+  // Anti-Patterns
+  if (analysis.antiPatterns && analysis.antiPatterns.length > 0) {
+    sections.push('## Anti-Patterns');
+    sections.push('');
+    sections.push('Do not:');
+    for (const p of analysis.antiPatterns) {
+      sections.push(`- ${p}`);
+    }
+    sections.push('');
+  }
+
+  // Framework Conventions
+  const fc = analysis.frameworkConventions;
+  if (fc && fc.framework) {
+    sections.push('## Framework Conventions');
+    sections.push(`- ${fc.framework}${fc.version ? ` ${fc.version}` : ''}${fc.routing ? ` (${fc.routing})` : ''}`);
+    for (const c of fc.conventions) {
+      sections.push(`- ${c}`);
+    }
     sections.push('');
   }
 
