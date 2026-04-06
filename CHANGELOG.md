@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.22] — 2026-04-06
+
 ## [0.2.21] — 2026-04-06
 
 ## [0.2.20] — 2026-04-06
@@ -286,7 +288,8 @@ Initial release under the `scaffold-cli` name.
 
 Initial capabilities: universal skills (pre-start-context, post-start-validation), interview-driven governance generation, 3 compile targets (github, husky, pre-commit), basic workspace support for monorepos via multi-level `governance.md`.
 
-[Unreleased]: https://github.com/WhitehatD/crag/compare/v0.2.21...HEAD
+[Unreleased]: https://github.com/WhitehatD/crag/compare/v0.2.22...HEAD
+[0.2.22]: https://github.com/WhitehatD/crag/compare/v0.2.21...v0.2.22
 [0.2.21]: https://github.com/WhitehatD/crag/compare/v0.2.20...v0.2.21
 [0.2.20]: https://github.com/WhitehatD/crag/compare/v0.2.19...v0.2.20
 [0.2.19]: https://github.com/WhitehatD/crag/compare/v0.2.18...v0.2.19
