@@ -1,4 +1,4 @@
-{"version":2,"width":92,"height":23,"timestamp":1775508284,"env":{"SHELL":"/bin/bash","TERM":"xterm-256color"},"theme":{"fg":"#cdd6f4","bg":"#1e1e2e","palette":"#45475a:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#bac2de:#585b70:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#a6adc8"}}
+{"version":2,"width":92,"height":23,"timestamp":1775510612,"env":{"SHELL":"/bin/bash","TERM":"xterm-256color"},"theme":{"fg":"#cdd6f4","bg":"#1e1e2e","palette":"#45475a:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#bac2de:#585b70:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#a6adc8"}}
 [0,"o"," \u001b[31m●\u001b[0m \u001b[33m●\u001b[0m \u001b[32m●\u001b[0m\r\n"]
 [0.1,"o","\u001b[90m──────────────────────────────────────────────────────────────────────────────────────────\u001b[0m\r\n"]
 [0.2,"o","> "]
@@ -33,12 +33,12 @@
 [2.36,"o","  \u001b[2mNode + TypeScript + Rust workspace + web/ frontend\u001b[0m\r\n"]
 [2.44,"o","  \u001b[2mCI has 8 gates, governance has 6 + path-scoped section\u001b[0m\r\n"]
 [2.52,"o","\r\n"]
-[2.58,"o","  \u001b[36m[1/6]\u001b[0m \u001b[1mscaffold                    \u001b[0m \u001b[2m  75 ms\u001b[0m  9 files, 3 stacks + web/\r\n"]
+[2.58,"o","  \u001b[36m[1/6]\u001b[0m \u001b[1mscaffold                    \u001b[0m \u001b[2m  76 ms\u001b[0m  9 files, 3 stacks + web/\r\n"]
 [2.83,"o","  \u001b[36m[2/6]\u001b[0m \u001b[1manalyze --dry-run           \u001b[0m \u001b[2m 106 ms\u001b[0m  stack=node, typescript, rust workspace=ca\u001b[0m…\r\n"]
 [3.08,"o","  \u001b[36m[3/6]\u001b[0m \u001b[1mwrite minimal governance    \u001b[0m \u001b[2m   0 ms\u001b[0m  6 gates + path-scoped web/\r\n"]
-[3.33,"o","  \u001b[36m[4/6]\u001b[0m \u001b[1mdiff (governance vs CI reality)\u001b[0m \u001b[2m 117 ms\u001b[0m  6 match, 2 drift, 0 missing, 3 extra\r\n"]
+[3.33,"o","  \u001b[36m[4/6]\u001b[0m \u001b[1mdiff (governance vs CI reality)\u001b[0m \u001b[2m  99 ms\u001b[0m  6 match, 2 drift, 0 missing, 3 extra\r\n"]
 [3.58,"o","  \u001b[36m[5/6]\u001b[0m \u001b[1mcompile --target all --dry-run\u001b[0m \u001b[2m  49 ms\u001b[0m  12 files + per-path for web/\r\n"]
-[3.83,"o","  \u001b[36m[6/6]\u001b[0m \u001b[1manalyze --dry-run (second run)\u001b[0m \u001b[2m 101 ms\u001b[0m  SHA-256 matches run 1 (e14e73e0c94c…)\r\n"]
+[3.83,"o","  \u001b[36m[6/6]\u001b[0m \u001b[1manalyze --dry-run (second run)\u001b[0m \u001b[2m 120 ms\u001b[0m  SHA-256 matches run 1 (604084af3995…)\r\n"]
 [4.08,"o","\r\n"]
 [4.14,"o","  \u001b[1mWhat this proves\u001b[0m\r\n"]
 [4.54,"o","    \u001b[32m✓\u001b[0m Multi-stack analysis in one pass (node + ts + rust + cargo)\r\n"]
@@ -47,5 +47,5 @@
 [5.589999999999999,"o","    \u001b[32m✓\u001b[0m Per-path glob-scoped files for Cursor, Windsurf, Copilot\r\n"]
 [5.939999999999999,"o","    \u001b[32m✓\u001b[0m Deterministic: SHA-256 identical across both runs\r\n"]
 [6.289999999999998,"o","\r\n"]
-[6.349999999999998,"o","  \u001b[1m449 ms\u001b[0m from empty directory to verified pipeline.\r\n"]
+[6.349999999999998,"o","  \u001b[1m452 ms\u001b[0m from empty directory to verified pipeline.\r\n"]
 [6.429999999999998,"o","\r\n"]
