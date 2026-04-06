@@ -479,6 +479,7 @@ function printHumanReport(summary, samples) {
 
   line('');
   line(`  ${BOLD}${summary.totalMs} ms${RESET} from empty directory to verified pipeline.`);
+  line(`  ${CYAN}npx @whitehatd/crag analyze${RESET} ${DIM}— run it on your repo${RESET}`);
 }
 
 module.exports = { demo, scaffoldDemoProject, extractSummaryCounts, extractDiffCounts, sha256 };
