@@ -40,13 +40,12 @@ function generateAgentsMd(cwd, parsed) {
     '- Follow conventional commits (feat:, fix:, docs:, etc.)',
     '- No hardcoded secrets — grep for sk_live, AKIA, password= before commit',
     '',
-    '## Architecture',
+    '## Workflow',
     '',
-    'Run `/pre-start-context` at the start of every session to discover the project stack, load governance rules, and prepare for work.',
-    '',
-    '## Validation',
-    '',
-    'Run `/post-start-validation` after completing any task to validate changes, run gates, capture knowledge, and commit.',
+    '1. Read `governance.md` at the start of every session — it is the single source of truth.',
+    '2. Run all mandatory quality gates before committing.',
+    '3. If a gate fails, fix the issue and re-run only the failed gate.',
+    '4. Use conventional commits for all changes.',
     '',
   ].join('\n');
 
