@@ -165,21 +165,24 @@ Plus per-path glob-scoped files for Cursor, Windsurf, Copilot, and Continue when
 
 ## How it works
 
-```
-your repo  ───►  crag analyze  ───►  governance.md  ───►  crag compile  ───►  12+ files
-                  mines stack,        gates, arch,                             CI workflow
-                  CI, tests,          testing, style,                          pre-commit hook
-                  style, deps,        anti-patterns,                           AGENTS.md
-                  frameworks          conventions                              .cursor/rules
-                                           │                                   + 8 more
-                                      edit one line
-                                      recompile all
+**Step 1 — Analyze.** `crag analyze` reads your repo (stack, CI, tests,
+style, deps, frameworks) and writes `governance.md` with gates,
+architecture, testing profile, code style, anti-patterns, and
+framework conventions.
 
-crag diff    ───►  MATCH / DRIFT / MISSING / EXTRA
-crag doctor  ───►  integrity + drift + security check
-```
+**Step 2 — Edit.** Review the generated governance. Change a rule, add a
+gate, remove a section. This is your single source of truth.
 
-Deterministic: same input → byte-identical output. No LLM. No network.
+**Step 3 — Compile.** `crag compile --target all` regenerates all 12
+output files from governance.md. CI workflow, pre-commit hook, AGENTS.md,
+.cursor/rules, GEMINI.md, copilot-instructions.md, .clinerules,
+.continuerules, .windsurf/rules, .rules, .amazonq/rules — all in sync.
+
+**Step 4 — Verify.** `crag diff` compares governance against your CI
+reality: MATCH, DRIFT, MISSING, EXTRA. `crag doctor` checks infrastructure
+integrity, drift, and security.
+
+Deterministic: same input produces byte-identical output. No LLM. No network.
 
 ---
 
