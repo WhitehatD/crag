@@ -184,6 +184,14 @@ cargo fmt
 `,
 
     'README.md': '# crag-demo-app\n\nA synthetic project scaffolded by `crag demo`.\n',
+
+    // Frontend subdirectory — enables path-scoped gate demo
+    'web/package.json': JSON.stringify({
+      name: 'crag-demo-web',
+      version: '0.1.0',
+      scripts: { dev: 'next dev', build: 'next build', lint: 'biome check .' },
+    }, null, 2) + '\n',
+    'web/tsconfig.json': JSON.stringify({ extends: '../tsconfig.json' }, null, 2) + '\n',
   };
 
   for (const [rel, content] of Object.entries(files)) {
@@ -304,7 +312,7 @@ function demo(args) {
     const t1 = process.hrtime.bigint();
     scaffoldDemoProject(root);
     const ms1 = Math.round(Number(process.hrtime.bigint() - t1) / 1_000_000);
-    summary.steps.push({ step: 'scaffold', ms: ms1, detail: '7 files across 3 stacks' });
+    summary.steps.push({ step: 'scaffold', ms: ms1, detail: '9 files across 3 stacks + web/ frontend' });
 
     // --- Step 2: analyze --dry-run (RUN #1) ---
     const t2 = process.hrtime.bigint();
@@ -329,6 +337,7 @@ function demo(args) {
     const minimalGovernance = `# Governance — crag-demo-app
 ## Identity
 - Project: crag-demo-app
+- Description: Synthetic polyglot monorepo with frontend, backend, and Rust crates
 - Stack: node, typescript, rust
 
 ## Gates (run in order, stop on failure)
@@ -340,12 +349,18 @@ function demo(args) {
 - npm run lint
 - cargo clippy -- -D warnings
 
+### Frontend (path: web/)
+- npx biome check .
+- npx next build
+
 ## Branch Strategy
 - Trunk-based development
 - Conventional commits
+- Commit trailer: Co-Authored-By: Claude <noreply@anthropic.com>
 
 ## Security
-- No hardcoded secrets
+- No hardcoded secrets — grep for sk_live, AKIA, password= before commit
+- Validate all user input at API boundaries
 `;
     fs.mkdirSync(path.join(root, '.claude'), { recursive: true });
     fs.writeFileSync(path.join(root, '.claude', 'governance.md'), minimalGovernance);
@@ -358,7 +373,7 @@ function demo(args) {
     summary.steps.push({
       step: 'write minimal governance',
       ms: ms3a,
-      detail: '4 gates (npm test/lint, cargo test/clippy) — the "human-written" baseline',
+      detail: '6 gates + path-scoped web/ section — the "human-written" baseline',
     });
     summary.steps.push({
       step: 'diff (governance vs CI reality)',
@@ -378,7 +393,7 @@ function demo(args) {
     summary.steps.push({
       step: 'compile --target all --dry-run',
       ms: ms4,
-      detail: `${plannedFiles} files planned`,
+      detail: `${plannedFiles} files planned (+ per-path glob-scoped for web/)`,
     });
 
     // --- Step 5: determinism check (RUN #2 of analyze --dry-run) ---
@@ -436,8 +451,8 @@ function printHumanReport(summary, samples) {
   line(`  ${BOLD}crag demo${RESET} — proof-of-value on a synthetic polyglot project`);
   line('');
   line(`  ${DIM}Project: ${summary.tempDir}${RESET}`);
-  line(`  ${DIM}Stack: Node + TypeScript + Rust (cargo workspace with 2 crates)${RESET}`);
-  line(`  ${DIM}CI: .github/workflows/ci.yml with 8 gates; hand-written governance has only 4${RESET}`);
+  line(`  ${DIM}Stack: Node + TypeScript + Rust (cargo workspace with 2 crates) + web/ frontend${RESET}`);
+  line(`  ${DIM}CI: .github/workflows/ci.yml with 8 gates; hand-written governance has 6 + path-scoped section${RESET}`);
   line('');
 
   summary.steps.forEach((s, i) => step(i + 1, s.step, s.ms, s.detail));
@@ -456,7 +471,8 @@ function printHumanReport(summary, samples) {
     }
   }
 
-  line(`    ${GREEN}✓${RESET} crag compile --target all produces 12 downstream files from one governance.md`);
+  line(`    ${GREEN}✓${RESET} crag compile --target all produces 12 root files from one governance.md`);
+  line(`    ${GREEN}✓${RESET} Path-scoped sections (web/) emit per-path glob-scoped files for Cursor, Windsurf, Copilot, and Continue`);
 
   if (summary.deterministic && summary.deterministic.ok) {
     line(`    ${GREEN}✓${RESET} Deterministic: two back-to-back runs produced byte-identical SHA-256 hashes`);
