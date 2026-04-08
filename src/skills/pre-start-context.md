@@ -1,6 +1,6 @@
 ---
 name: pre-start-context
-version: 0.2.37
+version: 0.2.38
 source_hash: 4ace3388804f528a7e7a446466a506ca5f0da4c23e42b540b9ae8923eaf35e4e
 description: Universal context loader. Discovers any project's stack, architecture, and state at runtime. Reads governance.md for project-specific rules. Works for any language, framework, or deployment target.
 ---
