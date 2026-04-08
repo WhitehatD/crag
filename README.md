@@ -1,40 +1,50 @@
 # crag
 
-**Governance compiler for AI-assisted codebases.**
+**Your AI agents are reading stale rules right now.**
 
-You tighten a lint rule in `.cursor/rules/`. The Copilot file still has
-the old one. CI enforces a third version. Your AI agent writes code that
-CI rejects — and nobody knows which config is the source of truth.
+You have `.cursorrules` from three months ago. `CLAUDE.md` doesn't know
+about the API routes you added last week. `copilot-instructions.md`
+still says "use npm" but you switched to pnpm. Your CI enforces rules
+that none of your AI configs mention.
 
-`crag` fixes this. One command analyzes your project — stack, CI, test
-framework, code style, dependencies, anti-patterns — and writes a
-`governance.md` that reads like a senior engineer wrote it. One more
-command compiles it to all 12 targets. Change a rule, recompile, done.
+We checked 13 of the most important open-source projects. **9 of them
+— Django, Angular, Vue, Svelte, Tokio, Remix, Tauri, Cal.com, Airflow
+— have zero AI agent configuration.** No `CLAUDE.md`. No `.cursorrules`.
+No `AGENTS.md`. Nothing. Your AI agent is working off stale training
+data with zero project-specific guidance.
 
-![crag demo](assets/demo.gif)
+The 4 that do have configs? Supabase has **3 separate AI config surfaces
+that don't share rules.** Prisma's own AGENTS.md warns: *"Your training
+data contains a lot of outdated information."*
 
-> 500 ms · zero dependencies · no LLM · no network · SHA-verified deterministic output
+These are projects with hundreds of contributors. Yours is worse.
+
+`crag` fixes this. One command.
 
 ```bash
-npx @whitehatd/crag demo          # see it work (no install needed)
-npx @whitehatd/crag analyze       # generate governance.md from your project
-npx @whitehatd/crag compile       # regenerate all 12 files
+npx @whitehatd/crag
 ```
+
+![crag on django/django — zero config to 38 gates in 390ms](assets/poster-demo.gif)
+
+> Analyzes your project. Generates governance. Compiles to all 12 AI tool formats. 500 ms. Zero dependencies.
 
 [![npm version](https://img.shields.io/npm/v/%40whitehatd%2Fcrag?color=%23e8bb3a&label=npm&logo=npm)](https://www.npmjs.com/package/@whitehatd/crag)
 [![Test](https://github.com/WhitehatD/crag/actions/workflows/test.yml/badge.svg)](https://github.com/WhitehatD/crag/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
+[![50 repos · 0 crashes](https://img.shields.io/badge/benchmark-50%20repos%20%C2%B7%200%20crashes-brightgreen)](./benchmarks/phase1-benchmark.md)
+[![40% drift found](https://img.shields.io/badge/audit-40%25%20drift%20in%2050%20top%20repos-orange)](./benchmarks/phase1-benchmark.md)
 
 ---
 
-## What `crag analyze` actually produces
+## What happens when you run it
 
-Most tools give you a template. `crag analyze` reads your project — CI
-workflows, manifests, configs, directory structure — and writes
-governance that's specific to what it finds. On a Node + TypeScript +
-Next.js project with Prisma and Vitest:
+`crag analyze` reads your project — CI workflows, package manifests,
+configs, directory structure, code patterns — and writes a
+`governance.md` that captures what a senior engineer would write after
+spending a week with your codebase:
 
 ```markdown
 ## Gates (run in order, stop on failure)
@@ -54,135 +64,145 @@ Next.js project with Prisma and Vitest:
 - `src/` — source
 - `test/` — tests (unit + integration)
 - `prisma/` — database
-- `.github/` — CI/CD
 
 ## Testing
 - Framework: vitest
-- Layout: unit + integration
 - Naming: *.test.ts
-- Snapshot testing: yes
 
 ## Code Style
 - Indent: 2 spaces
-- Line length: 100
 - Formatter: prettier
 - Linter: eslint
 
-## Dependencies
-- Package manager: pnpm (pnpm-lock.yaml)
-- Node: >=20
-
-## Import Conventions
-- Module system: ESM
-- TypeScript module: NodeNext
-- Path aliases: @/
-
 ## Anti-Patterns
-
 Do not:
-- Use `any` type in TypeScript — use `unknown` or proper types
-- Use `@ts-ignore` — fix the type error instead
+- Use `any` in TypeScript — use `unknown`
 - Use `getServerSideProps` with App Router — use Server Components
-- Use `pages/api/` with App Router — use `app/api/` route handlers
-
-## Framework Conventions
-- Next.js 14 (App Router)
-- Use Server Components by default
-- Use route handlers for API endpoints
-- Use Prisma Client for database access
-- Use tRPC for type-safe API communication
 ```
 
-That's ~80 lines of project-specific governance, generated in under a
-second, from zero configuration. 25+ language detectors, 11 CI systems,
-8 framework convention engines. Every section is only emitted when data
-is actually found.
+Then `crag compile --target all` takes that single file and generates
+configs for **every AI tool your team uses** — in each tool's native
+format, with the right frontmatter, activation patterns, and structure:
+
+| Target | Output | Consumer |
+|---|---|---|
+| `agents-md` | `AGENTS.md` | Codex, Aider, Gemini CLI, Factory (60K+ repos) |
+| `cursor` | `.cursor/rules/governance.mdc` | Cursor |
+| `copilot` | `.github/copilot-instructions.md` | GitHub Copilot |
+| `gemini` | `GEMINI.md` | Gemini CLI |
+| `cline` | `.clinerules` | Cline |
+| `continue` | `.continuerules` | Continue.dev |
+| `windsurf` | `.windsurf/rules/governance.md` | Windsurf Cascade |
+| `zed` | `.rules` | Zed |
+| `amazonq` | `.amazonq/rules/governance.md` | Amazon Q Developer |
+| `github` | `.github/workflows/gates.yml` | GitHub Actions |
+| `husky` | `.husky/pre-commit` | husky |
+| `pre-commit` | `.pre-commit-config.yaml` | pre-commit.com |
+
+One file in, twelve files out. Change a rule, recompile, done.
 
 ---
 
-## What `crag compile` produces from it
+## Then it watches your back
 
-```
-$ crag compile --target all --dry-run --verbose
+```bash
+$ crag audit
 
-  Compiling governance.md → github, husky, pre-commit, agents-md, cursor,
-  gemini, copilot, cline, continue, windsurf, zed, amazonq
-  10 gates, 1 runtimes detected (dry-run)
+  crag audit — governance drift report
 
-  plan .github/workflows/gates.yml                  1.57 KB
-  plan .husky/pre-commit                              507 B
-  plan .pre-commit-config.yaml                      2.23 KB
-  plan AGENTS.md                                    1.20 KB
-  plan .cursor/rules/governance.mdc                   984 B
-  plan GEMINI.md                                    1.24 KB
-  plan .github/copilot-instructions.md              1.95 KB
-  plan .clinerules                                  1.54 KB
-  plan .continuerules                               1.76 KB
-  plan .windsurf/rules/governance.md                 1.90 KB
-  plan .rules                                       1.79 KB
-  plan .amazonq/rules/governance.md                 1.87 KB
+  Compiled configs
+  ✗ .cursor/rules/governance.mdc     stale — governance.md is newer
+  ✗ AGENTS.md                        stale — governance.md is newer
+  ✓ .github/workflows/gates.yml      in sync
+  ✓ .husky/pre-commit                in sync
 
-  Total: 18.5 KB across 12 target(s)
-  Dry-run complete — no files written.
+  Gate reality
+  ✗ npx tsc --noEmit                 tsc not in devDependencies
+  ✗ npm run lint                     "lint" script not in package.json
+
+  2 stale · 2 drift
+  Fix: crag compile --target all — or — crag audit --fix
 ```
 
-Each target uses the tool's native format — verified against real-world
-production files from OpenAI Codex, Vercel Next.js, Google ADK, Zed,
-Windsurf, and GitHub's own repos.
+Install the pre-commit hook and it auto-recompiles on every commit:
 
-**Path-scoped sections** like `### Frontend (path: web/)` automatically
-emit glob-scoped files: `.cursor/rules/web.mdc`,
-`.windsurf/rules/web.md`, `.github/instructions/web.instructions.md`,
-`.continue/rules/web.md` — each with the tool's native activation
-frontmatter.
-
-**Custom content survives recompilation.** Generated content is wrapped
-in markers. Anything you add outside the markers persists across
-`crag compile` runs.
+```bash
+crag hook install              # auto-recompile when governance changes
+crag hook install --drift-gate # also block commits if drift detected
+```
 
 ---
 
-## Supported targets
+## 50 repos. Zero crashes. 40% had drift.
 
-| Target | Output | Consumer | Format |
+We cloned 50 of the highest-profile open-source projects and ran the
+full crag pipeline on each one. 20 languages. 7 CI systems. Monorepos
+to single-crate Rust libraries.
+
+| Repo | Stack | Gates | Finding |
 |---|---|---|---|
-| `github` | `.github/workflows/gates.yml` | GitHub Actions | YAML workflow |
-| `husky` | `.husky/pre-commit` | husky | Shell script |
-| `pre-commit` | `.pre-commit-config.yaml` | pre-commit.com | YAML config |
-| `agents-md` | `AGENTS.md` | Codex, Aider, Factory | Freeform markdown |
-| `cursor` | `.cursor/rules/governance.mdc` | Cursor | MDC with frontmatter |
-| `gemini` | `GEMINI.md` | Gemini CLI | Freeform markdown |
-| `copilot` | `.github/copilot-instructions.md` | GitHub Copilot | Freeform markdown |
-| `cline` | `.clinerules` | Cline | Markdown |
-| `continue` | `.continuerules` | Continue.dev | Plain text |
-| `windsurf` | `.windsurf/rules/governance.md` | Windsurf Cascade | MD with `trigger:` frontmatter |
-| `zed` | `.rules` | Zed | Plain markdown |
-| `amazonq` | `.amazonq/rules/governance.md` | Amazon Q Developer | Markdown |
+| grafana/grafana | Go + React + Docker | 67 | Clean |
+| calcom/cal.com | Next.js + React + Docker | 53 | Clean |
+| hashicorp/vault | Go + Docker + Node | 50 | Clean |
+| biomejs/biome | Rust + React + TS | 47 | Clean |
+| excalidraw/excalidraw | TypeScript + Docker | 46 | 2 drift |
+| moby/moby | Go + Docker | 45 | Clean |
+| vuejs/core | TypeScript | 44 | 2 drift |
+| tauri-apps/tauri | Rust + TypeScript | 44 | Clean |
+| supabase/supabase | TS + React + Docker | 43 | 1 drift |
+| apache/airflow | Python + Docker | 41 | Clean |
+| prisma/prisma | TypeScript | 40 | 2 drift |
+| django/django | Python | 38 | Clean |
+| angular/angular | TypeScript | 38 | 1 drift |
+| remix-run/remix | TypeScript | 37 | 1 drift |
+| dotnet/aspnetcore | .NET + TypeScript | 37 | 1 drift |
+| pandas-dev/pandas | Python + C | 35 | Clean |
 
-Plus per-path glob-scoped files for Cursor, Windsurf, Copilot, and Continue when governance has path-scoped sections.
+**1,809 gates inferred** across 50 repos. **96.4% verified accurate**
+(187/194 gates matched against codebase reality in deep audit).
+Full results: [`benchmarks/phase1-benchmark.md`](./benchmarks/phase1-benchmark.md)
+
+---
+
+## Get started
+
+```bash
+# One command — analyze + compile in one shot
+npx @whitehatd/crag
+
+# Or step by step:
+npx @whitehatd/crag analyze                   # generate governance.md
+npx @whitehatd/crag compile --target all       # compile to 12 targets
+npx @whitehatd/crag audit                      # check for drift
+npx @whitehatd/crag hook install               # enforce on every commit
+```
+
+**Requirements**: Node.js 18+ and `git`. Zero runtime dependencies.
 
 ---
 
 ## How it works
 
-**Step 1 — Analyze.** `crag analyze` reads your repo (stack, CI, tests,
-style, deps, frameworks) and writes `governance.md` with gates,
-architecture, testing profile, code style, anti-patterns, and
-framework conventions.
+**Analyze.** Reads your repo: 25+ language detectors, 11 CI system
+extractors, 8 framework convention engines. Writes `governance.md` with
+gates, architecture, testing profile, code style, anti-patterns, and
+framework conventions. Under a second, zero config.
 
-**Step 2 — Edit.** Review the generated governance. Change a rule, add a
-gate, remove a section. This is your single source of truth.
+**Compile.** Converts `governance.md` to each tool's native format. MDC
+frontmatter for Cursor. YAML `trigger:` for Windsurf. Numbered steps
+for AGENTS.md. Path-scoped files for monorepos. Custom content survives
+recompilation.
 
-**Step 3 — Compile.** `crag compile --target all` regenerates all 12
-output files from governance.md. CI workflow, pre-commit hook, AGENTS.md,
-.cursor/rules, GEMINI.md, copilot-instructions.md, .clinerules,
-.continuerules, .windsurf/rules, .rules, .amazonq/rules — all in sync.
+**Audit.** Three detection axes: (1) compiled configs older than
+governance.md, (2) governance references tools that don't exist, (3) AI
+tool directories present but no compiled config. Reports drift, suggests
+fixes.
 
-**Step 4 — Verify.** `crag diff` compares governance against your CI
-reality: MATCH, DRIFT, MISSING, EXTRA. `crag doctor` checks infrastructure
-integrity, drift, and security.
+**Hook.** Pre-commit hook auto-recompiles when governance.md changes.
+Optional drift gate blocks commits if configs are stale.
 
-Deterministic: same input produces byte-identical output. No LLM. No network.
+Deterministic: same input produces byte-identical output. No LLM. No
+network. No API keys.
 
 ---
 
@@ -190,77 +210,29 @@ Deterministic: same input produces byte-identical output. No LLM. No network.
 
 | Metric | Result |
 |---|---|
+| Phase 1 benchmark | [50 repos · 0 crashes · 1,809 gates · 40% drift](./benchmarks/phase1-benchmark.md) |
 | Stress test | [101 repos · 4,400 invocations · 0 crashes](./benchmarks/stress-test.md) |
-| Benchmark | [40/40 Grade A](./benchmarks/results.md) across 7 language families |
-| Determinism | SHA-verified, byte-identical across Ubuntu + macOS + Windows × Node 18/20/22 |
-| Tests | 510 passing |
+| Reference benchmark | [40/40 Grade A](./benchmarks/results.md) across 7 language families |
+| Determinism | SHA-verified, byte-identical across Ubuntu + macOS + Windows |
+| Tests | 510+ passing |
 | Dependencies | 0 |
-| Self-audit | `crag doctor` 29/29 pass · `crag diff` 0 drift · `crag check` 9/9 files |
-
-Full methodology: [`benchmarks/stress-test.md`](./benchmarks/stress-test.md) ·
-[`benchmarks/results.md`](./benchmarks/results.md)
-
----
-
-## Why not X?
-
-| Alternative | When it's better than crag | When crag is better |
-|---|---|---|
-| Hand-written `.cursorrules` | You use exactly one AI tool, rules rarely change | You use more than one AI tool, **or** rules drift from CI |
-| Makefile as source of truth | Small repos, single-language, Jenkins-shaped CI | Cross-stack projects, multiple targets, AI agents need their own formats |
-| Conftest / OPA | Runtime policy enforcement on cluster state | Dev-time gate definition *before* code reaches the cluster |
-| Pre-commit framework alone | Pre-commit is the only surface you care about | You also want the same rules in CI, AI agents, and contributor docs |
-| Copy-pasted `CONTRIBUTING.md` | You trust contributors to read and follow docs | You want rules *enforced* mechanically, not documented |
-
----
-
-## First 5 minutes
-
-```bash
-# 1. See it work (no install needed)
-npx @whitehatd/crag demo
-
-# 2. Generate governance.md from your project
-cd your-repo
-npx @whitehatd/crag analyze
-
-# 3. Verify it matches reality
-npx @whitehatd/crag diff
-
-# 4. Compile to every target
-npx @whitehatd/crag compile --target all --dry-run   # preview
-npx @whitehatd/crag compile --target all             # write
-
-# 5. Health check
-npx @whitehatd/crag doctor
-```
-
-These five commands cover 95 % of real-world usage. Everything else is
-in [`docs/`](./docs/index.md).
-
-**Requirements**: Node.js 18+ and `git`. Zero runtime dependencies.
 
 ---
 
 ## Further reading
 
-All reference material lives under [`docs/`](./docs/index.md):
-
 - [`docs/commands.md`](./docs/commands.md) — every subcommand, every flag, every exit code
-- [`docs/compile-targets.md`](./docs/compile-targets.md) — the 12 compile targets, their outputs, their consumers
-- [`docs/governance-format.md`](./docs/governance-format.md) — the `governance.md` v2 format (annotations, sections, inheritance)
-- [`docs/languages.md`](./docs/languages.md) — the 25+ stack detectors and the gates each emits
-- [`docs/ci-systems.md`](./docs/ci-systems.md) — the 11 CI extractors and the files they parse
-- [`docs/workspaces.md`](./docs/workspaces.md) — the 12 workspace types, fixture filtering, symlink protection
-- [`docs/claude-code.md`](./docs/claude-code.md) — Claude Code session loop (pre-start / post-start skills)
-- [`docs/release-pipeline.md`](./docs/release-pipeline.md) — how the auto-release workflow publishes to npm
+- [`docs/compile-targets.md`](./docs/compile-targets.md) — the 12 compile targets and their formats
+- [`docs/governance-format.md`](./docs/governance-format.md) — the governance.md v2 format
+- [`docs/languages.md`](./docs/languages.md) — the 25+ stack detectors
+- [`docs/ci-systems.md`](./docs/ci-systems.md) — the 11 CI extractors
+- [`docs/workspaces.md`](./docs/workspaces.md) — monorepo and workspace support
 
 ---
 
 ## Contributing
 
 Issues and PRs at [github.com/WhitehatD/crag](https://github.com/WhitehatD/crag).
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for the workflow.
 
 If `crag analyze` misses a language, CI system, or gate pattern on a
 public repo, file an issue with the repo URL and `crag analyze
@@ -268,7 +240,4 @@ public repo, file an issue with the repo URL and `crag analyze
 
 ---
 
-## License
-
-MIT — see [LICENSE](./LICENSE). Built by
-[Alexandru Cioc (WhitehatD)](https://github.com/WhitehatD).
+MIT — [Alexandru Cioc (WhitehatD)](https://github.com/WhitehatD)
