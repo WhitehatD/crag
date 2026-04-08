@@ -1,23 +1,28 @@
 # crag
 
-**Every AI tool you use needs project-specific rules. Nobody maintains them.**
+**Your AI tools are reading stale rules right now.**
+
+Every AI tool you use needs project-specific rules. Nobody maintains them.
 
 `.cursorrules` from three months ago. `CLAUDE.md` that doesn't know your
 API routes. `copilot-instructions.md` that still says "use npm." CI
 enforces rules that none of your AI configs mention.
 
-You already know this. You just haven't had a sane way to fix it.
+This is config drift — and your AI is the one paying the price.
+
+Most projects don't even have AI configs:
+
+![crag on django/django — zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
 
 ```bash
 npx @whitehatd/crag
 ```
 
-![crag on django/django — zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
-
-One command reads your CI, manifests, and codebase. Writes one
-`governance.md`. Compiles it to **every AI tool format** — Cursor,
-Claude, Copilot, Gemini, Cline, Windsurf, Zed, Amazon Q, and more.
-500 ms. Zero dependencies. No LLM.
+It reads your actual codebase and CI, extracts the real rules your
+project follows, and keeps every AI tool in sync with reality. One
+`governance.md` compiles to **12 formats** — Cursor, Claude, Copilot,
+Gemini, Cline, Windsurf, Zed, Amazon Q, and more. 500 ms. Zero
+dependencies. No LLM.
 
 [![npm version](https://img.shields.io/npm/v/%40whitehatd%2Fcrag?color=%23e8bb3a&label=npm&logo=npm)](https://www.npmjs.com/package/@whitehatd/crag)
 [![Test](https://github.com/WhitehatD/crag/actions/workflows/test.yml/badge.svg)](https://github.com/WhitehatD/crag/actions/workflows/test.yml)
