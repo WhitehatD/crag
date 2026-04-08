@@ -25,7 +25,7 @@ These are projects with hundreds of contributors. Yours is worse.
 npx @whitehatd/crag
 ```
 
-![crag on django/django — zero config to 38 gates in 390ms](assets/poster-demo.gif)
+![crag on django/django — zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
 
 > Analyzes your project. Generates governance. Compiles to all 12 AI tool formats. 500 ms. Zero dependencies.
 
