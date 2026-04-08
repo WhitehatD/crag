@@ -2,6 +2,10 @@
 node_modules/
 package-lock.json.bak
 
+# Assets — only the README hero GIF is tracked; everything else is local
+assets/*
+!assets/poster-demo.gif
+
 # crag self-dogfooding artifacts — GENERATED, not source.
 # The entire .claude/ folder is produced by `crag init` / `crag analyze` from
 # the tracked sources in src/skills/, src/crag-agent.md, and scripts/. We do
