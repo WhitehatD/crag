@@ -7,7 +7,7 @@ Thanks for wanting to make crag better. This document is short on purpose — cr
 ```bash
 git clone https://github.com/WhitehatD/crag.git
 cd crag
-node test/all.js        # all tests should pass (498)
+node test/all.js        # all tests should pass (539)
 node bin/crag.js help   # verify CLI works
 ```
 
@@ -101,7 +101,7 @@ git push
 ```
 
 That's it. The `release.yml` workflow will:
-1. Run all gates + 498 tests + compile-all smoke test
+1. Run all gates + 539 tests + compile-all smoke test
 2. Detect that the version in `package.json` is new
 3. Publish to npm with SLSA provenance
 4. Create the `v0.2.2` git tag

@@ -86,7 +86,7 @@ assumptions:
 In scope:
 
 - Any of the command surface (`init`, `check`, `compile`, `analyze`, `diff`,
-  `upgrade`, `workspace`).
+  `upgrade`, `workspace`, `audit`, `hook`, `demo`, `doctor`, `auto`).
 - The generated artifacts (CI configs, hooks, AI agent rule files).
 - The auto-update and skill-sync machinery.
 - The release pipeline (`.github/workflows/release.yml`).

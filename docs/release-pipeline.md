@@ -15,7 +15,7 @@ push to master
    │     ├── crag help / version / check / analyze --dry-run
    │     ├── crag upgrade --check / workspace --json / doctor --ci
    │     ├── crag demo --json (determinism SHA verification)
-   │     ├── node test/all.js (498+ tests)
+   │     ├── node test/all.js (539 tests)
    │     └── crag compile --target all (artifact smoke test)
    │
    └─► Release workflow (.github/workflows/release.yml)

@@ -35,7 +35,7 @@ npx @whitehatd/crag
 [![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
 [![50 repos · 0 crashes](https://img.shields.io/badge/benchmark-50%20repos%20%C2%B7%200%20crashes-brightgreen)](./benchmarks/phase1-benchmark.md)
-[![40% drift found](https://img.shields.io/badge/audit-40%25%20drift%20in%2050%20top%20repos-orange)](./benchmarks/phase1-benchmark.md)
+[![46% drift found](https://img.shields.io/badge/audit-46%25%20drift%20in%2050%20top%20repos-orange)](./benchmarks/phase1-benchmark.md)
 
 ---
 
@@ -133,7 +133,7 @@ crag hook install --drift-gate # also block commits if drift detected
 
 ---
 
-## 50 repos. Zero crashes. 40% had drift.
+## 50 repos. Zero crashes. 46% had drift.
 
 We cloned 50 of the highest-profile open-source projects and ran the
 full crag pipeline on each one. 20 languages. 7 CI systems. Monorepos
@@ -214,7 +214,7 @@ network. No API keys.
 | Stress test | [101 repos · 4,400 invocations · 0 crashes](./benchmarks/stress-test.md) |
 | Reference benchmark | [40/40 Grade A](./benchmarks/results.md) across 7 language families |
 | Determinism | SHA-verified, byte-identical across Ubuntu + macOS + Windows |
-| Tests | 510+ passing |
+| Tests | 539 passing |
 | Dependencies | 0 |
 
 ---
