@@ -145,8 +145,9 @@ function compile(args) {
     return;
   }
 
-  try {
-    for (const t of targets) {
+  let failures = 0;
+  for (const t of targets) {
+    try {
       runGenerator(t, cwd, parsed);
       if (verbose) {
         const outPath = planOutputPath(cwd, t);
@@ -155,9 +156,18 @@ function compile(args) {
         const rel = path.relative(cwd, outPath);
         console.log(`  \x1b[32mwrote\x1b[0m ${rel.padEnd(44)} \x1b[2m${formatBytes(size)}\x1b[0m`);
       }
+    } catch (err) {
+      // Per-target failure: warn and continue so one broken target
+      // doesn't prevent the remaining targets from compiling.
+      const outPath = planOutputPath(cwd, t);
+      const rel = outPath ? path.relative(cwd, outPath) : t;
+      console.error(`  \x1b[33m!\x1b[0m ${rel} \x1b[2m(skipped: ${err.message.split('\n')[0]})\x1b[0m`);
+      failures++;
     }
-  } catch (err) {
-    cliError(`compile failed: ${err.message}`, EXIT_INTERNAL);
+  }
+  if (failures > 0 && targets.length === 1) {
+    // Single-target compile should still fail hard
+    process.exit(EXIT_INTERNAL);
   }
 
   console.log('\n  Done. Governance is now executable infrastructure.\n');
@@ -254,4 +264,4 @@ function planOutputPath(cwd, target) {
   return map[target] || null;
 }
 
-module.exports = { compile, ALL_TARGETS, planOutputPath, formatBytes, computeArtifactSizes };
+module.exports = { compile, ALL_TARGETS, planOutputPath, formatBytes, computeArtifactSizes, runGenerator };

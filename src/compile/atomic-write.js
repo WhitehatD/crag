@@ -20,7 +20,14 @@ const path = require('path');
  */
 function atomicWrite(filePath, content) {
   const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  } else if (!fs.statSync(dir).isDirectory()) {
+    // A non-directory (e.g. a file) exists where we need a directory.
+    // This happens when a project has e.g. .cursor/rules as a file instead
+    // of a directory. Throw a clear error instead of corrupting the project.
+    throw new Error(`path conflict: ${dir} exists but is not a directory`);
+  }
 
   const suffix = crypto.randomBytes(8).toString('hex');
   const tmp = `${filePath}.tmp.${suffix}`;

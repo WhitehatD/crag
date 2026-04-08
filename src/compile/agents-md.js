@@ -30,6 +30,33 @@ function generateAgentsMd(cwd, parsed) {
     ? `## Security\n\n${parsed.security}`
     : '## Security\n\n- No hardcoded secrets — grep for sk_live, AKIA, password= before commit';
 
+  // Enriched sections from project mining (only include if non-empty)
+  const enriched = [];
+
+  if (parsed.architecture && parsed.architecture.trim()) {
+    enriched.push('## Architecture', '', parsed.architecture.trim(), '');
+  }
+
+  if (parsed.keyDirectories && parsed.keyDirectories.trim()) {
+    enriched.push('## Key Directories', '', parsed.keyDirectories.trim(), '');
+  }
+
+  if (parsed.testing && parsed.testing.trim()) {
+    enriched.push('## Testing', '', parsed.testing.trim(), '');
+  }
+
+  if (parsed.codeStyleSection && parsed.codeStyleSection.trim()) {
+    enriched.push('## Code Style', '', parsed.codeStyleSection.trim(), '');
+  }
+
+  if (parsed.antiPatterns && parsed.antiPatterns.trim()) {
+    enriched.push('## Anti-Patterns', '', parsed.antiPatterns.trim(), '');
+  }
+
+  if (parsed.frameworkConventions && parsed.frameworkConventions.trim()) {
+    enriched.push('## Framework Conventions', '', parsed.frameworkConventions.trim(), '');
+  }
+
   const content = [
     '# AGENTS.md',
     '',
@@ -49,6 +76,7 @@ function generateAgentsMd(cwd, parsed) {
     stackLine,
     commitLine,
     '',
+    ...enriched,
     securityBlock,
     '',
     '## Workflow',

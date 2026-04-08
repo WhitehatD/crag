@@ -63,9 +63,9 @@ function analyze(args) {
     cliWarn(`  continuing anyway; pass --dry-run to preview without writing.`);
   }
 
-  console.log(`\n  Analyzing project in ${cwd}...\n`);
+  console.log(`\n  Analyzing ${path.basename(cwd)}...\n`);
 
-  const analysis = analyzeProject(cwd);
+  const analysis = analyzeProject(cwd, { progress: true });
 
   // Surface any manifest files that failed JSON.parse. These are silent
   // failures in safeJson(); users should know if their root package.json
@@ -241,7 +241,9 @@ function sanitizeProjectName(basename) {
   return trimmed.length > 0 ? trimmed : basename;
 }
 
-function analyzeProject(dir) {
+function analyzeProject(dir, opts = {}) {
+  const log = opts.progress ? (msg) => console.log(msg) : () => {};
+
   const result = {
     name: sanitizeProjectName(path.basename(dir)),
     description: '',
@@ -263,10 +265,57 @@ function analyzeProject(dir) {
   // Stack detection (languages, frameworks, package managers)
   detectStack(dir, result);
 
+  // Per-file discovery output: show WHAT crag read and WHAT it understood
+  const G_ = '\x1b[32m';
+  const C_ = '\x1b[36m';
+  const D_ = '\x1b[2m';
+  const Y_ = '\x1b[33m';
+  const B_ = '\x1b[1m';
+  const X_ = '\x1b[0m';
+  const manifests = result._manifests || {};
+
+  // Report each discovered file → what it told us
+  if (manifests.packageJson) {
+    const frameworks = result.stack.filter(s => ['react', 'next.js', 'vue', 'svelte', 'angular', 'express', 'fastify', 'hono', 'solid'].includes(s));
+    const fwStr = frameworks.length > 0 ? ` ${D_}\u2192${X_} ${C_}${frameworks.join(`${X_} ${D_}\u00b7${X_} ${C_}`)}${X_}` : '';
+    log(`  ${D_}\u2192${X_} package.json       ${C_}node${X_}${result.stack.includes('typescript') ? ` ${D_}\u00b7${X_} ${C_}typescript${X_}` : ''}${fwStr}`);
+  }
+  if (fs.existsSync(path.join(dir, 'go.mod'))) {
+    log(`  ${D_}\u2192${X_} go.mod             ${C_}go${X_}`);
+  }
+  if (fs.existsSync(path.join(dir, 'Cargo.toml'))) {
+    log(`  ${D_}\u2192${X_} Cargo.toml         ${C_}rust${X_}${manifests.cargoWorkspace ? ` ${D_}(workspace)${X_}` : ''}`);
+  }
+  if (fs.existsSync(path.join(dir, 'pyproject.toml')) || fs.existsSync(path.join(dir, 'setup.py'))) {
+    const runner = manifests.pythonRunner ? ` ${D_}\u00b7${X_} ${C_}${manifests.pythonRunner}${X_}` : '';
+    log(`  ${D_}\u2192${X_} ${fs.existsSync(path.join(dir, 'pyproject.toml')) ? 'pyproject.toml' : 'setup.py'}     ${C_}python${X_}${runner}`);
+  }
+  if (fs.existsSync(path.join(dir, 'build.gradle')) || fs.existsSync(path.join(dir, 'build.gradle.kts'))) {
+    log(`  ${D_}\u2192${X_} build.gradle       ${C_}java/gradle${X_}`);
+  }
+  if (fs.existsSync(path.join(dir, 'pom.xml'))) {
+    log(`  ${D_}\u2192${X_} pom.xml            ${C_}java/maven${X_}`);
+  }
+  if (fs.existsSync(path.join(dir, 'Package.swift'))) {
+    log(`  ${D_}\u2192${X_} Package.swift      ${C_}swift${X_}`);
+  }
+  if (fs.existsSync(path.join(dir, 'mix.exs'))) {
+    log(`  ${D_}\u2192${X_} mix.exs            ${C_}elixir${X_}`);
+  }
+  if (result.stack.includes('dotnet')) {
+    log(`  ${D_}\u2192${X_} *.csproj           ${C_}dotnet${X_}`);
+  }
+  if (result.stack.includes('docker')) {
+    log(`  ${D_}\u2192${X_} Dockerfile         ${C_}docker${X_}`);
+  }
+
   // CI system detection + raw command extraction (all supported CI systems)
   const ci = extractCiCommands(dir);
   result.ci = ci.system;
   result.ciGates = normalizeCiGates(ci.commands.filter(c => isGateCommand(c)));
+  if (ci.system) {
+    log(`  ${D_}\u2192${X_} ${ci.system === 'github-actions' ? '.github/workflows/' : ci.system}  ${D_}${ci.commands.length} commands parsed${X_}`);
+  }
 
   // Task runner target mining
   result.taskTargets = mineTaskTargets(dir);
@@ -276,6 +325,11 @@ function analyzeProject(dir) {
 
   // Emit explicit gates for mined task targets
   emitTaskRunnerGates(result);
+
+  const gateCount = result.linters.length + result.testers.length + result.builders.length + result.ciGates.length;
+  if (gateCount > 0) {
+    log(`  ${G_}\u2713${X_} ${B_}${Y_}${gateCount}${X_} quality gates extracted`);
+  }
 
   // Documentation-based gate mining (advisory)
   result.docGates = mineDocGates(dir);
@@ -295,6 +349,7 @@ function analyzeProject(dir) {
   // so analyze command can print a hint and --workspace can enumerate them.
   if (result._manifests && result._manifests.subservices) {
     result.subservices = result._manifests.subservices;
+    log(`  \x1b[32m\u2713\x1b[0m Services   \x1b[1m\x1b[33m${result.subservices.length}\x1b[0m \x1b[2mdetected\x1b[0m`);
   }
 
   // Mine project metadata BEFORE dropping _manifests (miners need the data)
@@ -306,6 +361,21 @@ function analyzeProject(dir) {
   result.dependencyPolicy = mineDependencyPolicy(dir, result);
   result.antiPatterns = mineAntiPatterns(result);
   result.frameworkConventions = mineFrameworkConventions(dir, result);
+
+  // Progress: mining results
+  if (result.testingProfile && result.testingProfile.framework) {
+    log(`  \x1b[32m\u2713\x1b[0m Testing    \x1b[2m${result.testingProfile.framework}${result.testingProfile.layout ? ' \u00b7 ' + result.testingProfile.layout : ''}\x1b[0m`);
+  }
+  if (result.codeStyle && (result.codeStyle.formatter || result.codeStyle.linter)) {
+    const parts = [];
+    if (result.codeStyle.indent) parts.push(result.codeStyle.indent);
+    if (result.codeStyle.formatter) parts.push(result.codeStyle.formatter);
+    if (result.codeStyle.linter) parts.push(result.codeStyle.linter);
+    if (parts.length > 0) log(`  \x1b[32m\u2713\x1b[0m Style      \x1b[2m${parts.join(' \u00b7 ')}\x1b[0m`);
+  }
+  if (result.antiPatterns && result.antiPatterns.length > 0) {
+    log(`  \x1b[32m\u2713\x1b[0m Rules      \x1b[2m${result.antiPatterns.length} anti-patterns\x1b[0m`);
+  }
 
   // Drop the internal manifests attachment before returning
   delete result._manifests;

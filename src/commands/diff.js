@@ -75,18 +75,32 @@ function diff(args) {
 }
 
 function checkGateReality(cwd, cmd) {
+  // Commands containing shell/CI variables (${...}, $VAR) are CI infrastructure,
+  // not verifiable as local quality gates. Skip them.
+  if (/\$\{?\w+\}?/.test(cmd)) return { status: 'match', detail: null };
+
   // Check if the tool referenced in the command actually exists
   const toolChecks = [
-    { pattern: /^npx\s+(\w+)/, check: (tool) => hasNpmDep(cwd, tool) || hasNpmBin(cwd, tool) },
-    { pattern: /^npm\s+run\s+(\w+)/, check: (script) => hasNpmScript(cwd, script) },
+    { pattern: /^npx\s+(\w[\w-]*)/, check: (tool) => {
+      // In monorepos, tools like tsc live in workspace packages, not root.
+      // Check both root deps and workspace package.json files.
+      if (hasNpmDep(cwd, tool) || hasNpmBin(cwd, tool)) return true;
+      // Also check if typescript is a dep (covers npx tsc --noEmit in workspaces
+      // where tsc is available via workspace hoisting)
+      if (tool === 'tsc' && (hasNpmDep(cwd, 'typescript') || hasNpmBin(cwd, 'tsc'))) return true;
+      return false;
+    }},
+    { pattern: /^npm\s+run\s+(\w[\w-]*)/, check: (script) => hasNpmScript(cwd, script) },
     { pattern: /^node\s+--check\s+(.+)/, check: (file) => fs.existsSync(path.join(cwd, file.trim())) },
-    { pattern: /^node\s+(\S+)/, check: (file) => fs.existsSync(path.join(cwd, file.trim())) },
+    // node <file> — skip flags (--flag) before capturing the file argument
+    { pattern: /^node\s+(?:--\S+\s+)*(\S+\.(?:js|mjs|cjs|ts|mts))/, check: (file) => fs.existsSync(path.join(cwd, file.replace(/^['"]|['"]$/g, ''))) },
     { pattern: /^cargo\s+/, check: () => fs.existsSync(path.join(cwd, 'Cargo.toml')) },
     { pattern: /^go\s+/, check: () => fs.existsSync(path.join(cwd, 'go.mod')) },
     { pattern: /^(\.\/)?gradlew\s+/, check: () => fs.existsSync(path.join(cwd, 'gradlew')) || fs.existsSync(path.join(cwd, 'gradlew.bat')) },
     { pattern: /^pytest/, check: () => fs.existsSync(path.join(cwd, 'pyproject.toml')) || fs.existsSync(path.join(cwd, 'setup.py')) },
     { pattern: /^ruff\s+/, check: () => fs.existsSync(path.join(cwd, 'ruff.toml')) || fs.existsSync(path.join(cwd, '.ruff.toml')) || fs.existsSync(path.join(cwd, 'pyproject.toml')) },
-    { pattern: /^docker\s+/, check: () => fs.existsSync(path.join(cwd, 'Dockerfile')) || fs.existsSync(path.join(cwd, 'docker-compose.yml')) },
+    { pattern: /^docker\s+compose/, check: () => true }, // docker compose commands are CI orchestration, assume valid
+    { pattern: /^docker\s+/, check: () => fs.existsSync(path.join(cwd, 'Dockerfile')) || fs.existsSync(path.join(cwd, 'docker-compose.yml')) || fs.existsSync(path.join(cwd, 'docker-compose.yaml')) },
   ];
 
   // Verify commands
@@ -249,5 +263,5 @@ function hasNpmScript(cwd, script) {
   return !!(pkg && pkg.scripts?.[script]);
 }
 
-module.exports = { diff, normalizeCmd, extractRunCommands, isGateCommand };
+module.exports = { diff, normalizeCmd, extractRunCommands, isGateCommand, checkGateReality, extractCIGateCommands };
 

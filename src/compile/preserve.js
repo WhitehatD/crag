@@ -27,6 +27,12 @@ function preserveCustomSections(filePath, generatedContent, style) {
 
   if (!fs.existsSync(filePath)) return wrapped;
 
+  // Guard: if the path is a directory (e.g. micronaut-core has .clinerules/
+  // as a dir, cal.com has .cursor/rules as a file), skip preservation.
+  try {
+    if (fs.statSync(filePath).isDirectory()) return wrapped;
+  } catch { return wrapped; }
+
   const existing = fs.readFileSync(filePath, 'utf-8');
 
   // If no markers in existing file, this is a legacy compile or hand-written

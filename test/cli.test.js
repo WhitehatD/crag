@@ -45,9 +45,10 @@ test('crag help prints usage with all commands', () => {
   assert.ok(out.includes('crag compile'));
 });
 
-test('crag with no args prints help', () => {
+test('crag with no args in project dir runs auto-pilot', () => {
+  // crag repo itself has package.json, so no-args triggers auto
   const out = run([]);
-  assert.ok(out.includes('Usage'));
+  assert.ok(out.includes('auto-pilot') || out.includes('Compiled') || out.includes('Governance'));
 });
 
 test('crag workspace --json produces valid JSON', () => {
