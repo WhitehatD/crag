@@ -24,8 +24,8 @@ function runCrag(args, opts = {}) {
     encoding: 'utf-8',
     timeout: 10000,
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1', ...opts.env },
     ...opts,
+    env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1', ...(opts.env || {}) },
   });
   return {
     rc: r.status ?? (r.error ? 1 : 0),
