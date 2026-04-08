@@ -15,7 +15,7 @@ const { generateContinue } = require('../compile/continue');
 const { generateWindsurf } = require('../compile/windsurf');
 const { generateZed } = require('../compile/zed');
 const { generateAmazonQ } = require('../compile/amazonq');
-const { cliError, readFileOrExit, EXIT_USER, EXIT_INTERNAL } = require('../cli-errors');
+const { cliError, readFileOrExit, EXIT_USER, EXIT_INTERNAL, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 
 // All supported compile targets in dispatch order.
@@ -59,9 +59,7 @@ function compile(args) {
   const cwd = process.cwd();
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
-  if (!fs.existsSync(govPath)) {
-    cliError('no .claude/governance.md found. Run crag init or crag analyze first.', EXIT_USER);
-  }
+  requireGovernance(cwd);
 
   const content = readFileOrExit(fs, govPath, 'governance.md');
   const parsed = parseGovernance(content);

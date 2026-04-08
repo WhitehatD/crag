@@ -29,12 +29,12 @@ const { diff } = require('./diff');
 const { compile } = require('./compile');
 const { EXIT_INTERNAL } = require('../cli-errors');
 
-// ANSI helpers — identical style to the rest of crag
-const GREEN = '\x1b[32m';
-const CYAN = '\x1b[36m';
-const DIM = '\x1b[2m';
-const BOLD = '\x1b[1m';
-const RESET = '\x1b[0m';
+// ANSI helpers — single-letter convention shared across all crag commands
+const G = '\x1b[32m';  // green
+const C = '\x1b[36m';  // cyan
+const D = '\x1b[2m';   // dim
+const B = '\x1b[1m';   // bold
+const X = '\x1b[0m';   // reset
 
 /**
  * Create the synthetic polyglot project. Intentionally small and
@@ -380,7 +380,7 @@ function demo(args) {
   } finally {
     if (keep) {
       // Write to stderr so --json stdout stays pristine
-      console.error(`\n  ${DIM}(demo project kept at ${root} because --keep was passed)${RESET}`);
+      console.error(`\n  ${D}(demo project kept at ${root} because --keep was passed)${X}`);
     } else {
       rmrf(root);
     }
@@ -390,44 +390,44 @@ function demo(args) {
 function printHumanReport(summary, samples) {
   const line = (s) => console.log(s);
   const step = (i, label, ms, detail) => {
-    const num = `${CYAN}[${i}/${summary.steps.length}]${RESET}`;
-    const timing = `${DIM}${String(ms).padStart(4)} ms${RESET}`;
-    line(`  ${num} ${BOLD}${label.padEnd(28)}${RESET} ${timing}  ${detail}`);
+    const num = `${C}[${i}/${summary.steps.length}]${X}`;
+    const timing = `${D}${String(ms).padStart(4)} ms${X}`;
+    line(`  ${num} ${B}${label.padEnd(28)}${X} ${timing}  ${detail}`);
   };
 
   line('');
-  line(`  ${BOLD}crag demo${RESET} — polyglot proof-of-value`);
+  line(`  ${B}crag demo${X} — polyglot proof-of-value`);
   line('');
-  line(`  ${DIM}Node + TypeScript + Rust workspace + web/ frontend${RESET}`);
-  line(`  ${DIM}CI has 8 gates, governance has 6 + path-scoped section${RESET}`);
+  line(`  ${D}Node + TypeScript + Rust workspace + web/ frontend${X}`);
+  line(`  ${D}CI has 8 gates, governance has 6 + path-scoped section${X}`);
   line('');
 
   summary.steps.forEach((s, i) => step(i + 1, s.step, s.ms, s.detail));
 
   line('');
-  line(`  ${BOLD}What this proves${RESET}`);
-  line(`    ${GREEN}✓${RESET} Multi-stack analysis in one pass (node + ts + rust + cargo)`);
+  line(`  ${B}What this proves${X}`);
+  line(`    ${G}✓${X} Multi-stack analysis in one pass (node + ts + rust + cargo)`);
 
   const diffStep = summary.steps.find(s => s.diffCounts);
   if (diffStep && diffStep.diffCounts) {
     const { match, extra } = diffStep.diffCounts;
     if (extra > 0) {
-      line(`    ${GREEN}✓${RESET} Drift detection: ${match} match, ${BOLD}${extra} in CI but missing from governance${RESET}`);
+      line(`    ${G}✓${X} Drift detection: ${match} match, ${B}${extra} in CI but missing from governance${X}`);
     } else {
-      line(`    ${GREEN}✓${RESET} Drift detection: ${match} gates match governance`);
+      line(`    ${G}✓${X} Drift detection: ${match} gates match governance`);
     }
   }
 
-  line(`    ${GREEN}✓${RESET} 12 files compiled from one governance.md`);
-  line(`    ${GREEN}✓${RESET} Per-path glob-scoped files for Cursor, Windsurf, Copilot`);
+  line(`    ${G}✓${X} 12 files compiled from one governance.md`);
+  line(`    ${G}✓${X} Per-path glob-scoped files for Cursor, Windsurf, Copilot`);
 
   if (summary.deterministic && summary.deterministic.ok) {
-    line(`    ${GREEN}✓${RESET} Deterministic: SHA-256 identical across both runs`);
+    line(`    ${G}✓${X} Deterministic: SHA-256 identical across both runs`);
   }
 
   line('');
-  line(`  ${BOLD}${summary.totalMs} ms${RESET} from empty directory to verified pipeline.`);
-  line(`  ${CYAN}npx @whitehatd/crag analyze${RESET} ${DIM}— run it on your repo${RESET}`);
+  line(`  ${B}${summary.totalMs} ms${X} from empty directory to verified pipeline.`);
+  line(`  ${C}npx @whitehatd/crag analyze${X} ${D}— run it on your repo${X}`);
 }
 
 module.exports = { demo, scaffoldDemoProject, extractSummaryCounts, extractDiffCounts, sha256 };

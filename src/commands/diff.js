@@ -7,8 +7,8 @@ const { parseGovernance, flattenGates } = require('../governance/parse');
 const { extractRunCommands, isGateCommand, stripYamlQuotes } = require('../governance/yaml-run');
 const { extractCiCommands } = require('../analyze/ci-extractors');
 const { normalizeCiGates } = require('../analyze/normalize');
-const { detectBranchStrategy, classifyGitBranchStrategy } = require('../governance/drift-utils');
-const { cliError, EXIT_USER, EXIT_INTERNAL, readFileOrExit } = require('../cli-errors');
+const { detectBranchStrategy, classifyGitBranchStrategy, detectCommitConvention, classifyGitCommitConvention } = require('../governance/drift-utils');
+const { cliError, EXIT_USER, EXIT_INTERNAL, readFileOrExit, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 
 /**
@@ -19,9 +19,7 @@ function diff(args) {
   const cwd = process.cwd();
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
-  if (!fs.existsSync(govPath)) {
-    cliError('no .claude/governance.md found. Run crag init or crag analyze first.', EXIT_USER);
-  }
+  requireGovernance(cwd);
 
   const content = readFileOrExit(fs, govPath, 'governance.md');
   const parsed = parseGovernance(content);
@@ -143,17 +141,12 @@ function checkBranchStrategy(cwd, content, results) {
 }
 
 function checkCommitConvention(cwd, content, results) {
-  const govConvention = content.includes('Conventional commits') || content.includes('conventional commits')
-    ? 'conventional' : content.includes('Free-form') || content.includes('free-form')
-    ? 'free-form' : null;
-
+  const govConvention = detectCommitConvention(content);
   if (!govConvention) return;
 
   try {
     const log = execSync('git log --oneline -20', { cwd, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] });
-    const lines = log.trim().split('\n');
-    const conventional = lines.filter(l => /\b(feat|fix|docs|chore|style|refactor|test|build|ci|perf|revert)[\(:!]/.test(l));
-    const actual = conventional.length > lines.length * 0.3 ? 'conventional' : 'free-form';
+    const actual = classifyGitCommitConvention(log);
 
     if (actual !== govConvention) {
       console.log(`  \x1b[33mDRIFT\x1b[0m   Commit convention: governance says ${govConvention}, git shows ${actual}`);
@@ -179,9 +172,6 @@ function extractCIGateCommands(cwd) {
     return [];
   }
 }
-
-// extractRunCommands and isGateCommand now live in src/governance/yaml-run.js
-// and are re-exported below for backward compatibility with existing tests.
 
 /**
  * Normalize commands to a canonical form for equality comparison.
@@ -268,5 +258,5 @@ function clearCaches() {
   _binCache.clear();
 }
 
-module.exports = { diff, normalizeCmd, extractRunCommands, isGateCommand, checkGateReality, extractCIGateCommands, clearCaches };
+module.exports = { diff, normalizeCmd, checkGateReality, extractCIGateCommands, clearCaches };
 

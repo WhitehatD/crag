@@ -59,4 +59,18 @@ function safeMtime(filePath) {
   try { return require('fs').statSync(filePath).mtimeMs; } catch { return 0; }
 }
 
-module.exports = { EXIT_USER, EXIT_INTERNAL, cliError, cliWarn, readFileOrExit, safeMtime };
+/**
+ * Guard: require .claude/governance.md to exist.
+ * Returns the resolved path if it exists; calls cliError (and exits) if not.
+ */
+function requireGovernance(cwd) {
+  const path = require('path');
+  const fs = require('fs');
+  const govPath = path.join(cwd, '.claude', 'governance.md');
+  if (!fs.existsSync(govPath)) {
+    cliError('no .claude/governance.md found. Run crag init or crag analyze first.', EXIT_USER);
+  }
+  return govPath;
+}
+
+module.exports = { EXIT_USER, EXIT_INTERNAL, cliError, cliWarn, readFileOrExit, safeMtime, requireGovernance };

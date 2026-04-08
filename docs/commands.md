@@ -18,6 +18,7 @@ crag analyze                     Generate .claude/governance.md from filesystem
 crag init                        Interactive interview (requires Claude Code CLI)
 
 crag                             Run analyze + compile in one shot (auto-detects project)
+  --dry-run                      Preview without writing files
 
 crag audit                       Governance drift report
   --json                         Machine-readable JSON output
@@ -25,6 +26,7 @@ crag audit                       Governance drift report
 
 crag hook install                Install pre-commit hook (auto-recompile on governance change)
   --drift-gate                   Also block commits if drift is detected
+  --force                        Overwrite existing non-crag hook
 crag hook uninstall              Remove crag-installed hook
 crag hook status                 Check hook installation status
 

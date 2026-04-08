@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { parseGovernance, flattenGates } = require('../governance/parse');
-const { cliError, readFileOrExit, EXIT_USER, safeMtime } = require('../cli-errors');
+const { cliError, readFileOrExit, EXIT_USER, safeMtime, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 const { planOutputPath, ALL_TARGETS } = require('./compile');
 const { checkGateReality, extractCIGateCommands, normalizeCmd } = require('./diff');
@@ -30,7 +30,7 @@ function audit(args) {
       console.log(JSON.stringify({ error: 'no governance.md found' }));
       process.exit(EXIT_USER);
     }
-    cliError('no .claude/governance.md found. Run crag analyze first.', EXIT_USER);
+    requireGovernance(cwd); // exits with consistent error message
   }
 
   const content = readFileOrExit(fs, govPath, 'governance.md');

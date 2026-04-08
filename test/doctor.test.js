@@ -4,7 +4,8 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { runDiagnostics, runWorkspaceDiagnostics, countFeatureBranches, detectBranchStrategy } = require('../src/commands/doctor');
+const { runDiagnostics, runWorkspaceDiagnostics } = require('../src/commands/doctor');
+const { countFeatureBranches, detectBranchStrategy } = require('../src/governance/drift-utils');
 
 function test(name, fn) {
   try {

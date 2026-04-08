@@ -1,7 +1,8 @@
 'use strict';
 
 const assert = require('assert');
-const { diff, normalizeCmd, extractRunCommands, isGateCommand } = require('../src/commands/diff');
+const { diff, normalizeCmd } = require('../src/commands/diff');
+const { extractRunCommands, isGateCommand } = require('../src/governance/yaml-run');
 
 function test(name, fn) {
   try {
@@ -18,9 +19,12 @@ console.log('\n  commands/diff.js');
 
 // --- Module surface ---
 
-test('exports diff, normalizeCmd, extractRunCommands, isGateCommand', () => {
+test('exports diff and normalizeCmd', () => {
   assert.strictEqual(typeof diff, 'function');
   assert.strictEqual(typeof normalizeCmd, 'function');
+});
+
+test('yaml-run exports extractRunCommands and isGateCommand', () => {
   assert.strictEqual(typeof extractRunCommands, 'function');
   assert.strictEqual(typeof isGateCommand, 'function');
 });

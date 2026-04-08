@@ -60,6 +60,10 @@ GEMINI.md.bak
 .github/copilot-instructions.md
 .github/workflows/gates.yml
 
+# Private code — lives in crag-cloud repo
+cloud/
+extensions/
+
 # OS
 .DS_Store
 Thumbs.db

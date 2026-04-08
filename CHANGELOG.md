@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.1] — 2026-04-08
 
+### Fixed
+- **Governance gates** — removed 4 broken CI gates inferred from stale `ci.yml`
+  (`npm run lint`, `npm run build`, `npx tsc --noEmit`, `node --check "$f"`);
+  recompiled `gates.yml` to match.
+- **Commit convention detection** — extracted shared `detectCommitConvention()`
+  and `classifyGitCommitConvention()` to `drift-utils.js`; `diff` and `doctor`
+  were maintaining duplicate regex/threshold logic that could diverge.
+- **"No governance.md" guard** — unified across 4 commands via shared
+  `requireGovernance()` in `cli-errors.js` (previously each command had its own
+  wording).
+- **Dead re-exports** — removed backward-compat re-exports from `diff.js`
+  (`extractRunCommands`, `isGateCommand`) and `doctor.js` (`countFeatureBranches`,
+  `detectBranchStrategy`); tests now import from canonical modules.
+- **ANSI color naming** — standardized to single-letter convention (`G`, `R`, `Y`,
+  `C`, `B`, `D`, `X`) across `analyze.js`, `demo.js`, and `doctor.js`.
+- **docs/commands.md** — documented undocumented `--force` flag on
+  `crag hook install` and `--dry-run` on bare `crag`.
+- **SECURITY.md** — added `install` command to in-scope list (writes to
+  `~/.claude/agents/` outside project).
+- **Deleted stale `ci.yml`** — untracked workflow referencing nonexistent
+  `npm run lint` and `npm run build` scripts.
+
+### Added
+- **`preserve.js` tests** — 12 tests covering marker preservation, idempotency,
+  edge cases (directory at path, missing end marker, legacy files).
+
 ## [0.3.0] — 2026-04-08
 
 ### Added

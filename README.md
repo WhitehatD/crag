@@ -217,7 +217,7 @@ network. No API keys.
 | Stress test | [101 repos · 4,400 invocations · 0 crashes](./benchmarks/stress-test.md) |
 | Reference benchmark | [40/40 Grade A](./benchmarks/results.md) across 7 language families |
 | Determinism | SHA-verified, byte-identical across Ubuntu + macOS + Windows |
-| Tests | 539 passing |
+| Tests | 550 passing |
 | Dependencies | 0 |
 
 ---

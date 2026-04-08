@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { parseGovernance, flattenGates } = require('../governance/parse');
 const { validateFlags } = require('../cli-args');
-const { cliError, EXIT_INTERNAL } = require('../cli-errors');
+const { cliError, EXIT_INTERNAL, requireGovernance } = require('../cli-errors');
 
 // Project markers — if any of these exist in cwd, it looks like a project.
 const PROJECT_MARKERS = [
@@ -63,7 +63,7 @@ function auto(args) {
 
   // After analyze, governance.md should exist
   if (!fs.existsSync(govPath)) {
-    cliError('could not generate governance.md — run crag analyze manually.', EXIT_INTERNAL);
+    requireGovernance(cwd); // exits with consistent error message
   }
 
   const content = fs.readFileSync(govPath, 'utf-8');

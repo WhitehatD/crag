@@ -99,9 +99,40 @@ function classifyGitBranchStrategy(gitBranchOutput) {
   return features.length > 2 ? 'feature-branches' : 'trunk-based';
 }
 
+/**
+ * Detect the commit convention declared in a governance.md document.
+ *
+ * Looks for "Conventional commits" or "Free-form" keywords in the
+ * `## Branch Strategy` section (where commit conventions are declared).
+ *
+ * Returns 'conventional', 'free-form', or null.
+ */
+function detectCommitConvention(content) {
+  if (typeof content !== 'string' || content.length === 0) return null;
+  if (content.includes('Conventional commits') || content.includes('conventional commits')) return 'conventional';
+  if (content.includes('Free-form') || content.includes('free-form')) return 'free-form';
+  return null;
+}
+
+/**
+ * Classify a repo's actual commit convention from `git log --oneline` output.
+ *
+ * Threshold: >30% of recent commits matching conventional prefixes
+ * (feat, fix, docs, chore, style, refactor, test, build, ci, perf, revert)
+ * indicates conventional commits.
+ */
+function classifyGitCommitConvention(gitLogOutput) {
+  if (typeof gitLogOutput !== 'string' || gitLogOutput.trim().length === 0) return 'free-form';
+  const lines = gitLogOutput.trim().split('\n');
+  const conventional = lines.filter(l => /\b(feat|fix|docs|chore|style|refactor|test|build|ci|perf|revert)[\(:!]/.test(l));
+  return conventional.length > lines.length * 0.3 ? 'conventional' : 'free-form';
+}
+
 module.exports = {
   FEATURE_PREFIXES,
   detectBranchStrategy,
   countFeatureBranches,
   classifyGitBranchStrategy,
+  detectCommitConvention,
+  classifyGitCommitConvention,
 };

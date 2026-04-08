@@ -262,47 +262,47 @@ function analyzeProject(dir, opts = {}) {
   detectStack(dir, result);
 
   // Per-file discovery output: show WHAT crag read and WHAT it understood
-  const G_ = '\x1b[32m';
-  const C_ = '\x1b[36m';
-  const D_ = '\x1b[2m';
-  const Y_ = '\x1b[33m';
-  const B_ = '\x1b[1m';
-  const X_ = '\x1b[0m';
+  const G = '\x1b[32m';  // green
+  const C = '\x1b[36m';  // cyan
+  const D = '\x1b[2m';   // dim
+  const Y = '\x1b[33m';  // yellow
+  const B = '\x1b[1m';   // bold
+  const X = '\x1b[0m';   // reset
   const manifests = result._manifests || {};
 
   // Report each discovered file → what it told us
   if (manifests.packageJson) {
     const frameworks = result.stack.filter(s => ['react', 'next.js', 'vue', 'svelte', 'angular', 'express', 'fastify', 'hono', 'solid'].includes(s));
-    const fwStr = frameworks.length > 0 ? ` ${D_}\u2192${X_} ${C_}${frameworks.join(`${X_} ${D_}\u00b7${X_} ${C_}`)}${X_}` : '';
-    log(`  ${D_}\u2192${X_} package.json       ${C_}node${X_}${result.stack.includes('typescript') ? ` ${D_}\u00b7${X_} ${C_}typescript${X_}` : ''}${fwStr}`);
+    const fwStr = frameworks.length > 0 ? ` ${D}\u2192${X} ${C}${frameworks.join(`${X} ${D}\u00b7${X} ${C}`)}${X}` : '';
+    log(`  ${D}\u2192${X} package.json       ${C}node${X}${result.stack.includes('typescript') ? ` ${D}\u00b7${X} ${C}typescript${X}` : ''}${fwStr}`);
   }
   if (fs.existsSync(path.join(dir, 'go.mod'))) {
-    log(`  ${D_}\u2192${X_} go.mod             ${C_}go${X_}`);
+    log(`  ${D}\u2192${X} go.mod             ${C}go${X}`);
   }
   if (fs.existsSync(path.join(dir, 'Cargo.toml'))) {
-    log(`  ${D_}\u2192${X_} Cargo.toml         ${C_}rust${X_}${manifests.cargoWorkspace ? ` ${D_}(workspace)${X_}` : ''}`);
+    log(`  ${D}\u2192${X} Cargo.toml         ${C}rust${X}${manifests.cargoWorkspace ? ` ${D}(workspace)${X}` : ''}`);
   }
   if (fs.existsSync(path.join(dir, 'pyproject.toml')) || fs.existsSync(path.join(dir, 'setup.py'))) {
-    const runner = manifests.pythonRunner ? ` ${D_}\u00b7${X_} ${C_}${manifests.pythonRunner}${X_}` : '';
-    log(`  ${D_}\u2192${X_} ${fs.existsSync(path.join(dir, 'pyproject.toml')) ? 'pyproject.toml' : 'setup.py'}     ${C_}python${X_}${runner}`);
+    const runner = manifests.pythonRunner ? ` ${D}\u00b7${X} ${C}${manifests.pythonRunner}${X}` : '';
+    log(`  ${D}\u2192${X} ${fs.existsSync(path.join(dir, 'pyproject.toml')) ? 'pyproject.toml' : 'setup.py'}     ${C}python${X}${runner}`);
   }
   if (fs.existsSync(path.join(dir, 'build.gradle')) || fs.existsSync(path.join(dir, 'build.gradle.kts'))) {
-    log(`  ${D_}\u2192${X_} build.gradle       ${C_}java/gradle${X_}`);
+    log(`  ${D}\u2192${X} build.gradle       ${C}java/gradle${X}`);
   }
   if (fs.existsSync(path.join(dir, 'pom.xml'))) {
-    log(`  ${D_}\u2192${X_} pom.xml            ${C_}java/maven${X_}`);
+    log(`  ${D}\u2192${X} pom.xml            ${C}java/maven${X}`);
   }
   if (fs.existsSync(path.join(dir, 'Package.swift'))) {
-    log(`  ${D_}\u2192${X_} Package.swift      ${C_}swift${X_}`);
+    log(`  ${D}\u2192${X} Package.swift      ${C}swift${X}`);
   }
   if (fs.existsSync(path.join(dir, 'mix.exs'))) {
-    log(`  ${D_}\u2192${X_} mix.exs            ${C_}elixir${X_}`);
+    log(`  ${D}\u2192${X} mix.exs            ${C}elixir${X}`);
   }
   if (result.stack.includes('dotnet')) {
-    log(`  ${D_}\u2192${X_} *.csproj           ${C_}dotnet${X_}`);
+    log(`  ${D}\u2192${X} *.csproj           ${C}dotnet${X}`);
   }
   if (result.stack.includes('docker')) {
-    log(`  ${D_}\u2192${X_} Dockerfile         ${C_}docker${X_}`);
+    log(`  ${D}\u2192${X} Dockerfile         ${C}docker${X}`);
   }
 
   // CI system detection + raw command extraction (all supported CI systems)
@@ -310,7 +310,7 @@ function analyzeProject(dir, opts = {}) {
   result.ci = ci.system;
   result.ciGates = normalizeCiGates(ci.commands.filter(c => isGateCommand(c)));
   if (ci.system) {
-    log(`  ${D_}\u2192${X_} ${ci.system === 'github-actions' ? '.github/workflows/' : ci.system}  ${D_}${ci.commands.length} commands parsed${X_}`);
+    log(`  ${D}\u2192${X} ${ci.system === 'github-actions' ? '.github/workflows/' : ci.system}  ${D}${ci.commands.length} commands parsed${X}`);
   }
 
   // Task runner target mining
@@ -324,7 +324,7 @@ function analyzeProject(dir, opts = {}) {
 
   const gateCount = result.linters.length + result.testers.length + result.builders.length + result.ciGates.length;
   if (gateCount > 0) {
-    log(`  ${G_}\u2713${X_} ${B_}${Y_}${gateCount}${X_} quality gates extracted`);
+    log(`  ${G}\u2713${X} ${B}${Y}${gateCount}${X} quality gates extracted`);
   }
 
   // Documentation-based gate mining (advisory)
@@ -408,10 +408,10 @@ function addUnique(arr, item) {
 
 const TEST_TARGETS = new Set(['test', 'tests', 'spec', 'check', 'ci', 'verify', 'validate']);
 const LINT_TARGETS = new Set(['lint', 'format', 'fmt', 'style', 'typecheck', 'type-check', 'types']);
-const BUILD_TARGETS = new Set(['build', 'compile']);
+const BUILDTARGETS = new Set(['build', 'compile']);
 const isTestTarget = (t) => TEST_TARGETS.has(t);
 const isLintTarget = (t) => LINT_TARGETS.has(t);
-const isBuildTarget = (t) => BUILD_TARGETS.has(t);
+const isBuildTarget = (t) => BUILDTARGETS.has(t);
 
 function detectDeployment(dir, result) {
   if (fs.existsSync(path.join(dir, 'Dockerfile'))) result.deployment.push('docker');

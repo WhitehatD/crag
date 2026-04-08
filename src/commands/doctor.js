@@ -22,23 +22,23 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { parseGovernance, flattenGates } = require('../governance/parse');
-const { detectBranchStrategy, countFeatureBranches } = require('../governance/drift-utils');
+const { detectBranchStrategy, countFeatureBranches, detectCommitConvention, classifyGitCommitConvention } = require('../governance/drift-utils');
 const { isModified, readFrontmatter } = require('../update/integrity');
 const { detectWorkspace } = require('../workspace/detect');
 const { enumerateMembers } = require('../workspace/enumerate');
 const { EXIT_USER, EXIT_INTERNAL } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 
-const GREEN = '\x1b[32m';
-const YELLOW = '\x1b[33m';
-const RED = '\x1b[31m';
-const DIM = '\x1b[2m';
-const BOLD = '\x1b[1m';
-const RESET = '\x1b[0m';
+const G = '\x1b[32m';  // green
+const Y = '\x1b[33m';  // yellow
+const R = '\x1b[31m';  // red
+const D = '\x1b[2m';   // dim
+const B = '\x1b[1m';   // bold
+const X = '\x1b[0m';   // reset
 
-const ICON_PASS = `${GREEN}✓${RESET}`;
-const ICON_WARN = `${YELLOW}!${RESET}`;
-const ICON_FAIL = `${RED}✗${RESET}`;
+const ICON_PASS = `${G}\u2713${X}`;
+const ICON_WARN = `${Y}!${X}`;
+const ICON_FAIL = `${R}\u2717${X}`;
 
 /**
  * CLI entry point.
@@ -502,18 +502,14 @@ function diagnoseDrift(cwd) {
   }
 
   // Commit convention alignment
-  const govConvention = content.includes('Conventional commits') || content.includes('conventional commits')
-    ? 'conventional'
-    : content.includes('Free-form') || content.includes('free-form')
-    ? 'free-form'
-    : null;
+  const govConvention = detectCommitConvention(content);
 
   if (govConvention) {
     try {
       const log = execSync('git log --oneline -20', { cwd, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] });
       const lines = log.trim().split('\n');
+      const actual = classifyGitCommitConvention(log);
       const conventional = lines.filter(l => /\b(feat|fix|docs|chore|style|refactor|test|build|ci|perf|revert)[\(:!]/.test(l));
-      const actual = conventional.length > lines.length * 0.3 ? 'conventional' : 'free-form';
 
       checks.push({
         name: 'commit convention matches git',
@@ -638,17 +634,17 @@ function diagnoseEnvironment(cwd) {
 
 function printReport(report, { ciMode = false, strict = false } = {}) {
   const modeLabel = ciMode ? ' (--ci mode)' : '';
-  console.log(`\n  ${BOLD}crag doctor${RESET}${modeLabel} — ${report.cwd}\n`);
+  console.log(`\n  ${B}crag doctor${X}${modeLabel} — ${report.cwd}\n`);
 
   for (const section of report.sections) {
-    console.log(`  ${BOLD}${section.title}${RESET}`);
+    console.log(`  ${B}${section.title}${X}`);
     for (const check of section.checks) {
       const icon = check.status === 'pass' ? ICON_PASS
         : check.status === 'warn' ? ICON_WARN
         : ICON_FAIL;
-      console.log(`    ${icon} ${check.name}${check.detail ? ` ${DIM}— ${check.detail}${RESET}` : ''}`);
+      console.log(`    ${icon} ${check.name}${check.detail ? ` ${D}— ${check.detail}${X}` : ''}`);
       if (check.fix && check.status !== 'pass') {
-        console.log(`      ${DIM}fix:${RESET} ${check.fix}`);
+        console.log(`      ${D}fix:${X} ${check.fix}`);
       }
     }
     console.log();
@@ -658,11 +654,11 @@ function printReport(report, { ciMode = false, strict = false } = {}) {
   const total = report.pass + report.warn + report.fail;
   const summary = `  ${report.pass}/${total} pass, ${report.warn} warn, ${report.fail} fail`;
   if (report.fail > 0) {
-    console.log(`${RED}${BOLD}${summary}${RESET}\n`);
+    console.log(`${R}${B}${summary}${X}\n`);
   } else if (report.warn > 0) {
-    console.log(`${YELLOW}${BOLD}${summary}${RESET}\n`);
+    console.log(`${Y}${B}${summary}${X}\n`);
   } else {
-    console.log(`${GREEN}${BOLD}${summary}${RESET}\n`);
+    console.log(`${G}${B}${summary}${X}\n`);
   }
 }
 
@@ -674,17 +670,13 @@ function printReport(report, { ciMode = false, strict = false } = {}) {
 function printWorkspaceSummary(combined) {
   const total = combined.pass + combined.warn + combined.fail;
   const msg = `  Workspace total — ${combined.pass}/${total} pass, ${combined.warn} warn, ${combined.fail} fail (${combined.memberCount} target${combined.memberCount === 1 ? '' : 's'})`;
-  if (combined.fail > 0) console.log(`${RED}${BOLD}${msg}${RESET}\n`);
-  else if (combined.warn > 0) console.log(`${YELLOW}${BOLD}${msg}${RESET}\n`);
-  else console.log(`${GREEN}${BOLD}${msg}${RESET}\n`);
+  if (combined.fail > 0) console.log(`${R}${B}${msg}${X}\n`);
+  else if (combined.warn > 0) console.log(`${Y}${B}${msg}${X}\n`);
+  else console.log(`${G}${B}${msg}${X}\n`);
 }
 
 module.exports = {
   doctor,
   runDiagnostics,
   runWorkspaceDiagnostics,
-  // Re-exported from drift-utils for backward compatibility with existing
-  // tests that import from './commands/doctor'.
-  countFeatureBranches,
-  detectBranchStrategy,
 };
