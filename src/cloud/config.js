@@ -3,7 +3,9 @@
 const path = require('path');
 const os = require('os');
 
-const HOME = os.homedir() || process.env.HOME || process.env.USERPROFILE || os.tmpdir();
+// Prefer env vars over os.homedir() — macOS ignores HOME in os.homedir()
+// (it reads the password database), making it untestable without this.
+const HOME = process.env.HOME || process.env.USERPROFILE || os.homedir() || os.tmpdir();
 
 /** Base URL for the crag cloud API. Override with CRAG_API_URL for testing. */
 const API_BASE = process.env.CRAG_API_URL || 'https://api.crag.sh';
