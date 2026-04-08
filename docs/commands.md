@@ -5,7 +5,7 @@ and a typo suggestion for close matches (e.g. `crag analyze --drty-run`
 prints `did you mean --dry-run?`).
 
 ```
-crag demo                        Self-contained proof-of-value (~500 ms)
+crag demo                        Self-contained proof-of-value (~3 s)
   --json                         Machine-readable summary
   --keep                         Leave the synthetic project on disk for inspection
 
@@ -16,6 +16,17 @@ crag analyze                     Generate .claude/governance.md from filesystem
   --no-install-skills            Skip auto-install of universal skills
 
 crag init                        Interactive interview (requires Claude Code CLI)
+
+crag                             Run analyze + compile in one shot (auto-detects project)
+
+crag audit                       Governance drift report
+  --json                         Machine-readable JSON output
+  --fix                          Auto-recompile stale targets
+
+crag hook install                Install pre-commit hook (auto-recompile on governance change)
+  --drift-gate                   Also block commits if drift is detected
+crag hook uninstall              Remove crag-installed hook
+crag hook status                 Check hook installation status
 
 crag compile --target <name>     Compile governance to a single target
   --target all                   Compile all 12 targets
@@ -42,6 +53,8 @@ crag upgrade                     Update universal skills to latest version
   --check                        Dry-run: show what would change
   --workspace                    Update every workspace member
   --force                        Overwrite modified skills (with backup)
+
+crag install                     Install crag-project agent globally (~/.claude/agents/)
 
 crag version
 crag help

@@ -6,7 +6,7 @@ const path = require('path');
 const { detectWorkspace } = require('../workspace/detect');
 const { enumerateMembers } = require('../workspace/enumerate');
 const { isGateCommand } = require('../governance/yaml-run');
-const { cliWarn, cliError, EXIT_INTERNAL } = require('../cli-errors');
+const { cliWarn, cliError, EXIT_INTERNAL, safeMtime } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 const { detectStack } = require('../analyze/stacks');
 const { inferGates } = require('../analyze/gates');
@@ -208,10 +208,6 @@ function rotateBackups(govPath) {
   } catch (err) {
     cliWarn(`could not create backup (continuing anyway): ${err.message}`);
   }
-}
-
-function safeMtime(filePath) {
-  try { return fs.statSync(filePath).mtimeMs; } catch { return 0; }
 }
 
 /**

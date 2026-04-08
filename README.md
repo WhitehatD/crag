@@ -10,6 +10,9 @@ enforces rules that none of your AI configs mention.
 
 This is config drift — and your AI is the one paying the price.
 
+> CI requires `pnpm`. Your AI uses `npm`. Build fails.
+> CI runs Biome. Your AI writes ESLint config. Conflict.
+
 You already know this. You just haven't had a sane way to fix it.
 
 ```bash
@@ -20,11 +23,10 @@ Most projects don't even have AI configs:
 
 ![crag on django/django — zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
 
-It reads your codebase and CI, extracts the real rules your project
-follows, and keeps every AI tool in sync with reality. One source of
-truth. No drift.
+It reads your CI and codebase — and extracts the rules your AI should
+actually follow. One source of truth. No drift.
 
-One `governance.md` compiles to **12 formats** — Cursor, Claude,
+One `governance.md` compiles to **12 formats** — AGENTS.md, Cursor,
 Copilot, Gemini, Cline, Windsurf, Zed, Amazon Q, and more. 500 ms.
 Zero dependencies. No LLM.
 
@@ -87,10 +89,10 @@ format, with the right frontmatter, activation patterns, and structure:
 
 | Target | Output | Consumer |
 |---|---|---|
-| `agents-md` | `AGENTS.md` | Codex, Aider, Gemini CLI, Factory (60K+ repos) |
+| `agents-md` | `AGENTS.md` | Codex, Aider, Factory (60K+ repos) |
 | `cursor` | `.cursor/rules/governance.mdc` | Cursor |
 | `copilot` | `.github/copilot-instructions.md` | GitHub Copilot |
-| `gemini` | `GEMINI.md` | Gemini CLI |
+| `gemini` | `GEMINI.md` | Gemini, Gemini CLI |
 | `cline` | `.clinerules` | Cline |
 | `continue` | `.continuerules` | Continue.dev |
 | `windsurf` | `.windsurf/rules/governance.md` | Windsurf Cascade |
@@ -159,8 +161,8 @@ to single-crate Rust libraries.
 | dotnet/aspnetcore | .NET + TypeScript | 37 | 1 drift |
 | pandas-dev/pandas | Python + C | 35 | Clean |
 
-**1,809 gates inferred** across 50 repos. **96.4% verified accurate**
-(187/194 gates matched against codebase reality in deep audit).
+**1,809 gates inferred** across 50 repos. **46% had audit drift** —
+governance rules that don't match codebase reality.
 Full results: [`benchmarks/phase1-benchmark.md`](./benchmarks/phase1-benchmark.md)
 
 ---
@@ -211,7 +213,7 @@ network. No API keys.
 
 | Metric | Result |
 |---|---|
-| Phase 1 benchmark | [50 repos · 0 crashes · 1,809 gates · 40% drift](./benchmarks/phase1-benchmark.md) |
+| Phase 1 benchmark | [50 repos · 0 crashes · 1,809 gates · 46% drift](./benchmarks/phase1-benchmark.md) |
 | Stress test | [101 repos · 4,400 invocations · 0 crashes](./benchmarks/stress-test.md) |
 | Reference benchmark | [40/40 Grade A](./benchmarks/results.md) across 7 language families |
 | Determinism | SHA-verified, byte-identical across Ubuntu + macOS + Windows |

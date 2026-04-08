@@ -52,4 +52,11 @@ function readFileOrExit(fs, filePath, label) {
   }
 }
 
-module.exports = { EXIT_USER, EXIT_INTERNAL, cliError, cliWarn, readFileOrExit };
+/**
+ * Safely get mtime of a file. Returns 0 if the file doesn't exist.
+ */
+function safeMtime(filePath) {
+  try { return require('fs').statSync(filePath).mtimeMs; } catch { return 0; }
+}
+
+module.exports = { EXIT_USER, EXIT_INTERNAL, cliError, cliWarn, readFileOrExit, safeMtime };

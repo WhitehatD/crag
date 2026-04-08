@@ -37,7 +37,7 @@ const ALL_TARGETS = [
 
 function compile(args) {
   validateFlags('compile', args, {
-    boolean: ['--dry-run', '--force', '--verbose'],
+    boolean: ['--dry-run', '--verbose'],
     string: ['--target'],
   });
   const targetIdx = args.indexOf('--target');

@@ -8,13 +8,13 @@ failures leave prior state intact (temp-file + rename).
 | `github` | `.github/workflows/gates.yml` | GitHub Actions |
 | `husky` | `.husky/pre-commit` | husky |
 | `pre-commit` | `.pre-commit-config.yaml` | pre-commit.com |
-| `agents-md` | `AGENTS.md` | Codex, Aider, Factory, Crush |
+| `agents-md` | `AGENTS.md` | Codex, Aider, Factory (60K+ repos) |
 | `cursor` | `.cursor/rules/governance.mdc` | Cursor |
-| `gemini` | `GEMINI.md` | Gemini CLI |
+| `gemini` | `GEMINI.md` | Gemini, Gemini CLI |
 | `copilot` | `.github/copilot-instructions.md` | GitHub Copilot |
 | `cline` | `.clinerules` | Cline (VS Code) |
 | `continue` | `.continuerules` | Continue.dev |
-| `windsurf` | `.windsurf/rules/governance.md` | Windsurf |
+| `windsurf` | `.windsurf/rules/governance.md` | Windsurf Cascade |
 | `zed` | `.rules` | Zed |
 | `amazonq` | `.amazonq/rules/governance.md` | Amazon Q Developer |
 

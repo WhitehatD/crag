@@ -6,6 +6,7 @@ const { flattenGatesRich } = require('../governance/parse');
 const { atomicWrite } = require('./atomic-write');
 const { preserveCustomSections } = require('./preserve');
 const { groupGatesByPath, pathToGlob, pathToFilename } = require('./path-groups');
+const { yamlScalar } = require('../update/integrity');
 
 /**
  * Compile governance.md to GitHub Copilot instructions.
@@ -94,8 +95,8 @@ This project uses **crag** (https://www.npmjs.com/package/@whitehatd/crag) as it
         .join('\n');
 
       const scopedContent = `---
-description: '${sectionName} governance gates for ${parsed.name || 'project'}'
-applyTo: '${glob}'
+description: ${yamlScalar(`${sectionName} governance gates for ${parsed.name || 'project'}`)}
+applyTo: ${yamlScalar(glob)}
 ---
 
 # ${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)} — ${parsed.name || 'project'}

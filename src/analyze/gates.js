@@ -503,11 +503,7 @@ function inferCFamilyGates(dir, result) {
   if (buildSystem === 'cmake') {
     push(result.builders, 'cmake -S . -B build');
     push(result.builders, 'cmake --build build');
-    if (fs.existsSync(path.join(dir, 'build'))) {
-      push(result.testers, 'ctest --test-dir build --output-on-failure');
-    } else {
-      push(result.testers, 'ctest --test-dir build --output-on-failure');
-    }
+    push(result.testers, 'ctest --test-dir build --output-on-failure');
   } else if (buildSystem === 'meson') {
     push(result.builders, 'meson setup build');
     push(result.builders, 'meson compile -C build');

@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const HOME = process.env.HOME || process.env.USERPROFILE || os.tmpdir();
+const HOME = os.homedir() || process.env.HOME || process.env.USERPROFILE || os.tmpdir();
 const CACHE_DIR = path.join(HOME, '.claude', 'crag');
 const CACHE_FILE = path.join(CACHE_DIR, 'update-check.json');
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours

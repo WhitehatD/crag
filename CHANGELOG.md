@@ -7,69 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.43] — 2026-04-08
+## [0.3.0] — 2026-04-08
 
-## [0.2.42] — 2026-04-08
+### Added
+- **`crag audit`** — drift detection across governance, compiled configs, and
+  codebase reality. Three axes: (1) staleness — compiled configs older than
+  governance.md, (2) reality — governance references tools that don't exist,
+  (3) missing — AI tool directories present but no compiled config. JSON output
+  via `--json`, auto-fix via `--fix`.
+- **`crag hook`** — pre-commit hook management. `crag hook install` wires
+  auto-recompile on governance change. `crag hook install --drift-gate` also
+  blocks commits when drift is detected. `crag hook uninstall` and
+  `crag hook status` for lifecycle management.
+- **`crag auto`** (bare `crag` command) — runs `analyze` + `compile --target all`
+  in one shot when invoked in a project directory. Auto-detects whether the
+  current directory looks like a project.
+- **Amazon Q compile target** (`crag compile --target amazonq`) — generates
+  `.amazonq/rules/governance.md`. Replaces the previous `cody` target.
+- **Per-path glob-scoped file splitting** for Cursor, Windsurf, Copilot, and
+  Continue generators when governance.md has path-scoped sections.
+- **Custom section preservation** with `<!-- crag:custom -->` markers —
+  hand-written content survives recompilation (except frontmatter files).
+- **8 new project mining functions** in `crag analyze`: architecture type, key
+  directories, testing profile, code style, import conventions, dependency
+  policy, anti-patterns, framework conventions.
 
-## [0.2.41] — 2026-04-08
+### Changed
+- `crag analyze` output expanded from ~20 lines to ~80 lines per project,
+  covering architecture, testing, style, and framework conventions.
+- Replaced `cody` compile target with `amazonq` (Cody wrote to a path no tool
+  discovers; Amazon Q uses `.amazonq/rules/`).
+- Zed target now writes `.rules` at repo root (was `.zed/rules.md`).
+- Windsurf target now writes `.windsurf/rules/` with YAML frontmatter.
 
-## [0.2.40] — 2026-04-08
+## [0.2.12] — [0.2.43] — 2026-04-05 through 2026-04-08
 
-## [0.2.39] — 2026-04-08
-
-## [0.2.38] — 2026-04-08
-
-## [0.2.37] — 2026-04-08
-
-## [0.2.36] — 2026-04-08
-
-## [0.2.35] — 2026-04-07
-
-## [0.2.34] — 2026-04-06
-
-## [0.2.33] — 2026-04-06
-
-## [0.2.32] — 2026-04-06
-
-## [0.2.31] — 2026-04-06
-
-## [0.2.30] — 2026-04-06
-
-## [0.2.29] — 2026-04-06
-
-## [0.2.28] — 2026-04-06
-
-## [0.2.27] — 2026-04-06
-
-## [0.2.26] — 2026-04-06
-
-## [0.2.25] — 2026-04-06
-
-## [0.2.24] — 2026-04-06
-
-## [0.2.23] — 2026-04-06
-
-## [0.2.22] — 2026-04-06
-
-## [0.2.21] — 2026-04-06
-
-## [0.2.20] — 2026-04-06
-
-## [0.2.19] — 2026-04-05
-
-## [0.2.18] — 2026-04-05
-
-## [0.2.17] — 2026-04-05
-
-## [0.2.16] — 2026-04-05
-
-## [0.2.15] — 2026-04-05
-
-## [0.2.14] — 2026-04-05
-
-## [0.2.13] — 2026-04-05
-
-## [0.2.12] — 2026-04-05
+Auto-release bumps. No user-visible changes between `[0.2.11]` and `[0.3.0]`;
+consolidated here rather than keeping 32 empty version headers.
 
 ## [0.2.11] — 2026-04-05
 
@@ -330,39 +304,9 @@ Initial release under the `scaffold-cli` name.
 
 Initial capabilities: universal skills (pre-start-context, post-start-validation), interview-driven governance generation, 3 compile targets (github, husky, pre-commit), basic workspace support for monorepos via multi-level `governance.md`.
 
-[Unreleased]: https://github.com/WhitehatD/crag/compare/v0.2.43...HEAD
-[0.2.43]: https://github.com/WhitehatD/crag/compare/v0.2.42...v0.2.43
-[0.2.42]: https://github.com/WhitehatD/crag/compare/v0.2.41...v0.2.42
-[0.2.41]: https://github.com/WhitehatD/crag/compare/v0.2.40...v0.2.41
-[0.2.40]: https://github.com/WhitehatD/crag/compare/v0.2.39...v0.2.40
-[0.2.39]: https://github.com/WhitehatD/crag/compare/v0.2.38...v0.2.39
-[0.2.38]: https://github.com/WhitehatD/crag/compare/v0.2.37...v0.2.38
-[0.2.37]: https://github.com/WhitehatD/crag/compare/v0.2.36...v0.2.37
-[0.2.36]: https://github.com/WhitehatD/crag/compare/v0.2.35...v0.2.36
-[0.2.35]: https://github.com/WhitehatD/crag/compare/v0.2.34...v0.2.35
-[0.2.34]: https://github.com/WhitehatD/crag/compare/v0.2.33...v0.2.34
-[0.2.33]: https://github.com/WhitehatD/crag/compare/v0.2.32...v0.2.33
-[0.2.32]: https://github.com/WhitehatD/crag/compare/v0.2.31...v0.2.32
-[0.2.31]: https://github.com/WhitehatD/crag/compare/v0.2.30...v0.2.31
-[0.2.30]: https://github.com/WhitehatD/crag/compare/v0.2.29...v0.2.30
-[0.2.29]: https://github.com/WhitehatD/crag/compare/v0.2.28...v0.2.29
-[0.2.28]: https://github.com/WhitehatD/crag/compare/v0.2.27...v0.2.28
-[0.2.27]: https://github.com/WhitehatD/crag/compare/v0.2.26...v0.2.27
-[0.2.26]: https://github.com/WhitehatD/crag/compare/v0.2.25...v0.2.26
-[0.2.25]: https://github.com/WhitehatD/crag/compare/v0.2.24...v0.2.25
-[0.2.24]: https://github.com/WhitehatD/crag/compare/v0.2.23...v0.2.24
-[0.2.23]: https://github.com/WhitehatD/crag/compare/v0.2.22...v0.2.23
-[0.2.22]: https://github.com/WhitehatD/crag/compare/v0.2.21...v0.2.22
-[0.2.21]: https://github.com/WhitehatD/crag/compare/v0.2.20...v0.2.21
-[0.2.20]: https://github.com/WhitehatD/crag/compare/v0.2.19...v0.2.20
-[0.2.19]: https://github.com/WhitehatD/crag/compare/v0.2.18...v0.2.19
-[0.2.18]: https://github.com/WhitehatD/crag/compare/v0.2.17...v0.2.18
-[0.2.17]: https://github.com/WhitehatD/crag/compare/v0.2.16...v0.2.17
-[0.2.16]: https://github.com/WhitehatD/crag/compare/v0.2.15...v0.2.16
-[0.2.15]: https://github.com/WhitehatD/crag/compare/v0.2.14...v0.2.15
-[0.2.14]: https://github.com/WhitehatD/crag/compare/v0.2.13...v0.2.14
-[0.2.13]: https://github.com/WhitehatD/crag/compare/v0.2.12...v0.2.13
-[0.2.12]: https://github.com/WhitehatD/crag/compare/v0.2.11...v0.2.12
+[Unreleased]: https://github.com/WhitehatD/crag/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/WhitehatD/crag/compare/v0.2.43...v0.3.0
+[0.2.43]: https://github.com/WhitehatD/crag/compare/v0.2.11...v0.2.43
 [0.2.11]: https://github.com/WhitehatD/crag/compare/v0.2.10...v0.2.11
 [0.2.10]: https://github.com/WhitehatD/crag/compare/v0.2.9...v0.2.10
 [0.2.9]: https://github.com/WhitehatD/crag/compare/v0.2.8...v0.2.9

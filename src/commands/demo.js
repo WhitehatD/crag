@@ -37,58 +37,6 @@ const BOLD = '\x1b[1m';
 const RESET = '\x1b[0m';
 
 /**
- * Run a synchronous function, capture stdout/stderr, and measure wall-clock.
- * We need this because analyze/diff/compile all print to stdout directly;
- * the demo wants to intercept, summarise, and re-emit.
- */
-function captureSync(fn) {
-  const start = process.hrtime.bigint();
-  const stdoutLines = [];
-  const stderrLines = [];
-  const origStdoutWrite = process.stdout.write.bind(process.stdout);
-  const origStderrWrite = process.stderr.write.bind(process.stderr);
-  process.stdout.write = (chunk, ...rest) => {
-    stdoutLines.push(String(chunk));
-    return true;
-  };
-  process.stderr.write = (chunk, ...rest) => {
-    stderrLines.push(String(chunk));
-    return true;
-  };
-  let error = null;
-  let exitCode = 0;
-  // Temporarily replace process.exit so an EXIT_USER from a sub-command
-  // doesn't tear down the demo. We capture the code instead.
-  const origExit = process.exit;
-  process.exit = (code) => {
-    exitCode = code || 0;
-    throw new Error('__CAPTURED_EXIT__');
-  };
-  try {
-    fn();
-  } catch (err) {
-    if (err && err.message === '__CAPTURED_EXIT__') {
-      // Captured exit — fine, exitCode was set above
-    } else {
-      error = err;
-    }
-  } finally {
-    process.stdout.write = origStdoutWrite;
-    process.stderr.write = origStderrWrite;
-    process.exit = origExit;
-  }
-  const end = process.hrtime.bigint();
-  const ms = Number(end - start) / 1_000_000;
-  return {
-    stdout: stdoutLines.join(''),
-    stderr: stderrLines.join(''),
-    ms: Math.round(ms),
-    exitCode,
-    error,
-  };
-}
-
-/**
  * Create the synthetic polyglot project. Intentionally small and
  * multi-stack so the demo exercises several detectors at once.
  */

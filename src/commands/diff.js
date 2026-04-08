@@ -15,7 +15,7 @@ const { validateFlags } = require('../cli-args');
  * crag diff — compare governance.md against codebase reality.
  */
 function diff(args) {
-  validateFlags('diff', args, { boolean: ['--json'] });
+  validateFlags('diff', args, {});
   const cwd = process.cwd();
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
@@ -263,5 +263,10 @@ function hasNpmScript(cwd, script) {
   return !!(pkg && pkg.scripts?.[script]);
 }
 
-module.exports = { diff, normalizeCmd, extractRunCommands, isGateCommand, checkGateReality, extractCIGateCommands };
+function clearCaches() {
+  _pkgCache.clear();
+  _binCache.clear();
+}
+
+module.exports = { diff, normalizeCmd, extractRunCommands, isGateCommand, checkGateReality, extractCIGateCommands, clearCaches };
 
