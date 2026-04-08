@@ -10,19 +10,25 @@ enforces rules that none of your AI configs mention.
 
 This is config drift — and your AI is the one paying the price.
 
-Most projects don't even have AI configs:
-
-![crag on django/django — zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
+You already know this. You just haven't had a sane way to fix it.
 
 ```bash
 npx @whitehatd/crag
 ```
 
-It reads your actual codebase and CI, extracts the real rules your
-project follows, and keeps every AI tool in sync with reality. One
-`governance.md` compiles to **12 formats** — Cursor, Claude, Copilot,
-Gemini, Cline, Windsurf, Zed, Amazon Q, and more. 500 ms. Zero
-dependencies. No LLM.
+Most projects don't even have AI configs:
+
+![crag on django/django — zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
+
+It reads your codebase and CI, extracts the real rules your project
+follows, and keeps every AI tool in sync with reality. One source of
+truth. No drift.
+
+One `governance.md` compiles to **12 formats** — Cursor, Claude,
+Copilot, Gemini, Cline, Windsurf, Zed, Amazon Q, and more. 500 ms.
+Zero dependencies. No LLM.
+
+**Your AI should follow your codebase — not guess it.**
 
 [![npm version](https://img.shields.io/npm/v/%40whitehatd%2Fcrag?color=%23e8bb3a&label=npm&logo=npm)](https://www.npmjs.com/package/@whitehatd/crag)
 [![Test](https://github.com/WhitehatD/crag/actions/workflows/test.yml/badge.svg)](https://github.com/WhitehatD/crag/actions/workflows/test.yml)
