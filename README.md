@@ -1,25 +1,12 @@
 # crag
 
-**Your AI agents are reading stale rules right now.**
+**Every AI tool you use needs project-specific rules. Nobody maintains them.**
 
-You have `.cursorrules` from three months ago. `CLAUDE.md` doesn't know
-about the API routes you added last week. `copilot-instructions.md`
-still says "use npm" but you switched to pnpm. Your CI enforces rules
-that none of your AI configs mention.
+`.cursorrules` from three months ago. `CLAUDE.md` that doesn't know your
+API routes. `copilot-instructions.md` that still says "use npm." CI
+enforces rules that none of your AI configs mention.
 
-We checked 13 of the most important open-source projects. **9 of them
-— Django, Angular, Vue, Svelte, Tokio, Remix, Tauri, Cal.com, Airflow
-— have zero AI agent configuration.** No `CLAUDE.md`. No `.cursorrules`.
-No `AGENTS.md`. Nothing. Your AI agent is working off stale training
-data with zero project-specific guidance.
-
-The 4 that do have configs? Supabase has **3 separate AI config surfaces
-that don't share rules.** Prisma's own AGENTS.md warns: *"Your training
-data contains a lot of outdated information."*
-
-These are projects with hundreds of contributors. Yours is worse.
-
-`crag` fixes this. One command.
+You already know this. You just haven't had a sane way to fix it.
 
 ```bash
 npx @whitehatd/crag
@@ -27,7 +14,10 @@ npx @whitehatd/crag
 
 ![crag on django/django — zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
 
-> Analyzes your project. Generates governance. Compiles to all 12 AI tool formats. 500 ms. Zero dependencies.
+One command reads your CI, manifests, and codebase. Writes one
+`governance.md`. Compiles it to **every AI tool format** — Cursor,
+Claude, Copilot, Gemini, Cline, Windsurf, Zed, Amazon Q, and more.
+500 ms. Zero dependencies. No LLM.
 
 [![npm version](https://img.shields.io/npm/v/%40whitehatd%2Fcrag?color=%23e8bb3a&label=npm&logo=npm)](https://www.npmjs.com/package/@whitehatd/crag)
 [![Test](https://github.com/WhitehatD/crag/actions/workflows/test.yml/badge.svg)](https://github.com/WhitehatD/crag/actions/workflows/test.yml)
