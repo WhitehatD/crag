@@ -12,6 +12,9 @@ const { demo } = require('./commands/demo');
 const { audit } = require('./commands/audit');
 const { auto, looksLikeProject } = require('./commands/auto');
 const { hook } = require('./commands/hook');
+const { login } = require('./commands/login');
+const { sync } = require('./commands/sync');
+const { team } = require('./commands/team');
 const { checkOnce } = require('./update/version-check');
 const { EXIT_USER } = require('./cli-errors');
 
@@ -34,6 +37,9 @@ function printUsage() {
     crag upgrade        Update universal skills to latest version
     crag workspace      Inspect detected workspace (type, members, governance hierarchy)
     crag install        Install agent globally for /crag-project
+    crag login          Authenticate with crag cloud (GitHub OAuth)
+    crag sync           Sync governance.md with crag cloud
+    crag team           Manage teams on crag cloud
     crag version        Show version
 
   Compile targets (${ALL_TARGETS.length}):
@@ -79,6 +85,23 @@ function printUsage() {
     crag upgrade --workspace          Update all workspace members
     crag upgrade --force              Overwrite modified skills (with backup)
 
+  Cloud:
+    crag login                        Authenticate via GitHub OAuth
+    crag login --status               Check auth state
+    crag login --logout               Clear saved credentials
+
+    crag sync                         Show sync status
+    crag sync --push                  Push governance.md to cloud
+    crag sync --pull                  Pull governance from cloud
+    crag sync --force                 Force overwrite on conflict
+
+    crag team                         Show current team
+    crag team create <name>           Create a team
+    crag team join <code>             Join with invite code
+    crag team members                 List members
+    crag team invite                  Generate invite link
+    crag team leave                   Leave current team
+
   Architecture:
     Universal skills (ship with crag, same for every project):
       pre-start-context     discovers any project at runtime
@@ -113,6 +136,9 @@ function run(args) {
     case 'demo':      demo(args.slice(1)); break;
     case 'audit':     audit(args); break;
     case 'hook':      hook(args); break;
+    case 'login':     return login(args);
+    case 'sync':      return sync(args);
+    case 'team':      return team(args);
     case 'version': case '--version': case '-v':
       console.log(`  crag v${require('../package.json').version}`);
       break;

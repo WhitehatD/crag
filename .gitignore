@@ -61,8 +61,8 @@ GEMINI.md.bak
 .github/workflows/gates.yml
 
 # Private code — lives in crag-cloud repo
-cloud/
-extensions/
+/cloud/
+/extensions/
 
 # OS
 .DS_Store

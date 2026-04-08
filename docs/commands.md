@@ -58,6 +58,25 @@ crag upgrade                     Update universal skills to latest version
 
 crag install                     Install crag-project agent globally (~/.claude/agents/)
 
+crag login                       Authenticate with crag cloud (GitHub OAuth)
+  --status                       Show current auth state
+  --logout                       Clear saved credentials
+
+crag sync                        Show sync status (default)
+  --push                         Push local governance.md to cloud
+  --pull                         Pull governance from cloud to local
+  --force                        Force overwrite on push/pull conflict
+  --status                       Explicit status check
+
+crag team                        Show current team (if any)
+  --json                         Machine-readable JSON output
+crag team create <name>          Create a new team
+crag team join <code>            Join a team with an invite code
+crag team members                List team members
+  --json                         Machine-readable JSON output
+crag team invite                 Generate an invite link
+crag team leave                  Leave current team
+
 crag version
 crag help
 ```
