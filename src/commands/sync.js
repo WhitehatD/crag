@@ -89,6 +89,33 @@ function repoOrExit(cwd) {
 
 // ── push ────────────────────────────────────────────────────────────────
 
+/**
+ * Run `crag audit --json` as a subprocess and return the parsed report.
+ *
+ * We shell out instead of calling audit.js directly because audit.js
+ * prints to stdout and calls process.exit() when drift is found, which
+ * would terminate sync too. Returns null on failure so push can degrade
+ * gracefully — we still upload governance even if audit can't run.
+ */
+function captureAuditReport(cwd) {
+  try {
+    const out = execFileSync(process.execPath, [process.argv[1], 'audit', '--json'], {
+      cwd,
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1', NO_COLOR: '1' },
+    });
+    return JSON.parse(out);
+  } catch (err) {
+    // Audit exits non-zero when drift is found, but the JSON report is
+    // still written to stdout. Try to recover it from the error buffer.
+    if (err && err.stdout) {
+      try { return JSON.parse(err.stdout.toString()); } catch { /* not JSON */ }
+    }
+    return null;
+  }
+}
+
 async function syncPush(args) {
   const G = '\x1b[32m'; const B = '\x1b[1m'; const D = '\x1b[2m'; const X = '\x1b[0m';
   const force = args.includes('--force');
@@ -104,11 +131,23 @@ async function syncPush(args) {
   const parsed = parseGovernance(content);
   const branch = getBranch(cwd);
 
+  // Capture an audit report so the dashboard can show live drift counts.
+  // Best-effort: if audit fails for any reason we push governance alone.
+  const auditReport = captureAuditReport(cwd);
+  const auditPayload = auditReport && auditReport.summary ? {
+    stale: auditReport.summary.stale || 0,
+    drift: auditReport.summary.drift || 0,
+    extra: auditReport.summary.extra || 0,
+    missing: auditReport.summary.missing || 0,
+    report: auditReport,
+  } : undefined;
+
   const payload = {
     repo: { owner: repo.owner, name: repo.repo },
     governance: content,
     commitSha: getHeadSha(cwd),
     force,
+    ...(auditPayload ? { audit: auditPayload } : {}),
   };
 
   try {
@@ -120,6 +159,19 @@ async function syncPush(args) {
     console.log(`  ${G}\u2713${X} Pushed governance to cloud`);
     if (result.snapshotId) console.log(`  ${D}Snapshot${X}  ${result.snapshotId.slice(0, 8)}`);
     console.log(`  ${D}Changed${X}   ${result.contentChanged ? 'yes' : 'no (content identical)'}`);
+    if (auditPayload) {
+      const total = auditPayload.stale + auditPayload.drift + auditPayload.extra + auditPayload.missing;
+      if (total === 0) {
+        console.log(`  ${D}Audit${X}     ${G}\u2713${X} no drift`);
+      } else {
+        const parts = [];
+        if (auditPayload.stale)   parts.push(`${auditPayload.stale} stale`);
+        if (auditPayload.drift)   parts.push(`${auditPayload.drift} drift`);
+        if (auditPayload.extra)   parts.push(`${auditPayload.extra} extra`);
+        if (auditPayload.missing) parts.push(`${auditPayload.missing} missing`);
+        console.log(`  ${D}Audit${X}     ${parts.join(' \u00B7 ')}`);
+      }
+    }
     console.log('');
   } catch (err) {
     if (err.status === 409 && !force) {
