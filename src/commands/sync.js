@@ -105,7 +105,7 @@ async function syncPush(args) {
   const branch = getBranch(cwd);
 
   const payload = {
-    repo: { owner: repo.owner, name: repo.repo, githubId: 0 },
+    repo: { owner: repo.owner, name: repo.repo },
     governance: content,
     commitSha: getHeadSha(cwd),
     force,

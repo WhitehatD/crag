@@ -68,13 +68,11 @@ crag sync                        Show sync status (default)
   --force                        Force overwrite on push/pull conflict
   --status                       Explicit status check
 
-crag team                        Show current team (if any)
-  --json                         Machine-readable JSON output
+crag team                        Show current team
 crag team create <name>          Create a new team
 crag team join <code>            Join a team with an invite code
 crag team members                List team members
-  --json                         Machine-readable JSON output
-crag team invite                 Generate an invite link
+crag team invite                 Generate an invite link (owner only)
 crag team leave                  Leave current team
 
 crag version
