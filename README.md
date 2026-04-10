@@ -27,6 +27,8 @@ Zero dependencies. No LLM. No network. No API keys.
 [![50 repos · 0 crashes](https://img.shields.io/badge/benchmark-50%20repos%20%C2%B7%200%20crashes-brightgreen)](./benchmarks/phase1-benchmark.md)
 [![46% drift found](https://img.shields.io/badge/audit-46%25%20drift%20in%2050%20top%20repos-orange)](./benchmarks/phase1-benchmark.md)
 
+**[crag.sh](https://crag.sh)** · [Docs](https://crag.sh/docs) · [Dashboard](https://app.crag.sh) · [VS Code](https://marketplace.visualstudio.com/items?itemName=whitehatd.vscode-crag) · [Neovim](https://github.com/WhitehatD/crag.nvim) · [Status](https://crag.sh/status)
+
 ---
 
 ## What happens when you run it
@@ -218,6 +220,19 @@ network. No API keys.
 - [`docs/languages.md`](./docs/languages.md) — the 25+ stack detectors
 - [`docs/ci-systems.md`](./docs/ci-systems.md) — the 11 CI extractors
 - [`docs/workspaces.md`](./docs/workspaces.md) — monorepo and workspace support
+
+---
+
+## Ecosystem
+
+| Surface | URL | What it does |
+|---|---|---|
+| **Website** | [crag.sh](https://crag.sh) | Landing page, docs, status |
+| **Dashboard** | [app.crag.sh](https://app.crag.sh) | Cloud sync, team governance, audit history |
+| **API** | [api.crag.sh](https://api.crag.sh/api/status) | REST API for governance sync |
+| **VS Code** | [Marketplace](https://marketplace.visualstudio.com/items?itemName=whitehatd.vscode-crag) | Sidebar, CodeLens, auto-recompile, diagnostics |
+| **Neovim** | [crag.nvim](https://github.com/WhitehatD/crag.nvim) | Commands, statusline, diagnostics, auto-compile |
+| **npm** | [@whitehatd/crag](https://www.npmjs.com/package/@whitehatd/crag) | CLI package |
 
 ---
 
