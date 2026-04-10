@@ -1,136 +1,79 @@
 'use strict';
 
 /**
- * Record the VS Code marketplace audit GIF — drift detection value prop.
+ * VS Code marketplace audit GIF — synthetic, max 5s.
  *
- * Shows: `crag audit` on a project with deliberate drift.
- * Stale configs, gate reality checks, summary with fix command.
+ * Shows: `crag audit` with mixed stale/clean results.
+ * Ends on: "5 stale · 1 drift — Fix: crag compile --target all"
  *
  * Usage: node assets/record-vscode-audit.js
- * Then:  agg assets/vscode-audit.cast assets/vscode-audit.gif --theme dracula --font-size 28 --line-height 1.3 --cols 92 --rows 24 --fps-cap 30 --last-frame-duration 3
+ * Then:  agg assets/vscode-audit.cast assets/vscode-audit.gif --theme dracula --font-size 28 --line-height 1.3 --cols 92 --rows 20 --fps-cap 30 --last-frame-duration 1.5
  */
 
-const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
 
-const cragBin = path.resolve(__dirname, '..', 'bin', 'crag.js');
+const G = '\x1b[32m'; const Y = '\x1b[33m'; const R = '\x1b[31m';
+const D = '\x1b[2m';  const B = '\x1b[1m';  const X = '\x1b[0m';
+
+function makeCast(events, W, H) {
+  return JSON.stringify({
+    version: 2, width: W, height: H,
+    timestamp: Math.floor(Date.now() / 1000),
+    env: { SHELL: '/bin/bash', TERM: 'xterm-256color' },
+    theme: {
+      fg: '#cdd6f4', bg: '#1e1e2e',
+      palette: '#45475a:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#bac2de:#585b70:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#a6adc8',
+    },
+  }) + '\n' + events.map(e => JSON.stringify(e)).join('\n') + '\n';
+}
+
+function ln(e, t, text, d) {
+  e.push([t, 'o', text + '\r\n']);
+  return t + d;
+}
+
+function pad(str, len) {
+  const vis = str.replace(/\x1b\[[0-9;]*m/g, '').length;
+  return str + ' '.repeat(Math.max(0, len - vis));
+}
+
+const W = 92, H = 20;
+const e = []; let t = 0;
+
+// Title bar
+t = ln(e, t, ` ${R}\u25cf${X} ${Y}\u25cf${X} ${G}\u25cf${X}`, 0);
+t = ln(e, t, `${D}${'\u2500'.repeat(90)}${X}`, 0.06);
+
+// Type command
+t = ln(e, t, `${D}\u276f${X} npx @whitehatd/crag audit`, 0.12);
+t = ln(e, t, '', 0.06);
+
+t = ln(e, t, `  ${B}crag audit${X} ${D}\u2014 governance drift report${X}`, 0.12);
+t = ln(e, t, '', 0.04);
+
+// Compiled configs — mix of stale and in-sync
+t = ln(e, t, `  ${D}Compiled configs${X}`, 0.06);
+t = ln(e, t, `  ${R}\u2717${X} ${pad('AGENTS.md', 38)}${R}stale${X} ${D}\u2014 governance.md is newer${X}`, 0.15);
+t = ln(e, t, `  ${R}\u2717${X} ${pad('.cursor/rules/governance.mdc', 38)}${R}stale${X} ${D}\u2014 governance.md is newer${X}`, 0.12);
+t = ln(e, t, `  ${R}\u2717${X} ${pad('GEMINI.md', 38)}${R}stale${X} ${D}\u2014 governance.md is newer${X}`, 0.12);
+t = ln(e, t, `  ${G}\u2713${X} ${pad('.github/workflows/gates.yml', 38)}${D}in sync${X}`, 0.05);
+t = ln(e, t, `  ${G}\u2713${X} ${pad('.husky/pre-commit', 38)}${D}in sync${X}`, 0.05);
+t = ln(e, t, `  ${G}\u2713${X} ${pad('CLAUDE.md', 38)}${D}in sync${X}`, 0.05);
+t = ln(e, t, `  ${R}\u2717${X} ${pad('.clinerules', 38)}${R}stale${X} ${D}\u2014 governance.md is newer${X}`, 0.12);
+t = ln(e, t, `  ${R}\u2717${X} ${pad('.continuerules', 38)}${R}stale${X} ${D}\u2014 governance.md is newer${X}`, 0.12);
+t = ln(e, t, '', 0.04);
+
+// Gate reality
+t = ln(e, t, `  ${D}Gate reality${X}`, 0.06);
+t = ln(e, t, `  ${R}\u2717${X} ${pad('npx tsc --noEmit', 38)}${R}tsc not in devDependencies${X}`, 0.15);
+t = ln(e, t, '', 0.04);
+
+// Summary — held at the end
+t = ln(e, t, `  ${R}${B}5 stale \u00b7 1 drift${X}`, 0.18);
+t = ln(e, t, `  ${D}Fix:${X} crag compile --target all ${D}\u2014 or \u2014${X} crag audit --fix`, 0.15);
+
 const castFile = path.resolve(__dirname, 'vscode-audit.cast');
-
-// Create a temp project with CI + gates
-const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-vscode-audit-'));
-fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({
-  name: 'my-saas-app',
-  scripts: { test: 'vitest run', lint: 'eslint src/', build: 'next build', typecheck: 'tsc --noEmit' },
-  devDependencies: { vitest: '^2.0.0', eslint: '^9.0.0', next: '^15.0.0', typescript: '^5.7.0' },
-}, null, 2));
-fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
-fs.writeFileSync(path.join(dir, 'src', 'index.ts'), 'export default {}');
-fs.writeFileSync(path.join(dir, 'tsconfig.json'), '{"compilerOptions":{"module":"esnext"}}');
-fs.mkdirSync(path.join(dir, '.github', 'workflows'), { recursive: true });
-fs.writeFileSync(path.join(dir, '.github', 'workflows', 'ci.yml'), `name: CI
-on: push
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run test
-      - run: npm run build
-`);
-
-// Step 1: Analyze + compile to create governance + targets
-execFileSync(process.execPath, [cragBin, 'analyze', '--no-install-skills'], {
-  cwd: dir, encoding: 'utf-8', stdio: 'pipe',
-  env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
-});
-execFileSync(process.execPath, [cragBin, 'compile', '--target', 'all'], {
-  cwd: dir, encoding: 'utf-8', stdio: 'pipe',
-  env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
-});
-
-// Step 2: Simulate drift — make governance newer than compiled files
-const govPath = path.join(dir, '.claude', 'governance.md');
-const future = new Date(Date.now() + 60000);
-fs.utimesSync(govPath, future, future);
-
-// Step 3: Capture `crag audit`
-let auditOutput;
-try {
-  auditOutput = execFileSync(process.execPath, [cragBin, 'audit'], {
-    cwd: dir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
-    env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
-  });
-} catch (err) {
-  auditOutput = err.stdout || '';
-}
-
-const lines = auditOutput.split('\n');
-
-// Build asciicast v2
-const width = 92;
-const height = 24;
-const header = JSON.stringify({
-  version: 2, width, height,
-  timestamp: Math.floor(Date.now() / 1000),
-  env: { SHELL: '/bin/bash', TERM: 'xterm-256color' },
-  theme: {
-    fg: '#cdd6f4', bg: '#1e1e2e',
-    palette: '#45475a:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#bac2de:#585b70:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#a6adc8',
-  },
-});
-
-const events = [];
-let t = 0;
-
-events.push([t, 'o', ' \x1b[31m\u25cf\x1b[0m \x1b[33m\u25cf\x1b[0m \x1b[32m\u25cf\x1b[0m\r\n']);
-t += 0.1;
-events.push([t, 'o', '\x1b[90m' + '\u2500'.repeat(90) + '\x1b[0m\r\n']);
-t += 0.1;
-
-const cmd = 'npx @whitehatd/crag audit';
-events.push([t, 'o', '> ']);
-t += 0.3;
-for (const ch of cmd) { events.push([t, 'o', ch]); t += 0.03; }
-t += 0.3;
-events.push([t, 'o', '\r\n']);
-t += 0.2;
-
-for (const line of lines) {
-  const visible = line.replace(/\x1b\[[0-9;]*m/g, '');
-  const maxCol = width - 4;
-  let trimmed = line;
-  if (visible.length > maxCol) {
-    let vis = 0, cut = 0;
-    for (let j = 0; j < line.length; j++) {
-      if (line[j] === '\x1b') { while (j < line.length && line[j] !== 'm') j++; continue; }
-      vis++;
-      if (vis >= maxCol - 1) { cut = j + 1; break; }
-    }
-    trimmed = line.slice(0, cut) + '\x1b[0m\u2026';
-  }
-
-  if (line.trim() === '') {
-    events.push([t, 'o', '\r\n']); t += 0.06;
-  } else {
-    events.push([t, 'o', trimmed + '\r\n']);
-    // Slow on failures (the drama), fast on passes
-    if (/crag audit/.test(line)) t += 0.5;
-    else if (/Compiled configs|Gate reality|Missing/.test(line)) t += 0.35;
-    else if (/\u2717/.test(line)) t += 0.45;    // ✗ failures land hard
-    else if (/\u2713/.test(line)) t += 0.12;    // ✓ passes scroll quick
-    else if (/stale|drift/.test(line)) t += 0.5;
-    else if (/Fix:/.test(line)) t += 0.5;
-    else t += 0.08;
-  }
-}
-
-t += 2.5;
-
-fs.writeFileSync(castFile, header + '\n' + events.map(e => JSON.stringify(e)).join('\n') + '\n');
-console.log(`Written: ${castFile} (${events.length} events, ${t.toFixed(1)}s)`);
-
-try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
+fs.writeFileSync(castFile, makeCast(e, W, H));
+const total = t + 1.5;
+console.log(`vscode-audit.cast: ${W}x${H}, content ${t.toFixed(1)}s, total ~${total.toFixed(1)}s`);

@@ -2,9 +2,31 @@
 node_modules/
 package-lock.json.bak
 
-# Assets — only the README hero GIF is tracked; everything else is local
+# Assets — only specific GIFs and recording scripts are tracked
 assets/*
 !assets/poster-demo.gif
+!assets/poster-sprawl.gif
+!assets/poster-sprawl.cast
+!assets/poster-git-status.gif
+!assets/poster-git-status.cast
+!assets/poster-hook.gif
+!assets/poster-hook.cast
+!assets/poster-scoreboard.gif
+!assets/poster-tools.gif
+!assets/poster-grafana.gif
+!assets/poster-benchmark.gif
+!assets/demo-audit.gif
+!assets/demo-auto.gif
+!assets/vscode-hero.gif
+!assets/vscode-hero.cast
+!assets/vscode-compile.gif
+!assets/vscode-compile.cast
+!assets/vscode-audit.gif
+!assets/vscode-audit.cast
+!assets/record-poster-new.js
+!assets/record-vscode-hero.js
+!assets/record-vscode-compile.js
+!assets/record-vscode-audit.js
 
 # crag self-dogfooding artifacts — GENERATED, not source.
 # The entire .claude/ folder is produced by `crag init` / `crag analyze` from
