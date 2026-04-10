@@ -1,36 +1,23 @@
 # crag
 
-**Your AI tools are reading stale rules right now.**
+**Make every AI agent obey your codebase.**
 
-Every AI tool you use needs project-specific rules. Nobody maintains them.
-
-`.cursorrules` from three months ago. `CLAUDE.md` that doesn't know your
-API routes. `copilot-instructions.md` that still says "use npm." CI
-enforces rules that none of your AI configs mention.
-
-This is config drift — and your AI is the one paying the price.
-
-> CI requires `pnpm`. Your AI uses `npm`. Build fails.
-> CI runs Biome. Your AI writes ESLint config. Conflict.
-
-You already know this. You just haven't had a sane way to fix it.
+One `governance.md` → compiled to CI, hooks, and every agent. No drift.
 
 ```bash
 npx @whitehatd/crag
 ```
 
-Most projects don't even have AI configs:
+> AGENTS.md · Cursor · Copilot · Gemini · Cline · Continue · Windsurf · Zed · Amazon Q · GitHub Actions · Husky · Pre-commit
 
 ![crag on django/django — zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
 
-It reads your CI and codebase — and extracts the rules your AI should
-actually follow. One source of truth. No drift.
+1. **Analyze** your repo → extract real CI + rules
+2. **Compile** governance → all tools & agents
+3. **Audit** drift → keep everything in sync
 
-One `governance.md` compiles to **12 formats** — AGENTS.md, Cursor,
-Copilot, Gemini, Cline, Windsurf, Zed, Amazon Q, and more. 500 ms.
-Zero dependencies. No LLM.
-
-**Your AI should follow your codebase — not guess it.**
+A deterministic engine that enforces your real CI gates across every AI agent.
+Zero dependencies. No LLM. No network. No API keys.
 
 [![npm version](https://img.shields.io/npm/v/%40whitehatd%2Fcrag?color=%23e8bb3a&label=npm&logo=npm)](https://www.npmjs.com/package/@whitehatd/crag)
 [![Test](https://github.com/WhitehatD/crag/actions/workflows/test.yml/badge.svg)](https://github.com/WhitehatD/crag/actions/workflows/test.yml)
