@@ -31,7 +31,7 @@ crag hook uninstall              Remove crag-installed hook
 crag hook status                 Check hook installation status
 
 crag compile --target <name>     Compile governance to a single target
-  --target all                   Compile all 12 targets
+  --target all                   Compile all 13 targets
   --dry-run                      Print planned output paths, don't write
   --verbose                      Print byte-size of each emitted target (dry-run or write)
 crag compile                     List available targets

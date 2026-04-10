@@ -9,7 +9,7 @@ deeper.
 | File | Contents |
 |---|---|
 | [commands.md](./commands.md) | Every subcommand, every flag, every exit code |
-| [compile-targets.md](./compile-targets.md) | All 12 compile targets with their output paths and consumers |
+| [compile-targets.md](./compile-targets.md) | All 13 compile targets with their output paths and consumers |
 | [governance-format.md](./governance-format.md) | The `governance.md` v2 format — annotations, sections, inheritance |
 | [languages.md](./languages.md) | The 25+ stack detectors and the gates each one emits |
 | [ci-systems.md](./ci-systems.md) | The 11 CI extractors and the files they parse |

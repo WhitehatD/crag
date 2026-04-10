@@ -17,6 +17,7 @@ failures leave prior state intact (temp-file + rename).
 | `windsurf` | `.windsurf/rules/governance.md` | Windsurf Cascade |
 | `zed` | `.rules` | Zed |
 | `amazonq` | `.amazonq/rules/governance.md` | Amazon Q Developer |
+| `claude` | `CLAUDE.md` | Claude Code |
 
 Each compiler detects runtime versions from the manifest
 (`package.json` `engines.node`, `pyproject.toml` `requires-python`,
@@ -34,7 +35,7 @@ not executable.
 
 ## Atomicity
 
-All 12 compilers route file writes through `src/compile/atomic-write.js`,
+All 13 compilers route file writes through `src/compile/atomic-write.js`,
 which writes to a crypto-random temp file and then renames. This means:
 
 - A crash during compile never leaves a half-written file.

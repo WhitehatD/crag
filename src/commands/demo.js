@@ -418,7 +418,7 @@ function printHumanReport(summary, samples) {
     }
   }
 
-  line(`    ${G}✓${X} 12 files compiled from one governance.md`);
+  line(`    ${G}✓${X} 13 files compiled from one governance.md`);
   line(`    ${G}✓${X} Per-path glob-scoped files for Cursor, Windsurf, Copilot`);
 
   if (summary.deterministic && summary.deterministic.ok) {

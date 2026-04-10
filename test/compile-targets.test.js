@@ -13,6 +13,7 @@ const { generateAmazonQ } = require('../src/compile/amazonq');
 const { generateAgentsMd } = require('../src/compile/agents-md');
 const { generateCursorRules } = require('../src/compile/cursor-rules');
 const { generateGeminiMd } = require('../src/compile/gemini-md');
+const { generateClaude } = require('../src/compile/claude');
 const { atomicWrite } = require('../src/compile/atomic-write');
 
 function test(name, fn) {
@@ -231,6 +232,7 @@ test('every new target honors gate classifications in output', () => {
     generateWindsurf(dir, parsed);
     generateZed(dir, parsed);
     generateAmazonQ(dir, parsed);
+    generateClaude(dir, parsed);
     // Each target should reference OPTIONAL or ADVISORY or MANDATORY
     const outputs = [
       fs.readFileSync(path.join(dir, '.github', 'copilot-instructions.md'), 'utf-8'),
@@ -239,6 +241,7 @@ test('every new target honors gate classifications in output', () => {
       fs.readFileSync(path.join(dir, '.windsurf', 'rules', 'governance.md'), 'utf-8'),
       fs.readFileSync(path.join(dir, '.rules'), 'utf-8'),
       fs.readFileSync(path.join(dir, '.amazonq', 'rules', 'governance.md'), 'utf-8'),
+      fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf-8'),
     ];
     for (const out of outputs) {
       const hasClassification =
@@ -323,6 +326,30 @@ test('GEMINI.md includes MANDATORY gates', () => {
   withTempDir((dir) => {
     generateGeminiMd(dir, sampleParsed());
     const content = fs.readFileSync(path.join(dir, 'GEMINI.md'), 'utf-8');
+    assert.ok(content.includes('npm test'));
+    assert.ok(content.includes('tsc --noEmit'));
+  });
+});
+
+console.log('\n  compile/claude.js');
+
+test('generates CLAUDE.md at repo root', () => {
+  withTempDir((dir) => {
+    generateClaude(dir, sampleParsed());
+    const out = path.join(dir, 'CLAUDE.md');
+    assert.ok(fs.existsSync(out));
+    const content = fs.readFileSync(out, 'utf-8');
+    assert.ok(content.length > 0);
+    assert.ok(content.includes('test-project'));
+  });
+});
+
+test('CLAUDE.md includes project description and gates', () => {
+  withTempDir((dir) => {
+    generateClaude(dir, sampleParsed());
+    const content = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf-8');
+    assert.ok(content.includes('A test project'));
+    assert.ok(content.includes('## Quality Gates'));
     assert.ok(content.includes('npm test'));
     assert.ok(content.includes('tsc --noEmit'));
   });

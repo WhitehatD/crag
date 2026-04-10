@@ -71,7 +71,7 @@ For every task:
 
 ## Tool context
 
-This project uses **crag** — the bedrock layer for AI coding agents. https://www.npmjs.com/package/@whitehatd/crag
+This project uses **crag** — the governance engine for AI coding agents. https://www.npmjs.com/package/@whitehatd/crag
 `;
 
   const outPath = path.join(cwd, '.clinerules');

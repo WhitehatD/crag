@@ -20,8 +20,8 @@ const { EXIT_USER } = require('./cli-errors');
 
 function printUsage() {
   console.log(`
-  crag — the bedrock layer for AI coding agents
-  One governance.md. Any project. Never stale.
+  crag — make every AI agent obey your codebase
+  One governance.md → compiled to CI, hooks, and every agent. No drift.
 
   Usage:
     crag                Run analyze + compile in one shot (auto-detects project)
@@ -55,6 +55,7 @@ function printUsage() {
       crag compile --target windsurf     .windsurf/rules/governance.md
       crag compile --target zed          .rules
       crag compile --target amazonq      .amazonq/rules/governance.md
+      crag compile --target claude       CLAUDE.md
     CI / git hooks:
       crag compile --target github       .github/workflows/gates.yml
       crag compile --target husky        .husky/pre-commit

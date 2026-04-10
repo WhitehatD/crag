@@ -15,6 +15,7 @@ const { generateContinue } = require('../compile/continue');
 const { generateWindsurf } = require('../compile/windsurf');
 const { generateZed } = require('../compile/zed');
 const { generateAmazonQ } = require('../compile/amazonq');
+const { generateClaude } = require('../compile/claude');
 const { cliError, readFileOrExit, EXIT_USER, EXIT_INTERNAL, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 
@@ -33,6 +34,7 @@ const ALL_TARGETS = [
   'windsurf',
   'zed',
   'amazonq',
+  'claude',
 ];
 
 function compile(args) {
@@ -86,7 +88,8 @@ function compile(args) {
     console.log('    crag compile --target continue     .continuerules');
     console.log('    crag compile --target windsurf     .windsurf/rules/governance.md');
     console.log('    crag compile --target zed          .rules');
-    console.log('    crag compile --target amazonq      .amazonq/rules/governance.md\n');
+    console.log('    crag compile --target amazonq      .amazonq/rules/governance.md');
+    console.log('    crag compile --target claude       CLAUDE.md\n');
     console.log('  Combined:');
     console.log(`    crag compile --target all          All ${ALL_TARGETS.length} targets at once`);
     console.log('    crag compile --target <t> --dry-run  Preview paths without writing\n');
@@ -190,6 +193,7 @@ function runGenerator(target, cwd, parsed) {
     case 'windsurf':   generateWindsurf(cwd, parsed); break;
     case 'zed':        generateZed(cwd, parsed); break;
     case 'amazonq':    generateAmazonQ(cwd, parsed); break;
+    case 'claude':     generateClaude(cwd, parsed); break;
     default:
       console.error(`  Unknown target: ${target}`);
       console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
@@ -258,6 +262,7 @@ function planOutputPath(cwd, target) {
     'windsurf':   path.join(cwd, '.windsurf', 'rules', 'governance.md'),
     'zed':        path.join(cwd, '.rules'),
     'amazonq':    path.join(cwd, '.amazonq', 'rules', 'governance.md'),
+    'claude':     path.join(cwd, 'CLAUDE.md'),
   };
   return map[target] || null;
 }

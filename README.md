@@ -8,7 +8,7 @@ One `governance.md` → compiled to CI, hooks, and every agent. No drift.
 npx @whitehatd/crag
 ```
 
-> AGENTS.md · Cursor · Copilot · Gemini · Cline · Continue · Windsurf · Zed · Amazon Q · GitHub Actions · Husky · Pre-commit
+> AGENTS.md · Claude Code · Cursor · Copilot · Gemini · Cline · Continue · Windsurf · Zed · Amazon Q · GitHub Actions · Husky · Pre-commit
 
 ![crag on django/django — zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
 
@@ -87,9 +87,10 @@ format, with the right frontmatter, activation patterns, and structure:
 | `amazonq` | `.amazonq/rules/governance.md` | Amazon Q Developer |
 | `github` | `.github/workflows/gates.yml` | GitHub Actions |
 | `husky` | `.husky/pre-commit` | husky |
+| `claude` | `CLAUDE.md` | Claude Code |
 | `pre-commit` | `.pre-commit-config.yaml` | pre-commit.com |
 
-One file in, twelve files out. Change a rule, recompile, done.
+One file in, thirteen files out. Change a rule, recompile, done.
 
 ---
 
@@ -162,7 +163,7 @@ npx @whitehatd/crag
 
 # Or step by step:
 npx @whitehatd/crag analyze                   # generate governance.md
-npx @whitehatd/crag compile --target all       # compile to 12 targets
+npx @whitehatd/crag compile --target all       # compile to 13 targets
 npx @whitehatd/crag audit                      # check for drift
 npx @whitehatd/crag hook install               # enforce on every commit
 ```
@@ -212,7 +213,7 @@ network. No API keys.
 ## Further reading
 
 - [`docs/commands.md`](./docs/commands.md) — every subcommand, every flag, every exit code
-- [`docs/compile-targets.md`](./docs/compile-targets.md) — the 12 compile targets and their formats
+- [`docs/compile-targets.md`](./docs/compile-targets.md) — the 13 compile targets and their formats
 - [`docs/governance-format.md`](./docs/governance-format.md) — the governance.md v2 format
 - [`docs/languages.md`](./docs/languages.md) — the 25+ stack detectors
 - [`docs/ci-systems.md`](./docs/ci-systems.md) — the 11 CI extractors
