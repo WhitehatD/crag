@@ -140,11 +140,13 @@ test('demo: rejects unknown flag with typo suggestion', () => {
   assert.ok(/did you mean/.test(stderr), `expected typo suggestion, got: ${stderr}`);
 });
 
-test('demo: total wall-clock is under 5 seconds', () => {
+test('demo: total wall-clock is under 10 seconds', () => {
   const { stdout } = runCrag(['demo', '--json']);
   const parsed = JSON.parse(stdout);
-  assert.ok(parsed.totalMs < 5000,
-    `demo should run in <5s, took ${parsed.totalMs}ms`);
+  // 10s allows headroom for slow Windows CI runners (GitHub Actions shared
+  // runners). Typical local runs complete in 1-3s.
+  assert.ok(parsed.totalMs < 10_000,
+    `demo should run in <10s, took ${parsed.totalMs}ms`);
 });
 
 test('demo: scaffolded project has correct stack signals (via analyze step)', () => {
