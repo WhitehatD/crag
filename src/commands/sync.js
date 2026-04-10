@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 const { validateFlags } = require('../cli-args');
 const { cliError, cliWarn, EXIT_USER, requireGovernance, readFileOrExit } = require('../cli-errors');
 const { requireAuth } = require('../cloud/auth');
@@ -96,22 +96,31 @@ function repoOrExit(cwd) {
  * prints to stdout and calls process.exit() when drift is found, which
  * would terminate sync too. Returns null on failure so push can degrade
  * gracefully — we still upload governance even if audit can't run.
+ *
+ * Uses spawnSync instead of execFileSync to avoid a libuv UV_HANDLE_CLOSING
+ * assertion crash on Windows (Node.js bug with execFileSync + piped stdio).
+ * Resolves the crag entry point via require.resolve so it works regardless
+ * of whether crag was installed globally, via npx, or locally.
  */
 function captureAuditReport(cwd) {
   try {
-    const out = execFileSync(process.execPath, [process.argv[1], 'audit', '--json'], {
+    // Resolve the actual crag.js entry point — works for global installs,
+    // local node_modules, and npx alike. Avoids Windows .cmd wrapper issues.
+    const cragEntry = path.resolve(__dirname, '../../bin/crag.js');
+    const result = spawnSync(process.execPath, [cragEntry, 'audit', '--json'], {
       cwd,
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1', NO_COLOR: '1' },
+      timeout: 30_000,
+      windowsHide: true,
     });
-    return JSON.parse(out);
-  } catch (err) {
-    // Audit exits non-zero when drift is found, but the JSON report is
-    // still written to stdout. Try to recover it from the error buffer.
-    if (err && err.stdout) {
-      try { return JSON.parse(err.stdout.toString()); } catch { /* not JSON */ }
+    const out = (result.stdout || '').trim();
+    if (out) {
+      try { return JSON.parse(out); } catch { /* not JSON */ }
     }
+    return null;
+  } catch {
     return null;
   }
 }
