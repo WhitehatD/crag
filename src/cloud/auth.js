@@ -103,7 +103,7 @@ function browserAuth() {
 
     server.listen(0, '127.0.0.1', () => {
       const port = server.address().port;
-      openBrowser(`${API_BASE}/auth/cli?port=${port}`);
+      openBrowser(`${API_BASE}/api/auth/cli?port=${port}`);
     });
 
     const timer = setTimeout(() => {
