@@ -3,7 +3,7 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { parseGovernance, flattenGates } = require('../governance/parse');
+const { parseGovernance, flattenGates, flattenGatesRich } = require('../governance/parse');
 const { extractRunCommands, isGateCommand, stripYamlQuotes } = require('../governance/yaml-run');
 const { extractCiCommands } = require('../analyze/ci-extractors');
 const { normalizeCiGates } = require('../analyze/normalize');
@@ -32,17 +32,20 @@ function diff(args) {
 
   const results = { match: 0, drift: 0, missing: 0, extra: 0 };
 
-  // Check each gate command
-  for (const [section, cmds] of Object.entries(flat)) {
-    for (const cmd of cmds) {
-      const check = checkGateReality(cwd, cmd);
-      const icon = check.status === 'match' ? '\x1b[32mMATCH\x1b[0m'
-        : check.status === 'drift' ? '\x1b[33mDRIFT\x1b[0m'
-        : '\x1b[31mMISSING\x1b[0m';
-      console.log(`  ${icon}   ${cmd}`);
-      if (check.detail) console.log(`          ${check.detail}`);
-      results[check.status]++;
-    }
+  // Check each gate command, respecting path-scoped sections.
+  // In monorepos, `### Frontend (path: frontend/)` gates should be checked
+  // against the subdirectory, not the project root.
+  const rich = flattenGatesRich(parsed.gates);
+  for (const gate of rich) {
+    const checkDir = gate.path ? path.join(cwd, gate.path) : cwd;
+    const check = checkGateReality(checkDir, gate.cmd);
+    const icon = check.status === 'match' ? '\x1b[32mMATCH\x1b[0m'
+      : check.status === 'drift' ? '\x1b[33mDRIFT\x1b[0m'
+      : '\x1b[31mMISSING\x1b[0m';
+    const prefix = gate.path ? `[${gate.path}] ` : '';
+    console.log(`  ${icon}   ${prefix}${gate.cmd}`);
+    if (check.detail) console.log(`          ${check.detail}`);
+    results[check.status]++;
   }
 
   // Check for CI gates not in governance. Deduplicates across workflows so
@@ -115,12 +118,71 @@ function checkGateReality(cwd, cmd) {
     const m = cmd.match(pattern);
     if (m) {
       if (check(m[1])) return { status: 'match', detail: null };
+
+      // Monorepo fallback: if the tool isn't at root, scan immediate
+      // subdirectories (backend/, frontend/, services/*, packages/*, etc.).
+      // This handles projects where governance gates reference tools that
+      // live in workspace members without path-scoped sections.
+      if (checkSubdirs(cwd, cmd)) return { status: 'match', detail: null };
+
       return { status: 'drift', detail: `Tool or dependency not found for: ${cmd}` };
     }
   }
 
   // Unknown command — assume match (can't verify)
   return { status: 'match', detail: null };
+}
+
+/**
+ * Monorepo fallback: check if any immediate subdirectory has the tool.
+ * Returns true on the first match.
+ */
+function checkSubdirs(rootCwd, cmd) {
+  const subdirs = getSubdirs(rootCwd);
+  for (const sub of subdirs) {
+    const subCwd = path.join(rootCwd, sub);
+    // npx <tool> — check subdir's deps or .bin
+    const npxM = cmd.match(/^npx\s+(\w[\w-]*)/);
+    if (npxM) {
+      const tool = npxM[1];
+      if (hasNpmDep(subCwd, tool) || hasNpmBin(subCwd, tool)) return true;
+      if (tool === 'tsc' && (hasNpmDep(subCwd, 'typescript') || hasNpmBin(subCwd, 'tsc'))) return true;
+    }
+    // npm run <script>
+    const npmRunM = cmd.match(/^npm\s+run\s+(\w[\w-]*)/);
+    if (npmRunM && hasNpmScript(subCwd, npmRunM[1])) return true;
+    // gradlew
+    if (/^(\.\/)?gradlew\s+/.test(cmd) && (fs.existsSync(path.join(subCwd, 'gradlew')) || fs.existsSync(path.join(subCwd, 'gradlew.bat')))) return true;
+    // cargo
+    if (/^cargo\s+/.test(cmd) && fs.existsSync(path.join(subCwd, 'Cargo.toml'))) return true;
+    // go
+    if (/^go\s+/.test(cmd) && fs.existsSync(path.join(subCwd, 'go.mod'))) return true;
+    // pytest
+    if (/^pytest/.test(cmd) && (fs.existsSync(path.join(subCwd, 'pyproject.toml')) || fs.existsSync(path.join(subCwd, 'setup.py')))) return true;
+    // ruff
+    if (/^ruff\s+/.test(cmd) && (fs.existsSync(path.join(subCwd, 'ruff.toml')) || fs.existsSync(path.join(subCwd, '.ruff.toml')) || fs.existsSync(path.join(subCwd, 'pyproject.toml')))) return true;
+  }
+  return false;
+}
+
+/**
+ * Get immediate subdirectories of `dir`, excluding common non-source dirs.
+ * Cached per invocation.
+ */
+const _subdirCache = new Map();
+function getSubdirs(dir) {
+  if (_subdirCache.has(dir)) return _subdirCache.get(dir);
+  const skip = new Set(['node_modules', '.git', 'dist', 'build', 'target', '.next', '__pycache__']);
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true })
+      .filter(e => e.isDirectory() && !skip.has(e.name) && !e.name.startsWith('.'))
+      .map(e => e.name);
+  } catch {
+    entries = [];
+  }
+  _subdirCache.set(dir, entries);
+  return entries;
 }
 
 function checkBranchStrategy(cwd, content, results) {
@@ -256,6 +318,7 @@ function hasNpmScript(cwd, script) {
 function clearCaches() {
   _pkgCache.clear();
   _binCache.clear();
+  _subdirCache.clear();
 }
 
 module.exports = { diff, normalizeCmd, checkGateReality, extractCIGateCommands, clearCaches };

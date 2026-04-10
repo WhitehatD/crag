@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { parseGovernance, flattenGates } = require('../governance/parse');
+const { parseGovernance, flattenGates, flattenGatesRich } = require('../governance/parse');
 const { cliError, readFileOrExit, EXIT_USER, safeMtime, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 const { planOutputPath, ALL_TARGETS } = require('./compile');
@@ -71,15 +71,21 @@ function audit(args) {
   }
 
   // --- Axis 2: Governance vs reality ---
-  const govCommands = Object.values(flat).flat();
-  for (const cmd of govCommands) {
-    const check = checkGateReality(cwd, cmd);
+  // Use flattenGatesRich to preserve path-scoping. When a gate section has
+  // `path: frontend/`, we resolve tools against that subdirectory instead
+  // of the project root. This prevents false-positive drift in monorepos
+  // where e.g. `npx tsc` lives in frontend/node_modules, not root.
+  const richGates = flattenGatesRich(parsed.gates);
+  for (const gate of richGates) {
+    const checkDir = gate.path ? path.join(cwd, gate.path) : cwd;
+    const check = checkGateReality(checkDir, gate.cmd);
     if (check.status === 'drift' || check.status === 'missing') {
-      report.drift.push({ command: cmd, detail: check.detail });
+      report.drift.push({ command: gate.cmd, detail: check.detail });
     }
   }
 
   // CI extras: gates in CI but not in governance
+  const govCommands = richGates.map(g => g.cmd);
   const ciGates = extractCIGateCommands(cwd);
   const reportedExtras = new Set();
   for (const ciGate of ciGates) {
