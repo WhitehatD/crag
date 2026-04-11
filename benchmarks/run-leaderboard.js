@@ -147,11 +147,15 @@ function detectAIConfigs(repoDir) {
 }
 
 function calcScore(drift) {
+  // Only count genuinely meaningful drift axes:
+  //   drift  = gate references tool that doesn't exist (always real)
+  //   extra  = CI has commands not in governance (always real)
+  // Exclude from scoring:
+  //   stale  = existing files older than freshly-generated governance.md (tautological)
+  //   missing = has .github/workflows but no crag-compiled gates.yml (tautological)
   let score = 100;
-  score -= (drift.stale || 0) * 5;
-  score -= (drift.drift || 0) * 10;
-  score -= (drift.extra || 0) * 3;
-  score -= (drift.missing || 0) * 5;
+  score -= (drift.drift || 0) * 15;
+  score -= (drift.extra || 0) * 5;
   return Math.max(0, score);
 }
 
@@ -312,10 +316,13 @@ fs.writeFileSync(RESULTS_FILE, JSON.stringify(results, null, 2));
 
 const totalRepos = results.filter(r => !r.error).length;
 const failedRepos = results.filter(r => r.error).length;
-const driftRepos = results.filter(r => !r.error && r.drift.total > 0).length;
+// Genuine drift: only count drift (phantom gates) + extra (CI commands missing from governance)
+const realDriftRepos = results.filter(r => !r.error && ((r.drift.drift || 0) + (r.drift.extra || 0)) > 0).length;
+const withAIConfigs = results.filter(r => !r.error && r.aiConfigCount > 0).length;
 const zeroAI = results.filter(r => !r.error && r.aiConfigCount === 0).length;
 const totalGates = results.reduce((sum, r) => sum + r.gates, 0);
-const driftPct = totalRepos > 0 ? ((driftRepos / totalRepos) * 100).toFixed(0) : 0;
+const realDriftPct = totalRepos > 0 ? ((realDriftRepos / totalRepos) * 100).toFixed(0) : 0;
+const aiAdoptPct = totalRepos > 0 ? ((withAIConfigs / totalRepos) * 100).toFixed(0) : 0;
 const zeroAIPct = totalRepos > 0 ? ((zeroAI / totalRepos) * 100).toFixed(0) : 0;
 
 // Read crag version from package.json
@@ -338,14 +345,15 @@ lines.push(`| Metric | Value |`);
 lines.push(`|---|---|`);
 lines.push(`| Repos audited | **${totalRepos}** |`);
 lines.push(`| Clone/analyze failures | **${failedRepos}** |`);
-lines.push(`| Repos with governance drift | **${driftRepos} (${driftPct}%)** |`);
+lines.push(`| Repos with genuine drift | **${realDriftRepos} (${realDriftPct}%)** |`);
+lines.push(`| AI config adoption | **${withAIConfigs} (${aiAdoptPct}%)** |`);
 lines.push(`| Repos with zero AI config | **${zeroAI} (${zeroAIPct}%)** |`);
 lines.push(`| Total gates inferred | **${totalGates.toLocaleString()}** |`);
 lines.push(`| Mean gates per repo | **${totalRepos > 0 ? (totalGates / totalRepos).toFixed(1) : 0}** |`);
 lines.push('');
 lines.push('## Leaderboard');
 lines.push('');
-lines.push('| # | Repo | Stars | Stack | Gates | Drift | AI Configs | Score |');
+lines.push('| # | Repo | Stars | Stack | Gates | Real Drift | AI Configs | Score |');
 lines.push('|---|---|---|---|---|---|---|---|');
 
 const successResults = results.filter(r => !r.error);
@@ -354,7 +362,8 @@ for (let i = 0; i < successResults.length; i++) {
   const starsStr = formatStars(r.stars);
   const stackShort = r.stack.split(', ').slice(0, 3).join(', ') + (r.stack.split(', ').length > 3 ? '...' : '');
   const aiStr = r.aiConfigs.length > 0 ? r.aiConfigs.join(', ') : '\u2014';
-  lines.push(`| ${i + 1} | ${r.repo} | ${starsStr} | ${stackShort} | ${r.gates} | ${r.drift.total} | ${aiStr} | ${r.score} |`);
+  const realDrift = (r.drift.drift || 0) + (r.drift.extra || 0);
+  lines.push(`| ${i + 1} | ${r.repo} | ${starsStr} | ${stackShort} | ${r.gates} | ${realDrift} | ${aiStr} | ${r.score} |`);
 }
 
 if (failedRepos > 0) {
@@ -372,24 +381,25 @@ if (failedRepos > 0) {
 lines.push('');
 lines.push('## Key Findings');
 lines.push('');
-lines.push(`1. **${driftPct}% of repos have governance drift** \u2014 rules referencing commands that don\u2019t exist, configs older than their source.`);
-lines.push(`2. **${zeroAIPct}% have zero AI config files** \u2014 no CLAUDE.md, no .cursorrules, no AGENTS.md. AI agents are flying blind.`);
-lines.push(`3. **${totalGates.toLocaleString()} total gates inferred** across ${totalRepos} repos, averaging ${totalRepos > 0 ? (totalGates / totalRepos).toFixed(1) : 0} per repo.`);
+lines.push(`1. **${aiAdoptPct}% of repos now have AI config files** \u2014 CLAUDE.md, AGENTS.md, .cursorrules, or copilot-instructions. Adoption is real.`);
+lines.push(`2. **${zeroAIPct}% still have zero AI config** \u2014 AI agents working on these repos get zero project-specific guidance.`);
+lines.push(`3. **${realDriftPct}% have genuine governance drift** \u2014 quality gates referencing commands that don\u2019t exist, or CI running checks not captured in governance.`);
+lines.push(`4. **${totalGates.toLocaleString()} total gates inferred** across ${totalRepos} repos, averaging ${totalRepos > 0 ? (totalGates / totalRepos).toFixed(1) : 0} per repo.`);
 
 // Top 5 by gates
 const top5 = successResults.slice().sort((a, b) => b.gates - a.gates).slice(0, 5);
-lines.push(`4. **Highest gate counts:** ${top5.map(r => `${r.repo} (${r.gates})`).join(', ')}`);
+lines.push(`5. **Highest gate counts:** ${top5.map(r => `${r.repo} (${r.gates})`).join(', ')}`);
 
 // Repos with most drift
 const worstDrift = successResults.filter(r => r.drift.total > 0).sort((a, b) => b.drift.total - a.drift.total).slice(0, 5);
 if (worstDrift.length > 0) {
-  lines.push(`5. **Most drift:** ${worstDrift.map(r => `${r.repo} (${r.drift.total} issues)`).join(', ')}`);
+  lines.push(`6. **Most drift:** ${worstDrift.map(r => `${r.repo} (${r.drift.total} issues)`).join(', ')}`);
 }
 
 // AI config adoption
 const withAI = successResults.filter(r => r.aiConfigCount > 0);
 if (withAI.length > 0) {
-  lines.push(`6. **AI config adoption:** ${withAI.length} of ${totalRepos} repos have at least one AI config file.`);
+  lines.push(`7. **AI config breakdown:** ${withAI.length} of ${totalRepos} repos have at least one AI config file.`);
   const configCounts = {};
   for (const r of withAI) {
     for (const c of r.aiConfigs) {
