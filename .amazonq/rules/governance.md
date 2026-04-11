@@ -26,6 +26,11 @@ Make every AI agent obey your codebase. One governance.md → compiled to CI, ho
 - `npm run test`
 - `node --check bin/crag.js`
 - `node bin/crag.js help > /dev/null`
+- `node --check "$f"`
+- `node bin/crag.js version`
+- `node bin/crag.js analyze --dry-run > /dev/null`
+- `node bin/crag.js upgrade --check > /dev/null`
+- `node bin/crag.js workspace --json > /dev/null`
 
 ### Commit Style
 

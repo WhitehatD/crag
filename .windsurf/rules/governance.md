@@ -35,6 +35,11 @@ When Windsurf's Cascade agent operates on this project:
 1. `npm run test`
 2. `node --check bin/crag.js`
 3. `node bin/crag.js help > /dev/null`
+4. `node --check "$f"`
+5. `node bin/crag.js version`
+6. `node bin/crag.js analyze --dry-run > /dev/null`
+7. `node bin/crag.js upgrade --check > /dev/null`
+8. `node bin/crag.js workspace --json > /dev/null`
 
 ## Rules of Engagement
 
