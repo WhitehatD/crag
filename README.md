@@ -166,6 +166,7 @@ npx @whitehatd/crag
 # Or step by step:
 npx @whitehatd/crag analyze                   # generate governance.md
 npx @whitehatd/crag compile --target all       # compile to 13 targets
+npx @whitehatd/crag compile --target scaffold  # generate hooks, settings, agents
 npx @whitehatd/crag audit                      # check for drift
 npx @whitehatd/crag hook install               # enforce on every commit
 ```

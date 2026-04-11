@@ -9,15 +9,16 @@ const CORE_CHECKS = [
   ['.claude/skills/pre-start-context/SKILL.md', 'Pre-start skill (universal)'],
   ['.claude/skills/post-start-validation/SKILL.md', 'Post-start skill (universal)'],
   ['.claude/governance.md', 'Governance rules'],
+  ['.claude/hooks/sandbox-guard.sh', 'Sandbox guard hook'],
+  ['.claude/settings.local.json', 'Settings with hooks'],
+];
+
+const OPTIONAL_CHECKS = [
   ['.claude/hooks/drift-detector.sh', 'Drift detector hook'],
   ['.claude/hooks/circuit-breaker.sh', 'Circuit breaker hook'],
   ['.claude/agents/test-runner.md', 'Test runner agent'],
   ['.claude/agents/security-reviewer.md', 'Security reviewer agent'],
   ['.claude/ci-playbook.md', 'CI playbook'],
-  ['.claude/settings.local.json', 'Settings with hooks'],
-];
-
-const OPTIONAL_CHECKS = [
   ['.claude/.session-name', 'Session name (remote access)'],
   ['.claude/hooks/pre-compact-snapshot.sh', 'Pre-compact hook (MemStack)'],
   ['.claude/hooks/post-compact-recovery.sh', 'Post-compact hook (MemStack)'],
@@ -90,7 +91,7 @@ function check(args = []) {
 
   console.log(`\n  ${report.total - report.missing}/${report.total} core files present.`);
   if (report.missing > 0) {
-    console.log(`  Run 'crag init' to generate missing files.\n`);
+    console.log(`  Run 'crag compile --target scaffold' to generate missing files.\n`);
     process.exit(EXIT_USER);
   } else {
     console.log(`  Infrastructure complete.\n`);

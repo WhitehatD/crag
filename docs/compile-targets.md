@@ -19,6 +19,30 @@ failures leave prior state intact (temp-file + rename).
 | `amazonq` | `.amazonq/rules/governance.md` | Amazon Q Developer |
 | `claude` | `CLAUDE.md` | Claude Code |
 
+## Scaffold target
+
+`crag compile --target scaffold` generates project infrastructure that
+`crag doctor` and `crag check` expect. Unlike the 13 AI-config targets
+above, scaffold is **not** included in `--target all` — it's run
+separately because these files are commit-once infrastructure, not
+frequently recompiled.
+
+| Output | Purpose |
+|---|---|
+| `.claude/hooks/sandbox-guard.sh` | Hard-block destructive system commands |
+| `.claude/hooks/drift-detector.sh` | Warn when compiled configs are stale |
+| `.claude/hooks/circuit-breaker.sh` | Prevent runaway retries |
+| `.claude/settings.local.json` | Wire hooks into Claude Code settings |
+| `.claude/agents/test-runner.md` | Run quality gates in a worktree |
+| `.claude/agents/security-reviewer.md` | Review changes for security issues |
+| `.claude/ci-playbook.md` | CI failure resolution playbook |
+
+Existing files are preserved by default. Pass `--force` to regenerate.
+Settings are merged: existing `permissions.allow` entries are kept and
+the `hooks` section is added or updated.
+
+---
+
 Each compiler detects runtime versions from the manifest
 (`package.json` `engines.node`, `pyproject.toml` `requires-python`,
 `go.mod` directive, Gradle toolchain) so generated CI matrices match the

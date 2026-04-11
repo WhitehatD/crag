@@ -16,6 +16,7 @@ const { generateWindsurf } = require('../compile/windsurf');
 const { generateZed } = require('../compile/zed');
 const { generateAmazonQ } = require('../compile/amazonq');
 const { generateClaude } = require('../compile/claude');
+const { generateScaffold } = require('../compile/scaffold');
 const { cliError, readFileOrExit, EXIT_USER, EXIT_INTERNAL, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 
@@ -39,7 +40,7 @@ const ALL_TARGETS = [
 
 function compile(args) {
   validateFlags('compile', args, {
-    boolean: ['--dry-run', '--verbose'],
+    boolean: ['--dry-run', '--verbose', '--force'],
     string: ['--target'],
   });
   const targetIdx = args.indexOf('--target');
@@ -51,10 +52,10 @@ function compile(args) {
   // previous bug had target validation buried inside the compile loop, so
   // `crag compile --target zzzunknown` would print "Compiling → zzzunknown"
   // and "0 gates, 0 runtimes" before finally erroring. Fail fast.
-  const KNOWN_TARGETS = new Set([...ALL_TARGETS, 'all', 'list']);
+  const KNOWN_TARGETS = new Set([...ALL_TARGETS, 'all', 'list', 'scaffold']);
   if (target && !KNOWN_TARGETS.has(target)) {
     console.error(`  Unknown target: ${target}`);
-    console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
+    console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, scaffold, all, list`);
     process.exit(EXIT_USER);
   }
 
@@ -90,9 +91,35 @@ function compile(args) {
     console.log('    crag compile --target zed          .rules');
     console.log('    crag compile --target amazonq      .amazonq/rules/governance.md');
     console.log('    crag compile --target claude       CLAUDE.md\n');
+    console.log('  Infrastructure:');
+    console.log('    crag compile --target scaffold     Hooks, settings, agents, CI playbook\n');
     console.log('  Combined:');
-    console.log(`    crag compile --target all          All ${ALL_TARGETS.length} targets at once`);
+    console.log(`    crag compile --target all          All ${ALL_TARGETS.length} AI config targets at once`);
     console.log('    crag compile --target <t> --dry-run  Preview paths without writing\n');
+    return;
+  }
+
+  // Scaffold is separate from `all` — it generates infrastructure, not AI configs
+  if (target === 'scaffold') {
+    const force = args.includes('--force');
+    if (dryRun) {
+      const scaffoldFiles = [
+        '.claude/hooks/sandbox-guard.sh',
+        '.claude/hooks/drift-detector.sh',
+        '.claude/hooks/circuit-breaker.sh',
+        '.claude/settings.local.json',
+        '.claude/agents/test-runner.md',
+        '.claude/agents/security-reviewer.md',
+        '.claude/ci-playbook.md',
+      ];
+      for (const f of scaffoldFiles) {
+        console.log(`  \x1b[36mplan\x1b[0m ${f}`);
+      }
+      console.log('\n  Dry-run complete — no files written.\n');
+      return;
+    }
+    generateScaffold(cwd, parsed, { force });
+    console.log('\n  Done. Infrastructure scaffolded.\n');
     return;
   }
 

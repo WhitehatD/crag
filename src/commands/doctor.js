@@ -204,7 +204,7 @@ function diagnoseInfrastructure(cwd) {
       name,
       status: present ? 'pass' : 'fail',
       detail: present ? null : `missing: ${file}`,
-      fix: present ? null : `run 'crag init' or 'crag analyze' then 'crag compile --target all'`,
+      fix: present ? null : `run 'crag compile --target scaffold'`,
     });
   }
 
@@ -355,7 +355,7 @@ function diagnoseHooks(cwd) {
       name: 'hooks directory',
       status: 'warn',
       detail: '.claude/hooks/ does not exist',
-      fix: `run 'crag compile --target github' or 'crag init' to generate`,
+      fix: `run 'crag compile --target scaffold' to generate`,
     });
     return { title: 'Hooks', checks };
   }
@@ -375,7 +375,7 @@ function diagnoseHooks(cwd) {
       name: 'sandbox-guard.sh installed',
       status: hasShebang ? 'pass' : 'fail',
       detail: hasShebang ? null : 'missing shebang line (#!/usr/bin/env bash)',
-      fix: hasShebang ? null : `run 'crag compile --target github' to regenerate`,
+      fix: hasShebang ? null : `run 'crag compile --target scaffold --force' to regenerate`,
     });
 
     checks.push({
@@ -403,7 +403,7 @@ function diagnoseHooks(cwd) {
       name: 'sandbox-guard.sh installed',
       status: 'fail',
       detail: 'no sandbox-guard.sh (hard-block of destructive commands is disabled)',
-      fix: `run 'crag compile --target github' to generate the hook`,
+      fix: `run 'crag compile --target scaffold' to generate the hook`,
     });
   }
 
@@ -417,7 +417,7 @@ function diagnoseHooks(cwd) {
         name: 'settings.local.json wires hooks',
         status: hasHooks ? 'pass' : 'warn',
         detail: hasHooks ? `${Object.keys(settings.hooks).length} hook event(s) configured` : 'no hooks section — hooks will not fire',
-        fix: hasHooks ? null : `run 'crag compile --target github' to wire hooks into settings`,
+        fix: hasHooks ? null : `run 'crag compile --target scaffold' to wire hooks into settings`,
       });
 
       // Check for hardcoded paths in the `hooks` section only. User-local
