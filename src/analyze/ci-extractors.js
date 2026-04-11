@@ -31,37 +31,61 @@ const { safeRead } = require('./stacks');
  */
 function extractCiCommands(dir) {
   const commands = [];
+  const managedCommands = [];
+  const unmanagedSources = [];
   let primary = null;
 
   // GitHub Actions
+  // Only files with `# crag:auto-start` are crag-managed. Commands from
+  // companion workflows (extensions-ci.yml, release.yml, etc.) that lack the
+  // marker are collected separately so audit can display them as informational
+  // rather than counting them as issues.
   const ghDir = path.join(dir, '.github', 'workflows');
   if (fs.existsSync(ghDir)) {
     primary = primary || 'github-actions';
     for (const file of walkYaml(ghDir)) {
       const content = safeRead(file);
-      commands.push(...extractRunCommands(content));
+      const cmds = extractRunCommands(content);
+      commands.push(...cmds);
+      if (content.includes('# crag:auto-start')) {
+        managedCommands.push(...cmds);
+      } else {
+        if (cmds.length > 0) {
+          unmanagedSources.push({ file, commands: cmds });
+        }
+      }
     }
   }
+
+  // For all non-GitHub CI systems crag has no concept of managed vs companion
+  // files — every command comes from the single authoritative config, so push
+  // to managedCommands as well.
 
   // GitLab CI
   const gitlabFile = path.join(dir, '.gitlab-ci.yml');
   if (fs.existsSync(gitlabFile)) {
     primary = primary || 'gitlab-ci';
-    commands.push(...extractGitlabCommands(safeRead(gitlabFile)));
+    const cmds = extractGitlabCommands(safeRead(gitlabFile));
+    commands.push(...cmds);
+    managedCommands.push(...cmds);
   }
 
   // CircleCI
   const circleFile = path.join(dir, '.circleci', 'config.yml');
   if (fs.existsSync(circleFile)) {
     primary = primary || 'circle-ci';
-    commands.push(...extractCircleCommands(safeRead(circleFile)));
+    const cmds = extractCircleCommands(safeRead(circleFile));
+    commands.push(...cmds);
+    managedCommands.push(...cmds);
   }
 
   // Travis CI
   const travisFile = path.join(dir, '.travis.yml');
   if (fs.existsSync(travisFile)) {
     primary = primary || 'travis-ci';
-    commands.push(...extractTravisCommands(safeRead(travisFile)));
+    const cmds = extractTravisCommands(safeRead(travisFile));
+    commands.push(...cmds);
+    managedCommands.push(...cmds);
   }
 
   // Azure Pipelines
@@ -69,14 +93,18 @@ function extractCiCommands(dir) {
     const p = path.join(dir, azureFile);
     if (fs.existsSync(p)) {
       primary = primary || 'azure-pipelines';
-      commands.push(...extractAzureCommands(safeRead(p)));
+      const cmds = extractAzureCommands(safeRead(p));
+      commands.push(...cmds);
+      managedCommands.push(...cmds);
     }
   }
   const azureDir = path.join(dir, '.azure-pipelines');
   if (fs.existsSync(azureDir)) {
     primary = primary || 'azure-pipelines';
     for (const file of walkYaml(azureDir)) {
-      commands.push(...extractAzureCommands(safeRead(file)));
+      const cmds = extractAzureCommands(safeRead(file));
+      commands.push(...cmds);
+      managedCommands.push(...cmds);
     }
   }
 
@@ -85,7 +113,9 @@ function extractCiCommands(dir) {
     const p = path.join(dir, bkFile);
     if (fs.existsSync(p)) {
       primary = primary || 'buildkite';
-      commands.push(...extractBuildkiteCommands(safeRead(p)));
+      const cmds = extractBuildkiteCommands(safeRead(p));
+      commands.push(...cmds);
+      managedCommands.push(...cmds);
     }
   }
 
@@ -93,20 +123,26 @@ function extractCiCommands(dir) {
   const droneFile = path.join(dir, '.drone.yml');
   if (fs.existsSync(droneFile)) {
     primary = primary || 'drone';
-    commands.push(...extractDroneCommands(safeRead(droneFile)));
+    const cmds = extractDroneCommands(safeRead(droneFile));
+    commands.push(...cmds);
+    managedCommands.push(...cmds);
   }
 
   // Woodpecker
   const woodFile = path.join(dir, '.woodpecker.yml');
   if (fs.existsSync(woodFile)) {
     primary = primary || 'woodpecker';
-    commands.push(...extractDroneCommands(safeRead(woodFile))); // same format
+    const cmds = extractDroneCommands(safeRead(woodFile)); // same format
+    commands.push(...cmds);
+    managedCommands.push(...cmds);
   }
   const woodDir = path.join(dir, '.woodpecker');
   if (fs.existsSync(woodDir)) {
     primary = primary || 'woodpecker';
     for (const file of walkYaml(woodDir)) {
-      commands.push(...extractDroneCommands(safeRead(file)));
+      const cmds = extractDroneCommands(safeRead(file));
+      commands.push(...cmds);
+      managedCommands.push(...cmds);
     }
   }
 
@@ -114,7 +150,9 @@ function extractCiCommands(dir) {
   const bbFile = path.join(dir, 'bitbucket-pipelines.yml');
   if (fs.existsSync(bbFile)) {
     primary = primary || 'bitbucket';
-    commands.push(...extractBitbucketCommands(safeRead(bbFile)));
+    const cmds = extractBitbucketCommands(safeRead(bbFile));
+    commands.push(...cmds);
+    managedCommands.push(...cmds);
   }
 
   // Jenkins — Jenkinsfile is Groovy, not YAML. We parse `sh/bat/pwsh`
@@ -124,7 +162,9 @@ function extractCiCommands(dir) {
     const p = path.join(dir, jf);
     if (fs.existsSync(p)) {
       primary = primary || 'jenkins';
-      commands.push(...extractJenkinsfileCommands(safeRead(p)));
+      const cmds = extractJenkinsfileCommands(safeRead(p));
+      commands.push(...cmds);
+      managedCommands.push(...cmds);
     }
   }
 
@@ -133,16 +173,20 @@ function extractCiCommands(dir) {
     const p = path.join(dir, cfFile);
     if (fs.existsSync(p)) {
       primary = primary || 'cirrus-ci';
-      commands.push(...extractCirrusCommands(safeRead(p)));
+      const cmds = extractCirrusCommands(safeRead(p));
+      commands.push(...cmds);
+      managedCommands.push(...cmds);
     }
   }
 
   // Ad-hoc ci/ shell scripts (common in C/C++ projects that predate GH Actions)
   // We scan ci/*.sh and scripts/ci-*.sh for canonical names like test.sh,
   // lint.sh, check.sh. Each matching script becomes `bash ci/<name>.sh`.
-  commands.push(...extractCiShellScripts(dir));
+  const shellCmds = extractCiShellScripts(dir);
+  commands.push(...shellCmds);
+  managedCommands.push(...shellCmds);
 
-  return { system: primary, commands };
+  return { system: primary, commands, managedCommands, unmanagedSources };
 }
 
 function walkYaml(dir) {

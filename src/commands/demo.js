@@ -90,7 +90,8 @@ edition = "2021"
     //   - `npx markdownlint '**/*.md'`  (docs linter, not in package.json)
     //   - `cargo deny check`            (supply-chain audit, not in default rust gates)
     // These demonstrate `crag diff` catching real governance-vs-CI drift.
-    '.github/workflows/ci.yml': `name: CI
+    '.github/workflows/ci.yml': `# crag:auto-start
+name: CI
 on: [push, pull_request]
 jobs:
   node:

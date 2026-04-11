@@ -225,11 +225,33 @@ function extractCIGateCommands(cwd) {
   // CircleCI, Travis, Azure, Buildkite, Drone, Woodpecker, Bitbucket,
   // Jenkins, Cirrus) in one pass — previously diff only looked at
   // .github/workflows/ which made it invisible on Jenkins/GitLab projects.
+  //
+  // Use managedCommands (crag-owned files only) so companion workflows like
+  // extensions-ci.yml don't produce false-positive CI extras in audit.
   try {
     const ci = extractCiCommands(cwd);
+    const source = ci.managedCommands ?? ci.commands;
     // Filter to gate-like commands and normalize noise (dedup, de-matrix,
     // drop install/echo/etc.) so the user sees a signal, not a wall of noise.
-    return normalizeCiGates(ci.commands.filter(c => isGateCommand(c)));
+    return normalizeCiGates(source.filter(c => isGateCommand(c)));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Return commands from unmanaged GitHub Actions workflow files (those without
+ * `# crag:auto-start`). Used by audit to display an informational section
+ * that does NOT count toward the issue total.
+ * Returns [{ file: string (relative path), commands: string[] }]
+ */
+function extractUnmanagedCIFiles(cwd) {
+  try {
+    const ci = extractCiCommands(cwd);
+    return (ci.unmanagedSources ?? []).map(s => ({
+      file: path.relative(cwd, s.file),
+      commands: normalizeCiGates(s.commands.filter(c => isGateCommand(c))),
+    })).filter(s => s.commands.length > 0);
   } catch {
     return [];
   }
@@ -321,5 +343,5 @@ function clearCaches() {
   _subdirCache.clear();
 }
 
-module.exports = { diff, normalizeCmd, checkGateReality, extractCIGateCommands, clearCaches };
+module.exports = { diff, normalizeCmd, checkGateReality, extractCIGateCommands, extractUnmanagedCIFiles, clearCaches };
 

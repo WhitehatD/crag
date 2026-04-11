@@ -6,7 +6,7 @@ const { parseGovernance, flattenGates, flattenGatesRich } = require('../governan
 const { cliError, readFileOrExit, EXIT_USER, safeMtime, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 const { planOutputPath, ALL_TARGETS } = require('./compile');
-const { checkGateReality, extractCIGateCommands, normalizeCmd } = require('./diff');
+const { checkGateReality, extractCIGateCommands, extractUnmanagedCIFiles, normalizeCmd } = require('./diff');
 
 /**
  * crag audit — drift detection across governance, compiled configs, and reality.
@@ -43,6 +43,7 @@ function audit(args) {
     missing: [],
     drift: [],
     extra: [],
+    unmanagedCI: [],
   };
 
   // --- Axis 1: Compiled file staleness ---
@@ -97,6 +98,9 @@ function audit(args) {
     }
   }
 
+  // Unmanaged CI: companion workflows without # crag:auto-start (informational only)
+  report.unmanagedCI = extractUnmanagedCIFiles(cwd);
+
   // --- Axis 3: Missing compile targets ---
   const toolIndicators = [
     { dir: '.cursor', target: 'cursor', label: 'Cursor' },
@@ -140,6 +144,7 @@ function audit(args) {
       drift: report.drift.length,
       extra: report.extra.length,
       missing: report.missing.length,
+      unmanagedCI: report.unmanagedCI.length,
       total: report.stale.length + report.drift.length + report.extra.length + report.missing.length,
     };
     console.log(JSON.stringify({ summary, ...report }, null, 2));
@@ -197,6 +202,18 @@ function audit(args) {
     for (const e of report.extra) {
       console.log(`  ${C}+${X} ${e.command}  ${D}in CI, not in governance${X}`);
       issues++;
+    }
+    console.log('');
+  }
+
+  // --- Unmanaged CI (informational — not counted as issues) ---
+  if (report.unmanagedCI.length > 0) {
+    console.log(`  ${D}Companion workflows${X} ${D}(no crag:auto-start — not managed by crag)${X}`);
+    for (const src of report.unmanagedCI) {
+      console.log(`  ${D}\u2139${X} ${src.file}`);
+      for (const cmd of src.commands) {
+        console.log(`    ${D}· ${cmd}${X}`);
+      }
     }
     console.log('');
   }
