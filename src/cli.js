@@ -84,6 +84,7 @@ function printUsage() {
   Upgrade options:
     crag upgrade --check              Show what would change
     crag upgrade --workspace          Update all workspace members
+    crag upgrade --siblings           Update all sibling repos in parent directory
     crag upgrade --force              Overwrite modified skills (with backup)
 
   Cloud:

@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
 const { syncSkills } = require('../update/skill-sync');
 const { detectWorkspace } = require('../workspace/detect');
@@ -11,10 +12,11 @@ const { validateFlags } = require('../cli-args');
  */
 function upgrade(args) {
   validateFlags('upgrade', args, {
-    boolean: ['--check', '--workspace', '--force'],
+    boolean: ['--check', '--workspace', '--siblings', '--force'],
   });
   const checkOnly = args.includes('--check');
   const workspace = args.includes('--workspace');
+  const siblings = args.includes('--siblings');
   const force = args.includes('--force');
   const cwd = process.cwd();
 
@@ -23,6 +25,32 @@ function upgrade(args) {
   // Upgrade current project
   const result = syncSkills(cwd, { force, dryRun: checkOnly });
   printResult(cwd, result, checkOnly);
+
+  // Upgrade sibling repos if requested
+  if (siblings) {
+    const parentDir = path.dirname(cwd);
+    let entries;
+    try {
+      entries = fs.readdirSync(parentDir, { withFileTypes: true });
+    } catch {
+      console.log('  Could not read parent directory.\n');
+      return;
+    }
+    const siblingDirs = entries
+      .filter(e => e.isDirectory() && e.name !== path.basename(cwd))
+      .map(e => path.join(parentDir, e.name))
+      .filter(d => fs.existsSync(path.join(d, '.claude', 'skills')));
+
+    if (siblingDirs.length === 0) {
+      console.log('  No sibling projects with crag installed found.\n');
+    } else {
+      console.log(`  Siblings: ${siblingDirs.length} project(s) found\n`);
+      for (const dir of siblingDirs) {
+        const sibResult = syncSkills(dir, { force, dryRun: checkOnly });
+        printResult(dir, sibResult, checkOnly);
+      }
+    }
+  }
 
   // Upgrade workspace members if requested
   if (workspace) {

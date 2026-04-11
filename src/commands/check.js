@@ -92,10 +92,42 @@ function check(args = []) {
   console.log(`\n  ${report.total - report.missing}/${report.total} core files present.`);
   if (report.missing > 0) {
     console.log(`  Run 'crag compile --target scaffold' to generate missing files.\n`);
+    printUpgradeNudge(cwd);
     process.exit(EXIT_USER);
   } else {
     console.log(`  Infrastructure complete.\n`);
+    printUpgradeNudge(cwd);
   }
+}
+
+/**
+ * If any installed skills are behind the bundled version, print a styled
+ * update-available banner. Silent when all skills are current.
+ */
+function printUpgradeNudge(cwd) {
+  let syncSkills;
+  try {
+    ({ syncSkills } = require('../update/skill-sync'));
+  } catch {
+    return; // skill-sync unavailable — skip silently
+  }
+
+  const result = syncSkills(cwd, { dryRun: true });
+  if (result.updated.length === 0) return;
+
+  const width = 54;
+  const border = '─'.repeat(width - 2);
+  const pad = (s) => {
+    const visible = s.replace(/\x1b\[[0-9;]*m/g, '');
+    return s + ' '.repeat(Math.max(0, width - 4 - visible.length));
+  };
+
+  console.log(`  \x1b[33m┌─ crag update available ${'─'.repeat(width - 26)}┐\x1b[0m`);
+  for (const item of result.updated) {
+    console.log(`  \x1b[33m│\x1b[0m  ${pad(`${item.name}: ${item.from} → ${item.to}`)}\x1b[33m│\x1b[0m`);
+  }
+  console.log(`  \x1b[33m│\x1b[0m  ${pad('Run: crag upgrade')}\x1b[33m│\x1b[0m`);
+  console.log(`  \x1b[33m└${border}┘\x1b[0m\n`);
 }
 
 module.exports = { check, runChecks, CORE_CHECKS, OPTIONAL_CHECKS };
