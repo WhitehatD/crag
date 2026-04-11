@@ -86,14 +86,17 @@ function parseSimpleToml(content) {
       continue;
     }
 
-    const kvMatch = line.match(/^([A-Za-z0-9_-]+)\s*=\s*(.+?)\s*(?:#.*)?$/);
+    const kvMatch = line.match(/^([A-Za-z0-9_-]+)\s*=\s*(.+)$/);
     if (kvMatch) {
       const key = (currentSection ? currentSection + '.' : '') + kvMatch[1];
       let value = kvMatch[2].trim();
-      // Strip surrounding quotes
-      if ((value.startsWith('"') && value.endsWith('"')) ||
-          (value.startsWith("'") && value.endsWith("'"))) {
-        value = value.slice(1, -1);
+      // Try quoted value first (handles trailing comments after closing quote)
+      const qm = value.match(/^(["'])(.*?)\1\s*(?:#.*)?$/);
+      if (qm) {
+        value = qm[2];
+      } else {
+        // Unquoted value — strip inline comment
+        value = value.replace(/\s+#.*$/, '');
       }
       values.set(key, value);
     }

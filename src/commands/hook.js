@@ -160,7 +160,7 @@ if echo "$STAGED" | grep -q "\\.claude/governance\\.md"; then
   npx @whitehatd/crag compile --target all 2>/dev/null
   if [ $? -eq 0 ]; then
     # Re-stage compiled files (only those that exist)
-    for f in AGENTS.md GEMINI.md .clinerules .continuerules .rules \\
+    for f in CLAUDE.md AGENTS.md GEMINI.md .clinerules .continuerules .rules \\
              .cursor/rules/governance.mdc .github/copilot-instructions.md \\
              .windsurf/rules/governance.md .amazonq/rules/governance.md \\
              .github/workflows/gates.yml .husky/pre-commit \\

@@ -138,9 +138,9 @@ function run(args) {
     case 'demo':      demo(args.slice(1)); break;
     case 'audit':     audit(args); break;
     case 'hook':      hook(args); break;
-    case 'login':     return login(args);
-    case 'sync':      return sync(args);
-    case 'team':      return team(args);
+    case 'login':     login(args).catch(e => { console.error(e.message); process.exit(1); }); break;
+    case 'sync':      sync(args).catch(e => { console.error(e.message); process.exit(1); }); break;
+    case 'team':      team(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'version': case '--version': case '-v':
       console.log(`  crag v${require('../package.json').version}`);
       break;

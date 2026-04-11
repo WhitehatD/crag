@@ -275,7 +275,7 @@ slash-command or agent support.
 | Stress test | [101 repos · 4,400 invocations · 0 crashes](./benchmarks/stress-test.md) |
 | Reference benchmark | [40/40 Grade A](./benchmarks/results.md) across 7 language families |
 | Determinism | SHA-verified, byte-identical across Ubuntu + macOS + Windows |
-| Tests | 589 passing |
+| Tests | 591 passing |
 | Dependencies | 0 |
 
 ---

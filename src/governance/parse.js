@@ -209,7 +209,7 @@ function parseGovernance(content) {
           path: sectionMeta.path,
           condition: sectionMeta.condition,
         };
-      } else if (line.match(/^\s*- [^[\s]/) && line.trim() !== '-') {
+      } else if (line.match(/^\s*- (?!\[.*\]\()/) && line.match(/^\s*- [^\s]/) && line.trim() !== '-') {
         let cmd = line.replace(/^\s*- /, '').trim();
         let classification = 'MANDATORY';
 

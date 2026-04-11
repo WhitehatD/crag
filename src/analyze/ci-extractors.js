@@ -377,12 +377,11 @@ function extractJenkinsfileCommands(content) {
     // Matches: sh 'foo', sh "foo", bat 'bar', pwsh "baz"
     const inlineMatch = line.match(/\b(sh|bat|pwsh|powershell)\s*\(?(['"])([^'"]*?)\2\)?/);
     if (inlineMatch) {
-      // But only if the string is NOT the start of a triple-quoted block
-      // (triple quotes: the char after the match end should not be another
-      // matching quote)
-      const afterIdx = inlineMatch.index + inlineMatch[0].length;
-      const beforeIdx = line.indexOf(inlineMatch[2] + inlineMatch[3] + inlineMatch[2]);
-      if (line[afterIdx] !== inlineMatch[2] && line[beforeIdx - 1] !== inlineMatch[2]) {
+      // Skip if this is part of a triple-quoted block (''' or """)
+      const quoteChar = inlineMatch[2];
+      const tripleQuote = quoteChar.repeat(3);
+      const matchEnd = inlineMatch.index + inlineMatch[0].length;
+      if (!line.includes(tripleQuote) && line[matchEnd] !== quoteChar) {
         const cmd = inlineMatch[3].trim();
         if (cmd) commands.push(cmd);
       }

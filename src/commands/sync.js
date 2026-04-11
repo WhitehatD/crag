@@ -277,9 +277,10 @@ async function syncStatus() {
   const govPath = path.join(cwd, '.claude', 'governance.md');
   if (fs.existsSync(govPath) && result.latestHash) {
     const local = fs.readFileSync(govPath, 'utf-8');
-    const lh = localHash(local);
-    const cloudShort = result.latestHash.slice(0, 12);
-    if (lh === cloudShort) {
+    const localFull = crypto.createHash('sha256').update(local).digest('hex');
+    const lh = localFull.slice(0, 12);
+    const cloudShort = result.latestHash.length > 12 ? result.latestHash.slice(0, 12) : result.latestHash;
+    if (localFull === result.latestHash || lh === cloudShort) {
       console.log(`  ${G}\u2713${X} In sync`);
     } else {
       console.log(`  ${Y}!${X} Local differs from cloud`);

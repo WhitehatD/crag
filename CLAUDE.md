@@ -35,3 +35,4 @@ Run these in order before committing. Stop on first MANDATORY failure:
 This project uses **crag** (https://www.npmjs.com/package/@whitehatd/crag) as its governance engine. The `governance.md` file is the authoritative source. Run `crag audit` to detect drift and `crag compile --target all` to recompile all targets.
 
 <!-- crag:auto-end -->
+

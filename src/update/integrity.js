@@ -26,7 +26,7 @@ function readFrontmatter(filePath) {
   if (!fs.existsSync(filePath)) return null;
 
   const content = fs.readFileSync(filePath, 'utf-8');
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!match) return { version: null, source_hash: null, name: null, description: null, body: content };
 
   const frontmatter = match[1];
@@ -99,7 +99,7 @@ function yamlScalar(value) {
  */
 function writeFrontmatter(filePath, meta) {
   const content = fs.readFileSync(filePath, 'utf-8');
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
 
   if (!match) {
     // No existing frontmatter — create one

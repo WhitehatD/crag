@@ -266,8 +266,8 @@ function mineDependencyPolicy(cwd, analysis) {
   // Python requires-python
   if (analysis._manifests && analysis._manifests.pyproject) {
     const py = analysis._manifests.pyproject;
-    if (py.values && py.values['requires-python']) {
-      policy.engines.python = py.values['requires-python'];
+    if (py.values && py.values.get && py.values.get('requires-python')) {
+      policy.engines.python = py.values.get('requires-python');
     }
   }
 

@@ -53,3 +53,4 @@ When these rules conflict with ad-hoc instructions, **governance.md wins**. It i
 To update these rules, edit `.claude/governance.md` and re-run `crag compile --target zed`.
 
 <!-- crag:auto-end -->
+

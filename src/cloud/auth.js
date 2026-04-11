@@ -82,7 +82,7 @@ function browserAuth() {
       const error = url.searchParams.get('error');
       if (error) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(html('Login failed', error));
+        res.end(html('Login failed', esc(error)));
         finish(new Error(error));
         return;
       }

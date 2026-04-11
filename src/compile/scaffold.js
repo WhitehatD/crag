@@ -94,8 +94,11 @@ function writeSettings(cwd, parsed, force) {
     }
   }
 
-  // If hooks are already wired and not forcing, skip
-  if (!force && existing.hooks && Object.keys(existing.hooks).length > 0) {
+  // If sandbox-guard hook is already wired and not forcing, skip
+  const hasSandboxGuard = existing.hooks?.PreToolUse?.some(h =>
+    h.hooks?.some(hk => hk.command?.includes('sandbox-guard'))
+  );
+  if (!force && hasSandboxGuard) {
     return { path: settingsPath, action: 'skipped' };
   }
 

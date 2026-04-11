@@ -138,7 +138,7 @@ function checkRegistry() {
 function compareVersions(a, b) {
   const parse = (v) => {
     const [core, prerelease] = String(v).split('-', 2);
-    const parts = core.split('.').map(n => parseInt(n, 10) || 0);
+    const parts = core.split('.').map(n => { const p = parseInt(n, 10); return Number.isNaN(p) ? 0 : p; });
     while (parts.length < 3) parts.push(0);
     return { core: parts.slice(0, 3), prerelease: prerelease || null };
   };

@@ -34,8 +34,8 @@ function generateGeminiMd(cwd, parsed) {
     '## Project Context',
     '',
     `- **Name:** ${parsed.name || 'Unnamed'}`,
-    parsed.description ? `- **Description:** ${parsed.description}` : '',
-    parsed.stack.length > 0 ? `- **Stack:** ${parsed.stack.join(', ')}` : '',
+    parsed.description ? `- **Description:** ${parsed.description}` : null,
+    parsed.stack.length > 0 ? `- **Stack:** ${parsed.stack.join(', ')}` : null,
     `- **Runtimes:** ${parsed.runtimes.join(', ') || 'auto-detected'}`,
     '',
     '## Rules',
@@ -56,7 +56,7 @@ function generateGeminiMd(cwd, parsed) {
     '- Run quality gates before committing',
     '- Review security implications of all changes',
     '',
-  ].filter(l => l !== undefined && l !== '').join('\n');
+  ].filter(l => l != null).join('\n');
 
   const outPath = path.join(cwd, 'GEMINI.md');
   const final = preserveCustomSections(outPath, content, 'markdown');

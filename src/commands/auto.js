@@ -52,7 +52,10 @@ function auto(args) {
       // Pass through progress lines (✓, ✗, →), suppress headers/footers
       if (/[✓✗→]/.test(s) || /\u2713|\u2717|\u2192/.test(s)) origLog(s);
     };
-    console.warn = () => {};
+    console.warn = (msg) => {
+      const s = String(msg || '');
+      if (/[✓✗→⚠]/.test(s) || /\u2713|\u2717|\u2192|\u26a0/.test(s) || /warning|warn/i.test(s)) origWarn(s);
+    };
     try {
       analyze(['analyze', '--no-install-skills']);
     } finally {

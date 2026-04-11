@@ -25,7 +25,7 @@ function generatePreCommitConfig(cwd, parsed) {
       shell = `cd "${shellEscapeDoubleQuoted(gate.path)}" && ${shell}`;
     }
     if (gate.condition) {
-      shell = `[ -e "${shellEscapeDoubleQuoted(gate.condition)}" ] && (${shell}) || true`;
+      shell = `if [ -e "${shellEscapeDoubleQuoted(gate.condition)}" ]; then ${shell}; fi`;
     }
     // For OPTIONAL/ADVISORY: never fail the hook
     if (gate.classification === 'OPTIONAL' || gate.classification === 'ADVISORY') {

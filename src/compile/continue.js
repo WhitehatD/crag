@@ -49,7 +49,7 @@ ${parsed.description || ''}
 
 ## Project Context
 
-${parsed.stack.length > 0 ? `- **Stack:** ${parsed.stack.join(', ')}` : ''}- **Runtimes:** ${parsed.runtimes.join(', ') || 'polyglot'}
+${parsed.stack.length > 0 ? `- **Stack:** ${parsed.stack.join(', ')}\n` : ''}- **Runtimes:** ${parsed.runtimes.join(', ') || 'polyglot'}
 - **Governance source:** \`.claude/governance.md\` (single source of truth)
 
 ## Coding Rules

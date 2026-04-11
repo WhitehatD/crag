@@ -44,7 +44,7 @@ function compile(args) {
     string: ['--target'],
   });
   const targetIdx = args.indexOf('--target');
-  const target = targetIdx !== -1 ? args[targetIdx + 1] : args[1];
+  const target = targetIdx !== -1 ? args[targetIdx + 1] : (args[1] && !args[1].startsWith('--') ? args[1] : undefined);
   const dryRun = args.includes('--dry-run');
   const verbose = args.includes('--verbose');
 

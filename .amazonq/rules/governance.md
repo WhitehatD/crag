@@ -47,3 +47,4 @@ When these instructions seem to conflict with something in the repo, **`.claude/
 **Tool:** crag — https://www.npmjs.com/package/@whitehatd/crag
 
 <!-- crag:auto-end -->
+
