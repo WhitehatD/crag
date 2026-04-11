@@ -1,0 +1,1908 @@
+[
+  {
+    "repo": "hashicorp/vault",
+    "stars": 35379,
+    "stack": "go, docker, node, typescript",
+    "gates": 50,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:40:39.425Z"
+  },
+  {
+    "repo": "vitejs/vite",
+    "stars": 79847,
+    "stack": "node, typescript",
+    "gates": 44,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:47:54.304Z"
+  },
+  {
+    "repo": "docker/compose",
+    "stars": 37259,
+    "stack": "go, docker",
+    "gates": 40,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "CLAUDE.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:37:28.957Z"
+  },
+  {
+    "repo": "sveltejs/svelte",
+    "stars": 86279,
+    "stack": "node, typescript",
+    "gates": 40,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:46:41.138Z"
+  },
+  {
+    "repo": "withastro/astro",
+    "stars": 58362,
+    "stack": "node, typescript",
+    "gates": 40,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:48:12.852Z"
+  },
+  {
+    "repo": "vitejs/vite-plugin-react",
+    "stars": 1062,
+    "stack": "node, typescript",
+    "gates": 39,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:47:58.218Z"
+  },
+  {
+    "repo": "trpc/trpc",
+    "stars": 39965,
+    "stack": "node, express, typescript, fastify",
+    "gates": 38,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2,
+      "total": 2
+    },
+    "aiConfigs": [
+      ".cursor/rules"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:47:08.994Z"
+  },
+  {
+    "repo": "remix-run/remix",
+    "stars": 32605,
+    "stack": "node, typescript",
+    "gates": 37,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:43:54.315Z"
+  },
+  {
+    "repo": "neovim/neovim",
+    "stars": 98586,
+    "stack": "zig, lua, c++/cmake",
+    "gates": 32,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:06.610Z"
+  },
+  {
+    "repo": "rails/rails",
+    "stars": 58333,
+    "stack": "node, ruby, rails",
+    "gates": 31,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:43:41.544Z"
+  },
+  {
+    "repo": "cli/cli",
+    "stars": 43744,
+    "stack": "go",
+    "gates": 30,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:36:25.802Z"
+  },
+  {
+    "repo": "micronaut-projects/micronaut-core",
+    "stars": 6400,
+    "stack": "java/gradle",
+    "gates": 29,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      ".clinerules"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:41:22.846Z"
+  },
+  {
+    "repo": "ziglang/zig",
+    "stars": 42813,
+    "stack": "zig, c++/cmake",
+    "gates": 21,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:48:40.402Z"
+  },
+  {
+    "repo": "ansible/ansible",
+    "stars": 68348,
+    "stack": "python",
+    "gates": 19,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 2
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:34:27.617Z"
+  },
+  {
+    "repo": "vapor/vapor",
+    "stars": 26022,
+    "stack": "swift",
+    "gates": 14,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-11T19:47:12.740Z"
+  },
+  {
+    "repo": "apache/flink",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\apache__flink'...\nUpdating files:   0% (2/25937)\rUpdating files:   1% (260/25937)\rUpdating files:   2% (519/25937)\rUpdating files:   3% (7",
+    "timestamp": "2026-04-11T19:34:51.637Z"
+  },
+  {
+    "repo": "cockroachdb/cockroach",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\cockroachdb__cockroach'...\nUpdating files:   0% (2/20193)\rUpdating files:   1% (202/20193)\rUpdating files:   2% (404/20193)\rUpdating files",
+    "timestamp": "2026-04-11T19:36:29.458Z"
+  },
+  {
+    "repo": "dotnet/aspnetcore",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\dotnet__aspnetcore'...\nUpdating files:   0% (2/16646)\rUpdating files:   1% (167/16646)\rUpdating files:   2% (333/16646)\rUpdating files:   ",
+    "timestamp": "2026-04-11T19:37:31.498Z"
+  },
+  {
+    "repo": "dotnet/maui",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\dotnet__maui'...\nUpdating files:   0% (2/24709)\rUpdating files:   1% (248/24709)\rUpdating files:   2% (495/24709)\rUpdating files:   3% (74",
+    "timestamp": "2026-04-11T19:37:46.845Z"
+  },
+  {
+    "repo": "elastic/elasticsearch",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\elastic__elasticsearch'...\nUpdating files:   0% (2/40289)\rUpdating files:   1% (403/40289)\rUpdating files:   1% (517/40289)\rUpdating files",
+    "timestamp": "2026-04-11T19:38:31.467Z"
+  },
+  {
+    "repo": "facebook/react-native",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\facebook__react-native'...\nUpdating files:   0% (2/7858)\rUpdating files:   1% (79/7858)\rUpdating files:   2% (158/7858)\rUpdating files:   ",
+    "timestamp": "2026-04-11T19:39:32.767Z"
+  },
+  {
+    "repo": "flutter/flutter",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\flutter__flutter'...\nUpdating files:   0% (2/15749)\rUpdating files:   1% (158/15749)\rUpdating files:   2% (315/15749)\rUpdating files:   3%",
+    "timestamp": "2026-04-11T19:39:45.636Z"
+  },
+  {
+    "repo": "moby/moby",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\moby__moby'...\nUpdating files:   0% (2/12491)\rUpdating files:   1% (125/12491)\rUpdating files:   2% (250/12491)\rUpdating files:   3% (375/",
+    "timestamp": "2026-04-11T19:41:36.604Z"
+  },
+  {
+    "repo": "prisma/prisma",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\prisma__prisma'...\nUpdating files:   0% (2/4625)\rUpdating files:   1% (47/4625)\rUpdating files:   2% (93/4625)\rUpdating files:   3% (139/4",
+    "timestamp": "2026-04-11T19:42:59.580Z"
+  },
+  {
+    "repo": "quarkusio/quarkus",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\quarkusio__quarkus'...\nUpdating files:   0% (2/29969)\rUpdating files:   1% (300/29969)\rUpdating files:   2% (600/29969)\rUpdating files:   ",
+    "timestamp": "2026-04-11T19:43:22.112Z"
+  },
+  {
+    "repo": "spring-projects/spring-framework",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\spring-projects__spring-framework'...\nUpdating files:   0% (2/11368)\rUpdating files:   1% (114/11368)\rUpdating files:   2% (228/11368)\rUpd",
+    "timestamp": "2026-04-11T19:45:54.875Z"
+  },
+  {
+    "repo": "turbopack/turbopack",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\turbopack__turbopack'...\nremote: Repository not found.\nfatal: repository 'https://github.com/turbopack/turbopack.git/' not found\n",
+    "timestamp": "2026-04-11T19:47:12.162Z"
+  },
+  {
+    "repo": "vercel/next.js",
+    "stars": 0,
+    "stack": "",
+    "gates": 0,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0,
+      "total": 0
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\vercel__next.js'...\nUpdating files:   0% (2/28547)\rUpdating files:   1% (286/28547)\rUpdating files:   2% (571/28547)\rUpdating files:   3% ",
+    "timestamp": "2026-04-11T19:47:22.621Z"
+  },
+  {
+    "repo": "biomejs/biome",
+    "stars": 24332,
+    "stack": "node, rust, react, typescript",
+    "gates": 47,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:35:49.725Z"
+  },
+  {
+    "repo": "prometheus/prometheus",
+    "stars": 63534,
+    "stack": "go, docker, node, typescript",
+    "gates": 47,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:43:05.206Z"
+  },
+  {
+    "repo": "etcd-io/etcd",
+    "stars": 51606,
+    "stack": "go, docker",
+    "gates": 44,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:39:13.194Z"
+  },
+  {
+    "repo": "facebook/docusaurus",
+    "stars": 64492,
+    "stack": "node, typescript",
+    "gates": 44,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:39:25.777Z"
+  },
+  {
+    "repo": "tauri-apps/tauri",
+    "stars": 105320,
+    "stack": "node, rust, typescript",
+    "gates": 44,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:46:50.965Z"
+  },
+  {
+    "repo": "junegunn/fzf",
+    "stars": 79388,
+    "stack": "go, ruby, docker",
+    "gates": 43,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:41:04.217Z"
+  },
+  {
+    "repo": "nuxt/nuxt",
+    "stars": 59999,
+    "stack": "node, typescript, vue",
+    "gates": 43,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:20.915Z"
+  },
+  {
+    "repo": "containerd/containerd",
+    "stars": 20571,
+    "stack": "go",
+    "gates": 42,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:37:00.222Z"
+  },
+  {
+    "repo": "n8n-io/n8n",
+    "stars": 183589,
+    "stack": "node, typescript, express",
+    "gates": 42,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:41:49.786Z"
+  },
+  {
+    "repo": "traefik/traefik",
+    "stars": 62651,
+    "stack": "go, docker",
+    "gates": 42,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:47:03.333Z"
+  },
+  {
+    "repo": "minio/minio",
+    "stars": 60668,
+    "stack": "go, docker",
+    "gates": 41,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:41:31.806Z"
+  },
+  {
+    "repo": "evanw/esbuild",
+    "stars": 39835,
+    "stack": "go, node, typescript",
+    "gates": 40,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:39:16.987Z"
+  },
+  {
+    "repo": "servo/servo",
+    "stars": 36240,
+    "stack": "rust, python",
+    "gates": 39,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:44:10.398Z"
+  },
+  {
+    "repo": "yarnpkg/berry",
+    "stars": 8044,
+    "stack": "node, typescript, react",
+    "gates": 39,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:48:20.565Z"
+  },
+  {
+    "repo": "angular/angular",
+    "stars": 100035,
+    "stack": "node, typescript",
+    "gates": 38,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:34:14.663Z"
+  },
+  {
+    "repo": "django/django",
+    "stars": 87253,
+    "stack": "node, python",
+    "gates": 38,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:37:21.776Z"
+  },
+  {
+    "repo": "redwoodjs/redwood",
+    "stars": 17623,
+    "stack": "node, typescript, fastify, react, express",
+    "gates": 38,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:43:48.460Z"
+  },
+  {
+    "repo": "openai/openai-node",
+    "stars": 10798,
+    "stack": "node, typescript",
+    "gates": 37,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:24.236Z"
+  },
+  {
+    "repo": "denoland/deno",
+    "stars": 106438,
+    "stack": "rust",
+    "gates": 36,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:37:12.376Z"
+  },
+  {
+    "repo": "pandas-dev/pandas",
+    "stars": 48471,
+    "stack": "python, c/meson",
+    "gates": 35,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:46.604Z"
+  },
+  {
+    "repo": "solidjs/solid",
+    "stars": 35391,
+    "stack": "node, typescript, solid",
+    "gates": 35,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:45:52.739Z"
+  },
+  {
+    "repo": "alacritty/alacritty",
+    "stars": 63375,
+    "stack": "rust",
+    "gates": 33,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:34:12.436Z"
+  },
+  {
+    "repo": "fastify/fastify",
+    "stars": 36022,
+    "stack": "node, typescript",
+    "gates": 33,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:39:43.212Z"
+  },
+  {
+    "repo": "hashicorp/terraform",
+    "stars": 48122,
+    "stack": "go, docker",
+    "gates": 33,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:40:32.319Z"
+  },
+  {
+    "repo": "leptos-rs/leptos",
+    "stars": 20553,
+    "stack": "rust",
+    "gates": 32,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:41:14.136Z"
+  },
+  {
+    "repo": "BurntSushi/ripgrep",
+    "stars": 62241,
+    "stack": "rust",
+    "gates": 31,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:36:03.308Z"
+  },
+  {
+    "repo": "drizzle-team/drizzle-orm",
+    "stars": 33814,
+    "stack": "node, typescript",
+    "gates": 30,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:38:28.108Z"
+  },
+  {
+    "repo": "scikit-learn/scikit-learn",
+    "stars": 65774,
+    "stack": "python, c/meson",
+    "gates": 29,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:44:05.478Z"
+  },
+  {
+    "repo": "helix-editor/helix",
+    "stars": 43893,
+    "stack": "rust",
+    "gates": 28,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:40:48.999Z"
+  },
+  {
+    "repo": "phoenixframework/phoenix",
+    "stars": 22963,
+    "stack": "node, elixir, phoenix",
+    "gates": 28,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:53.251Z"
+  },
+  {
+    "repo": "ajeetdsouza/zoxide",
+    "stars": 35502,
+    "stack": "rust",
+    "gates": 27,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:34:10.575Z"
+  },
+  {
+    "repo": "elixir-lang/elixir",
+    "stars": 26383,
+    "stack": "elixir",
+    "gates": 26,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:39:07.424Z"
+  },
+  {
+    "repo": "encode/starlette",
+    "stars": 12197,
+    "stack": "python",
+    "gates": 26,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:39:10.836Z"
+  },
+  {
+    "repo": "apache/kafka",
+    "stars": 32354,
+    "stack": "java/gradle",
+    "gates": 24,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:35:17.610Z"
+  },
+  {
+    "repo": "charmbracelet/bubbletea",
+    "stars": 41476,
+    "stack": "go",
+    "gates": 24,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:36:23.697Z"
+  },
+  {
+    "repo": "expressjs/express",
+    "stars": 68924,
+    "stack": "node",
+    "gates": 23,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:39:23.815Z"
+  },
+  {
+    "repo": "laravel/laravel",
+    "stars": 83999,
+    "stack": "node, php, laravel",
+    "gates": 22,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:41:12.182Z"
+  },
+  {
+    "repo": "livebook-dev/livebook",
+    "stars": 5762,
+    "stack": "elixir, phoenix, docker",
+    "gates": 22,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:41:17.565Z"
+  },
+  {
+    "repo": "nicklockwood/SwiftFormat",
+    "stars": 8767,
+    "stack": "swift, docker",
+    "gates": 21,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:17.541Z"
+  },
+  {
+    "repo": "apple/swift-package-manager",
+    "stars": 10121,
+    "stack": "swift, c++/cmake",
+    "gates": 16,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 95,
+    "error": null,
+    "timestamp": "2026-04-11T19:35:31.301Z"
+  },
+  {
+    "repo": "grafana/grafana",
+    "stars": 73143,
+    "stack": "node, react, typescript, go, docker",
+    "gates": 67,
+    "drift": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 4
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:40:06.685Z"
+  },
+  {
+    "repo": "astral-sh/ruff",
+    "stars": 46998,
+    "stack": "rust, python, docker",
+    "gates": 53,
+    "drift": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 4
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:35:36.379Z"
+  },
+  {
+    "repo": "Shopify/hydrogen",
+    "stars": 1924,
+    "stack": "node, react, typescript",
+    "gates": 48,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2,
+      "total": 4
+    },
+    "aiConfigs": [
+      "CLAUDE.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:45:48.896Z"
+  },
+  {
+    "repo": "webpack/webpack",
+    "stars": 65839,
+    "stack": "node, typescript",
+    "gates": 46,
+    "drift": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 4
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:48:04.172Z"
+  },
+  {
+    "repo": "nestjs/nest",
+    "stars": 75150,
+    "stack": "node, express, typescript, fastify",
+    "gates": 44,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:14.603Z"
+  },
+  {
+    "repo": "apache/airflow",
+    "stars": 45008,
+    "stack": "python, docker",
+    "gates": 41,
+    "drift": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 4
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:34:33.387Z"
+  },
+  {
+    "repo": "pydantic/pydantic",
+    "stars": 27442,
+    "stack": "python",
+    "gates": 38,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:43:13.829Z"
+  },
+  {
+    "repo": "shadcn-ui/ui",
+    "stars": 112115,
+    "stack": "node, typescript, next.js",
+    "gates": 38,
+    "drift": {
+      "stale": 0,
+      "drift": 1,
+      "extra": 0,
+      "missing": 2,
+      "total": 3
+    },
+    "aiConfigs": [
+      ".cursor/rules"
+    ],
+    "aiConfigCount": 1,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:45:41.442Z"
+  },
+  {
+    "repo": "pnpm/pnpm",
+    "stars": 34576,
+    "stack": "node, typescript",
+    "gates": 35,
+    "drift": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 4
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:55.629Z"
+  },
+  {
+    "repo": "psf/black",
+    "stars": 41461,
+    "stack": "python, docker",
+    "gates": 35,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:43:09.226Z"
+  },
+  {
+    "repo": "langchain-ai/langchain",
+    "stars": 133178,
+    "stack": "python",
+    "gates": 30,
+    "drift": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 4
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:41:06.202Z"
+  },
+  {
+    "repo": "pallets/flask",
+    "stars": 71410,
+    "stack": "python",
+    "gates": 30,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:42.254Z"
+  },
+  {
+    "repo": "pallets/werkzeug",
+    "stars": 6855,
+    "stack": "python",
+    "gates": 30,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:44.454Z"
+  },
+  {
+    "repo": "python/mypy",
+    "stars": 20359,
+    "stack": "python",
+    "gates": 29,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:43:17.361Z"
+  },
+  {
+    "repo": "tiangolo/fastapi",
+    "stars": 97077,
+    "stack": "python",
+    "gates": 29,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:46:55.201Z"
+  },
+  {
+    "repo": "caddyserver/caddy",
+    "stars": 71447,
+    "stack": "go",
+    "gates": 27,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:36:05.386Z"
+  },
+  {
+    "repo": "psf/requests",
+    "stars": 53880,
+    "stack": "python",
+    "gates": 26,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 90,
+    "error": null,
+    "timestamp": "2026-04-11T19:43:11.602Z"
+  },
+  {
+    "repo": "tokio-rs/tokio",
+    "stars": 31637,
+    "stack": "rust",
+    "gates": 31,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 2,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 89,
+    "error": null,
+    "timestamp": "2026-04-11T19:47:00.677Z"
+  },
+  {
+    "repo": "curl/curl",
+    "stars": 41265,
+    "stack": "c++/cmake, docker",
+    "gates": 35,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 3,
+      "missing": 1,
+      "total": 4
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 86,
+    "error": null,
+    "timestamp": "2026-04-11T19:37:07.591Z"
+  },
+  {
+    "repo": "calcom/cal.com",
+    "stars": 41106,
+    "stack": "node, typescript, docker, react, next.js",
+    "gates": 53,
+    "drift": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2,
+      "total": 5
+    },
+    "aiConfigs": [
+      ".cursor/rules",
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 3,
+    "score": 85,
+    "error": null,
+    "timestamp": "2026-04-11T19:36:07.814Z"
+  },
+  {
+    "repo": "vuejs/core",
+    "stars": 53413,
+    "stack": "node, typescript",
+    "gates": 44,
+    "drift": {
+      "stale": 0,
+      "drift": 1,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 85,
+    "error": null,
+    "timestamp": "2026-04-11T19:48:01.113Z"
+  },
+  {
+    "repo": "supabase/supabase",
+    "stars": 100678,
+    "stack": "node, typescript, react, next.js, docker",
+    "gates": 43,
+    "drift": {
+      "stale": 1,
+      "drift": 1,
+      "extra": 0,
+      "missing": 2,
+      "total": 4
+    },
+    "aiConfigs": [
+      ".cursor/rules",
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 85,
+    "error": null,
+    "timestamp": "2026-04-11T19:46:06.570Z"
+  },
+  {
+    "repo": "zed-industries/zed",
+    "stars": 78925,
+    "stack": "rust",
+    "gates": 38,
+    "drift": {
+      "stale": 4,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 5
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md",
+      "GEMINI.md",
+      ".rules"
+    ],
+    "aiConfigCount": 4,
+    "score": 85,
+    "error": null,
+    "timestamp": "2026-04-11T19:48:30.959Z"
+  },
+  {
+    "repo": "loco-rs/loco",
+    "stars": 8813,
+    "stack": "rust",
+    "gates": 31,
+    "drift": {
+      "stale": 0,
+      "drift": 1,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 85,
+    "error": null,
+    "timestamp": "2026-04-11T19:41:20.359Z"
+  },
+  {
+    "repo": "huggingface/transformers",
+    "stars": 159204,
+    "stack": "python",
+    "gates": 36,
+    "drift": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 2,
+      "missing": 1,
+      "total": 6
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md",
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 3,
+    "score": 84,
+    "error": null,
+    "timestamp": "2026-04-11T19:40:52.067Z"
+  },
+  {
+    "repo": "excalidraw/excalidraw",
+    "stars": 120813,
+    "stack": "node, typescript, docker",
+    "gates": 46,
+    "drift": {
+      "stale": 3,
+      "drift": 1,
+      "extra": 0,
+      "missing": 1,
+      "total": 5
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 80,
+    "error": null,
+    "timestamp": "2026-04-11T19:39:19.693Z"
+  },
+  {
+    "repo": "vercel/turborepo",
+    "stars": 30166,
+    "stack": "node, typescript, rust",
+    "gates": 51,
+    "drift": {
+      "stale": 1,
+      "drift": 2,
+      "extra": 0,
+      "missing": 2,
+      "total": 5
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 75,
+    "error": null,
+    "timestamp": "2026-04-11T19:47:46.642Z"
+  },
+  {
+    "repo": "TanStack/query",
+    "stars": 49093,
+    "stack": "node, typescript",
+    "gates": 42,
+    "drift": {
+      "stale": 0,
+      "drift": 2,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 75,
+    "error": null,
+    "timestamp": "2026-04-11T19:46:47.004Z"
+  },
+  {
+    "repo": "vercel/ai",
+    "stars": 23410,
+    "stack": "node, typescript, hono",
+    "gates": 39,
+    "drift": {
+      "stale": 3,
+      "drift": 1,
+      "extra": 0,
+      "missing": 2,
+      "total": 6
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 75,
+    "error": null,
+    "timestamp": "2026-04-11T19:47:14.890Z"
+  },
+  {
+    "repo": "rollup/rollup",
+    "stars": 26266,
+    "stack": "node, typescript",
+    "gates": 50,
+    "drift": {
+      "stale": 3,
+      "drift": 2,
+      "extra": 0,
+      "missing": 1,
+      "total": 6
+    },
+    "aiConfigs": [
+      "AGENTS.md",
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 70,
+    "error": null,
+    "timestamp": "2026-04-11T19:43:58.415Z"
+  },
+  {
+    "repo": "oven-sh/bun",
+    "stars": 88996,
+    "stack": "node, typescript, bun, zig, rust",
+    "gates": 48,
+    "drift": {
+      "stale": 2,
+      "drift": 3,
+      "extra": 0,
+      "missing": 2,
+      "total": 7
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 60,
+    "error": null,
+    "timestamp": "2026-04-11T19:42:26.731Z"
+  },
+  {
+    "repo": "astral-sh/ty",
+    "stars": 18264,
+    "stack": "python, docker",
+    "gates": 37,
+    "drift": {
+      "stale": 1,
+      "drift": 3,
+      "extra": 0,
+      "missing": 1,
+      "total": 5
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 60,
+    "error": null,
+    "timestamp": "2026-04-11T19:35:47.466Z"
+  }
+]
