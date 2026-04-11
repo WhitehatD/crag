@@ -12,12 +12,16 @@ npx @whitehatd/crag
 
 ![crag on django/django — zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
 
-1. **Analyze** your repo → extract real CI + rules
-2. **Compile** governance → all tools & agents
-3. **Audit** drift → keep everything in sync
+Your CI is the ground truth for what quality means in your repo.
+Your agents don't know it. When you add a lint gate in GitHub Actions,
+your Cursor rules don't update. Your CLAUDE.md doesn't update.
+Thirteen tool-specific files — all drifting apart.
 
-A deterministic engine that enforces your real CI gates across every AI agent.
-Zero dependencies. No LLM. No network. No API keys.
+crag reads your CI and codebase once, writes a single `governance.md`,
+and compiles it to every tool's native format. One file in. Thirteen
+files out. Change a rule once, recompile, done.
+
+Deterministic. No LLM. No network. No API keys.
 
 [![npm version](https://img.shields.io/npm/v/%40whitehatd%2Fcrag?color=%23e8bb3a&label=npm&logo=npm)](https://www.npmjs.com/package/@whitehatd/crag)
 [![Test](https://github.com/WhitehatD/crag/actions/workflows/test.yml/badge.svg)](https://github.com/WhitehatD/crag/actions/workflows/test.yml)
@@ -31,7 +35,7 @@ Zero dependencies. No LLM. No network. No API keys.
 
 ---
 
-## What happens when you run it
+## What it does
 
 `crag analyze` reads your project — CI workflows, package manifests,
 configs, directory structure, code patterns — and writes a
@@ -96,7 +100,7 @@ One file in, thirteen files out. Change a rule, recompile, done.
 
 ---
 
-## Then it watches your back
+## Governance drifts. crag catches it.
 
 ```bash
 $ crag audit
@@ -113,9 +117,20 @@ $ crag audit
   ✗ npx tsc --noEmit                 tsc not in devDependencies
   ✗ npm run lint                     "lint" script not in package.json
 
+  Companion workflows (no crag:auto-start — not managed by crag)
+  ℹ .github/workflows/deploy.yml
+    · docker compose build
+    · ssh deploy@prod
+  ℹ .github/workflows/publish.yml
+    · npm publish
+
   2 stale · 2 drift
   Fix: crag compile --target all — or — crag audit --fix
 ```
+
+Workflows without `# crag:auto-start` are shown as informational
+context — they don't count as drift. Add the marker to any workflow you
+want crag to enforce.
 
 Install the pre-commit hook and it auto-recompiles on every commit:
 
@@ -160,6 +175,9 @@ Full results: [`benchmarks/phase1-benchmark.md`](./benchmarks/phase1-benchmark.m
 ## Get started
 
 ```bash
+# See it live — zero config, zero install, ~3 seconds
+npx @whitehatd/crag demo
+
 # One command — analyze + compile in one shot
 npx @whitehatd/crag
 
@@ -169,6 +187,15 @@ npx @whitehatd/crag compile --target all       # compile to 13 targets
 npx @whitehatd/crag compile --target scaffold  # generate hooks, settings, agents
 npx @whitehatd/crag audit                      # check for drift
 npx @whitehatd/crag hook install               # enforce on every commit
+
+# Health and diagnostics:
+npx @whitehatd/crag check                     # verify infrastructure is complete
+npx @whitehatd/crag diff                      # compare governance against codebase reality
+npx @whitehatd/crag doctor                    # deep diagnostic (integrity, drift, hook validity)
+
+# Keep skills current:
+npx @whitehatd/crag upgrade                   # update universal skills in this repo
+npx @whitehatd/crag upgrade --siblings        # update all repos in parent directory at once
 ```
 
 **Requirements**: Node.js 18+ and `git`. Zero runtime dependencies.
@@ -190,13 +217,53 @@ recompilation.
 **Audit.** Three detection axes: (1) compiled configs older than
 governance.md, (2) governance references tools that don't exist, (3) AI
 tool directories present but no compiled config. Reports drift, suggests
-fixes.
+fixes. CI workflow files without `# crag:auto-start` are shown as an
+informational footnote — not counted as issues — so companion workflows
+(deploy, publish, extensions CI) don't generate noise.
+
+**Diff.** Shows exactly where governance and codebase diverge: gates in
+governance that don't exist in CI, gates in CI that governance doesn't
+know about, and which specific files caused the discrepancy.
+
+**Doctor.** Deep diagnostic that verifies governance file integrity,
+checks hook installation, validates that all compile targets are present,
+and surfaces latent drift that `audit` might miss.
 
 **Hook.** Pre-commit hook auto-recompiles when governance.md changes.
 Optional drift gate blocks commits if configs are stale.
 
 Deterministic: same input produces byte-identical output. No LLM. No
 network. No API keys.
+
+---
+
+## Universal skills
+
+AI agents forget context between sessions. You re-explain the stack,
+the conventions, the open PRs — every time. And after the agent does
+work, nobody checks whether the governance gates actually passed.
+
+Two skills ship with crag and solve this for any project, any language:
+
+| Skill | What it does |
+|---|---|
+| `pre-start-context` | Loads full project context at the start of any session — stack, architecture, governance rules, session state from last time. Every agent starts informed, not blank. |
+| `post-start-validation` | Runs your governance gates after any task, captures decisions as searchable knowledge, writes session state so the next session can pick up where you left off. |
+
+```bash
+# Install both into .claude/skills/
+npx @whitehatd/crag compile --target scaffold
+
+# Check they're current
+npx @whitehatd/crag check
+
+# Update after a crag release (all repos at once)
+npx @whitehatd/crag upgrade --siblings
+```
+
+The skills read your `governance.md` and adapt. Nothing is hardcoded.
+Works with Claude Code, Cursor Agent, Copilot Chat, any IDE with
+slash-command or agent support.
 
 ---
 
