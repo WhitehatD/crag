@@ -61,7 +61,10 @@ function generateHusky(cwd, parsed) {
 
   const outPath = path.join(dir, 'pre-commit');
   const { preserveCustomSections } = require('./preserve');
-  const final = preserveCustomSections(outPath, script, 'comment');
+  // Shebang must stay on line 1 — split it off before wrapping in markers
+  const [shebang, ...rest] = script.split('\n');
+  const wrapped = preserveCustomSections(outPath, rest.join('\n'), 'comment');
+  const final = shebang + '\n' + wrapped;
   atomicWrite(outPath, final);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
 }
