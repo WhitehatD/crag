@@ -75,6 +75,16 @@ function diff(args) {
   console.log(`\n  ${results.match} match, ${results.drift} drift, ${results.missing} missing, ${results.extra} extra (${total} total)\n`);
 }
 
+// Binary→package mapping for tools where the CLI name differs from the npm
+// package name (e.g. `npx biome` installs from `@biomejs/biome`).
+const BINARY_PKG_ALIASES = {
+  biome: '@biomejs/biome',
+  tsc: 'typescript',
+  tsup: 'tsup',
+  svelte: 'svelte',
+  astro: '@astrojs/cli',
+};
+
 function checkGateReality(cwd, cmd) {
   // Commands containing shell/CI variables (${...}, $VAR) are CI infrastructure,
   // not verifiable as local quality gates. Skip them.
@@ -86,9 +96,9 @@ function checkGateReality(cwd, cmd) {
       // In monorepos, tools like tsc live in workspace packages, not root.
       // Check both root deps and workspace package.json files.
       if (hasNpmDep(cwd, tool) || hasNpmBin(cwd, tool)) return true;
-      // Also check if typescript is a dep (covers npx tsc --noEmit in workspaces
-      // where tsc is available via workspace hoisting)
-      if (tool === 'tsc' && (hasNpmDep(cwd, 'typescript') || hasNpmBin(cwd, 'tsc'))) return true;
+      // Check scoped-package aliases (binary name ≠ npm package name)
+      const alias = BINARY_PKG_ALIASES[tool];
+      if (alias && hasNpmDep(cwd, alias)) return true;
       return false;
     }},
     { pattern: /^npm\s+run\s+(\w[\w-]*)/, check: (script) => hasNpmScript(cwd, script) },
@@ -146,7 +156,8 @@ function checkSubdirs(rootCwd, cmd) {
     if (npxM) {
       const tool = npxM[1];
       if (hasNpmDep(subCwd, tool) || hasNpmBin(subCwd, tool)) return true;
-      if (tool === 'tsc' && (hasNpmDep(subCwd, 'typescript') || hasNpmBin(subCwd, 'tsc'))) return true;
+      const alias = BINARY_PKG_ALIASES[tool];
+      if (alias && hasNpmDep(subCwd, alias)) return true;
     }
     // npm run <script>
     const npmRunM = cmd.match(/^npm\s+run\s+(\w[\w-]*)/);
