@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.10] — 2026-04-13
+
 ### Added
 - Forgejo / Gitea Actions support: analyze extracts from `.forgejo/workflows/` and `.gitea/workflows/`, compile generates `.forgejo/workflows/gates.yml` with Forgejo action mirrors (`code.forgejo.org`)
 - New compile target: `crag compile --target forgejo` (14 total targets)
@@ -395,7 +397,8 @@ Initial release under the `scaffold-cli` name.
 
 Initial capabilities: universal skills (pre-start-context, post-start-validation), interview-driven governance generation, 3 compile targets (github, husky, pre-commit), basic workspace support for monorepos via multi-level `governance.md`.
 
-[Unreleased]: https://github.com/WhitehatD/crag/compare/v0.5.9...HEAD
+[Unreleased]: https://github.com/WhitehatD/crag/compare/v0.5.10...HEAD
+[0.5.10]: https://github.com/WhitehatD/crag/compare/v0.5.9...v0.5.10
 [0.5.9]: https://github.com/WhitehatD/crag/compare/v0.5.8...v0.5.9
 [0.5.8]: https://github.com/WhitehatD/crag/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/WhitehatD/crag/compare/v0.5.6...v0.5.7
