@@ -228,6 +228,11 @@ function parseGovernance(content) {
         }
       }
     }
+
+    // Warn about unclosed code fences — subsequent sections silently eaten.
+    if (inCodeBlock) {
+      result.warnings.push('Unclosed code fence (```) in Gates section — subsequent gates may have been lost.');
+    }
   }
 
   // Warn if no gates were found (helps users catch structural mistakes)

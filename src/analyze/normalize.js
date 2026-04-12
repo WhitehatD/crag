@@ -95,6 +95,12 @@ function isNoise(cmd) {
   // Bare shell variable references
   if (/^\$\{?\w+\}?\s*$/.test(trimmed)) return true;
 
+  // Shell loop variables — commands containing `$f`, `$i`, `$d`, etc.
+  // (single-letter) or common loop names like `$file`, `$dir`, `$item`.
+  // These are meaningless when extracted from a for-loop body in isolation.
+  if (/\$\{?[a-z]\}?(?=["'\s;|&>)\]}]|$)/.test(trimmed)) return true;
+  if (/\$\{?(file|dir|item|entry|elem|pkg|mod|src|lib)\}?(?=["'\s;|&>)\]}]|$)/.test(trimmed)) return true;
+
   // Echo / printf / export / set-output — shell plumbing
   if (/^(echo|printf|export|set)\s/.test(trimmed)) return true;
   if (trimmed.startsWith('echo "::set-output')) return true;

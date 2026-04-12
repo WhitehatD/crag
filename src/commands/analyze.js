@@ -450,17 +450,13 @@ function detectDeployment(dir, result) {
 }
 
 function inferGitPatterns(dir, result) {
+  const { classifyGitBranchStrategy, classifyGitCommitConvention } = require('../governance/drift-utils');
   try {
     const log = execSync('git log --oneline --all -50', { cwd: dir, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] });
-    const lines = log.trim().split('\n');
-
-    const conventional = lines.filter(l => /\b(feat|fix|docs|chore|style|refactor|test|build|ci|perf|revert)[\(:!]/.test(l));
-    result.commitConvention = conventional.length > lines.length * 0.3 ? 'conventional' : 'free-form';
+    result.commitConvention = classifyGitCommitConvention(log);
 
     const branches = execSync('git branch -a --format="%(refname:short)"', { cwd: dir, encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] });
-    const branchList = branches.trim().split('\n');
-    const featureBranches = branchList.filter(b => /^(feat|fix|docs|chore|feature|hotfix|release)\//.test(b));
-    result.branchStrategy = featureBranches.length > 2 ? 'feature-branches' : 'trunk-based';
+    result.branchStrategy = classifyGitBranchStrategy(branches);
   } catch (err) {
     if (err && err.code !== 'ENOENT') {
       cliWarn(`could not detect git patterns in ${path.basename(dir)}: ${err.message}`);
