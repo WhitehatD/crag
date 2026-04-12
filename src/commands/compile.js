@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { parseGovernance, flattenGates } = require('../governance/parse');
 const { generateGitHubActions } = require('../compile/github-actions');
+const { generateForgejo } = require('../compile/forgejo');
 const { generateHusky } = require('../compile/husky');
 const { generatePreCommitConfig } = require('../compile/pre-commit');
 const { generateAgentsMd } = require('../compile/agents-md');
@@ -24,6 +25,7 @@ const { validateFlags } = require('../cli-args');
 // Grouped: CI (3) + AI agent native (3) + AI agent extras (6)
 const ALL_TARGETS = [
   'github',
+  'forgejo',
   'husky',
   'pre-commit',
   'agents-md',
@@ -77,6 +79,7 @@ function compile(args) {
     console.log(`  ${gateCount} gate(s) in ${Object.keys(parsed.gates).length} section(s), ${parsed.runtimes.length} runtime(s) detected\n`);
     console.log('  CI / git hooks:');
     console.log('    crag compile --target github       .github/workflows/gates.yml');
+    console.log('    crag compile --target forgejo      .forgejo/workflows/gates.yml');
     console.log('    crag compile --target husky        .husky/pre-commit');
     console.log('    crag compile --target pre-commit   .pre-commit-config.yaml\n');
     console.log('  AI coding agents — native formats:');
@@ -130,7 +133,7 @@ function compile(args) {
   // no checks). The user should either fix governance.md or run analyze
   // again. Doc-only targets (cursor, agents-md, gemini, ...) still work
   // because they're reference material, not executable.
-  const EXECUTABLE_TARGETS = new Set(['github', 'husky', 'pre-commit']);
+  const EXECUTABLE_TARGETS = new Set(['github', 'forgejo', 'husky', 'pre-commit']);
   const wantsExecutable = targets.some(t => EXECUTABLE_TARGETS.has(t));
   if (gateCount === 0 && wantsExecutable) {
     console.error(`  \x1b[31m✗\x1b[0m Refusing to compile executable targets with 0 gates.`);
@@ -209,6 +212,7 @@ function compile(args) {
 function runGenerator(target, cwd, parsed) {
   switch (target) {
     case 'github':     generateGitHubActions(cwd, parsed); break;
+    case 'forgejo':    generateForgejo(cwd, parsed); break;
     case 'husky':      generateHusky(cwd, parsed); break;
     case 'pre-commit': generatePreCommitConfig(cwd, parsed); break;
     case 'agents-md':  generateAgentsMd(cwd, parsed); break;
@@ -278,6 +282,7 @@ function formatBytes(n) {
 function planOutputPath(cwd, target) {
   const map = {
     'github':     path.join(cwd, '.github', 'workflows', 'gates.yml'),
+    'forgejo':    path.join(cwd, '.forgejo', 'workflows', 'gates.yml'),
     'husky':      path.join(cwd, '.husky', 'pre-commit'),
     'pre-commit': path.join(cwd, '.pre-commit-config.yaml'),
     'agents-md':  path.join(cwd, 'AGENTS.md'),

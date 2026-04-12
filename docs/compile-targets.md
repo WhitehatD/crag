@@ -6,6 +6,7 @@ failures leave prior state intact (temp-file + rename).
 | Target | Output | Consumer |
 |---|---|---|
 | `github` | `.github/workflows/gates.yml` | GitHub Actions |
+| `forgejo` | `.forgejo/workflows/gates.yml` | Forgejo / Gitea Actions |
 | `husky` | `.husky/pre-commit` | husky |
 | `pre-commit` | `.pre-commit-config.yaml` | pre-commit.com |
 | `agents-md` | `AGENTS.md` | Codex, Aider, Factory (60K+ repos) |
@@ -22,7 +23,7 @@ failures leave prior state intact (temp-file + rename).
 ## Scaffold target
 
 `crag compile --target scaffold` generates project infrastructure that
-`crag doctor` and `crag check` expect. Unlike the 13 AI-config targets
+`crag doctor` and `crag check` expect. Unlike the 14 AI-config targets
 above, scaffold is **not** included in `--target all` — it's run
 separately because these files are commit-once infrastructure, not
 frequently recompiled.
@@ -50,7 +51,7 @@ project automatically.
 
 ## Refusal behavior
 
-`crag compile` refuses to emit the `github`, `husky`, and `pre-commit`
+`crag compile` refuses to emit the `github`, `forgejo`, `husky`, and `pre-commit`
 targets when the governance has zero gates — these targets produce valid
 YAML but broken artifacts in that state. Doc-only targets (`cursor`,
 `agents-md`, `gemini`, `copilot`, `cline`, `continue`, `windsurf`, `zed`,
@@ -59,7 +60,7 @@ not executable.
 
 ## Atomicity
 
-All 13 compilers route file writes through `src/compile/atomic-write.js`,
+All 14 compilers route file writes through `src/compile/atomic-write.js`,
 which writes to a crypto-random temp file and then renames. This means:
 
 - A crash during compile never leaves a half-written file.

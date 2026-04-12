@@ -26,7 +26,7 @@ const { execFileSync } = require('child_process');
 const { validateFlags } = require('../cli-args');
 const { analyze } = require('./analyze');
 const { diff } = require('./diff');
-const { compile } = require('./compile');
+const { compile, ALL_TARGETS } = require('./compile');
 const { EXIT_INTERNAL } = require('../cli-errors');
 
 // ANSI helpers — single-letter convention shared across all crag commands
@@ -419,7 +419,7 @@ function printHumanReport(summary, samples) {
     }
   }
 
-  line(`    ${G}✓${X} 13 files compiled from one governance.md`);
+  line(`    ${G}✓${X} ${ALL_TARGETS.length} files compiled from one governance.md`);
   line(`    ${G}✓${X} Per-path glob-scoped files for Cursor, Windsurf, Copilot`);
 
   if (summary.deterministic && summary.deterministic.ok) {

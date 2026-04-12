@@ -396,6 +396,46 @@ test('extractCiCommands: ci/ shell scripts with canonical names', () => {
   assert.ok(!commands.includes('bash ci/random-helper.sh'));
 });
 
+// --- Forgejo / Gitea Actions -------------------------------------------
+
+test('extractCiCommands: Forgejo Actions (.forgejo/workflows/)', () => {
+  const dir = mkFixture({
+    '.forgejo/workflows/test.yml': `
+name: Tests
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm test
+      - run: npm run lint
+`,
+  });
+  const { system, commands } = extractCiCommands(dir);
+  assert.strictEqual(system, 'forgejo-actions');
+  assert.ok(commands.includes('npm test'));
+  assert.ok(commands.includes('npm run lint'));
+});
+
+test('extractCiCommands: Gitea Actions (.gitea/workflows/)', () => {
+  const dir = mkFixture({
+    '.gitea/workflows/ci.yml': `
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo test
+      - run: cargo clippy
+`,
+  });
+  const { system, commands } = extractCiCommands(dir);
+  assert.strictEqual(system, 'forgejo-actions');
+  assert.ok(commands.includes('cargo test'));
+  assert.ok(commands.includes('cargo clippy'));
+});
+
 // --- Cross-CI quote-stripping consistency regression test ---------------
 
 test('extractCiCommands: quote stripping is CONSISTENT across all CI systems', () => {
@@ -429,6 +469,10 @@ test('extractCiCommands: quote stripping is CONSISTENT across all CI systems', (
     {
       name: 'bitbucket',
       files: { 'bitbucket-pipelines.yml': `pipelines:\n  default:\n    - step:\n        script:\n          - "npm test"\n` },
+    },
+    {
+      name: 'forgejo-actions',
+      files: { '.forgejo/workflows/q.yml': `jobs:\n  t:\n    steps:\n      - run: "npm test"\n` },
     },
   ];
 

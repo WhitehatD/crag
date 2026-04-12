@@ -113,6 +113,7 @@ function audit(args) {
     { file: 'GEMINI.md', target: 'gemini', label: 'Gemini', checkFile: true },
     { file: 'AGENTS.md', target: 'agents-md', label: 'AGENTS.md', checkFile: true },
     { dir: '.github/workflows', target: 'github', label: 'GitHub Actions' },
+    { dir: '.forgejo/workflows', target: 'forgejo', label: 'Forgejo Actions' },
     { dir: '.husky', target: 'husky', label: 'Husky' },
   ];
 

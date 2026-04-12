@@ -34,7 +34,7 @@ src/
   analyze/                Project analysis subsystem
     stacks.js             Language/framework detection (25+ detectors)
     gates.js              Per-language gate inference (lint/test/build commands)
-    ci-extractors.js      Multi-CI command extraction (10 CI systems)
+    ci-extractors.js      Multi-CI command extraction (12 CI systems)
     normalize.js          CI gate deduplication and normalization
     project-mining.js     Architecture, testing profile, code style, anti-patterns
     doc-mining.js         Gate discovery from README/CONTRIBUTING docs
@@ -51,6 +51,7 @@ src/
     windsurf.js           .windsurf/rules/governance.md
     zed.js                .rules
     amazonq.js            .amazonq/rules/governance.md
+    forgejo.js            .forgejo/workflows/gates.yml (Forgejo / Gitea Actions)
     github-actions.js     .github/workflows/gates.yml
     husky.js              .husky/pre-commit
     pre-commit.js         .pre-commit-config.yaml
@@ -150,11 +151,11 @@ Content exceeding 256 KB is truncated at the last section boundary to prevent Re
 
 ### Target registry
 
-13 compile targets, stored in `ALL_TARGETS` (line 25):
+14 compile targets, stored in `ALL_TARGETS` (line 25):
 
 | Group | Targets |
 |-------|---------|
-| CI / git hooks | `github`, `husky`, `pre-commit` |
+| CI / git hooks | `github`, `forgejo`, `husky`, `pre-commit` |
 | AI agents (native) | `agents-md`, `cursor`, `gemini` |
 | AI agents (additional) | `copilot`, `cline`, `continue`, `windsurf`, `zed`, `amazonq`, `claude` |
 
@@ -193,7 +194,7 @@ Three drift detection axes:
 
 ### Axis 1: Staleness (line 50)
 
-For each of the 13 compile targets, compare `mtime` of the compiled config against `mtime` of `governance.md`. If governance is newer, the config is **stale**.
+For each of the 14 compile targets, compare `mtime` of the compiled config against `mtime` of `governance.md`. If governance is newer, the config is **stale**.
 
 ### Axis 2: Reality (line 79)
 
@@ -275,6 +276,7 @@ Conservative principle: prefer canonical commands, never guess exotic flags.
 | CI System | Config file(s) | Extractor |
 |-----------|---------------|-----------|
 | GitHub Actions | `.github/workflows/*.yml` | `extractRunCommands()` from yaml-run.js |
+| Forgejo / Gitea | `.forgejo/workflows/*.yml`, `.gitea/workflows/*.yml` | `extractRunCommands()` (same as GH Actions) |
 | GitLab CI | `.gitlab-ci.yml` | `extractGitlabCommands()` |
 | CircleCI | `.circleci/config.yml` | `extractCircleCommands()` |
 | Travis CI | `.travis.yml` | `extractTravisCommands()` |

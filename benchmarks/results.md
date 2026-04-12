@@ -24,7 +24,7 @@
 | Ruby supported | no | yes (+ rails/sinatra/hanami) | ✓ |
 | PHP supported | no | yes (+ laravel/symfony/slim/yii) | ✓ |
 | Python `uv run`/`tox run`/`hatch`/`poetry`/`pdm` | no | yes | ✓ |
-| CI systems beyond GitHub Actions | 0 | **8** (GitLab, CircleCI, Travis, Azure, Buildkite, Drone, Woodpecker, Bitbucket) | ✓ |
+| CI systems beyond GitHub Actions | 0 | **9** (Forgejo/Gitea, GitLab, CircleCI, Travis, Azure, Buildkite, Drone, Woodpecker, Bitbucket) | ✓ |
 | Workspace awareness in `analyze` | no | yes (auto-reports + optional --workspace) | ✓ |
 | Matrix/noise dedup in CI step extraction | no | yes | ✓ |
 | `express` false-positive fix (axios) | broken | fixed (framework only flagged from runtime deps) | ✓ |
@@ -183,7 +183,7 @@ Raw outputs: `benchmarks/full-capability/*.{analyze,workspace,diff,doctor,compil
 | Grade B | 0 / 40 (0%) |
 | Grade C | 0 / 40 (0%) |
 | Distinct languages covered | Node, TypeScript, Python, Rust, Go, Java (Maven + Gradle), Kotlin, Ruby (+Rails), PHP (+Laravel), Elixir (+Phoenix), .NET, Swift, C#, React, Next.js, Astro, Hono, Vue |
-| Distinct CI systems parsed | GitHub Actions, GitLab CI, CircleCI, Travis, Azure Pipelines, Buildkite, Drone, Woodpecker, Bitbucket (9) |
+| Distinct CI systems parsed | GitHub Actions, Forgejo/Gitea, GitLab CI, CircleCI, Travis, Azure Pipelines, Buildkite, Drone, Woodpecker, Bitbucket (10) |
 | Distinct workspace types | pnpm, npm, cargo, go, gradle, maven, bazel, nx, turbo, git-submodules, independent-repos, **subservices** |
 | Repos with 3+ stacks detected | **15 / 40** |
 | Repos with workspace detected | **17 / 40** |

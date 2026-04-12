@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Forgejo / Gitea Actions support: analyze extracts from `.forgejo/workflows/` and `.gitea/workflows/`, compile generates `.forgejo/workflows/gates.yml` with Forgejo action mirrors (`code.forgejo.org`)
+- New compile target: `crag compile --target forgejo` (14 total targets)
+
 ## [0.5.9] — 2026-04-12
 
 ## [0.5.8] — 2026-04-11

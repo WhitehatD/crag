@@ -232,10 +232,10 @@ function checkCommitConvention(cwd, content, results) {
 
 function extractCIGateCommands(cwd) {
   // Reuse the analyze-side extractor so diff sees the SAME gates that
-  // analyze would propose. This covers all 10+ CI systems (GitHub, GitLab,
-  // CircleCI, Travis, Azure, Buildkite, Drone, Woodpecker, Bitbucket,
-  // Jenkins, Cirrus) in one pass — previously diff only looked at
-  // .github/workflows/ which made it invisible on Jenkins/GitLab projects.
+  // analyze would propose. This covers all 12 CI systems (GitHub, Forgejo,
+  // GitLab, CircleCI, Travis, Azure, Buildkite, Drone, Woodpecker,
+  // Bitbucket, Jenkins, Cirrus) in one pass — previously diff only looked
+  // at .github/workflows/ which made it invisible on Jenkins/GitLab projects.
   //
   // Use managedCommands (crag-owned files only) so companion workflows like
   // extensions-ci.yml don't produce false-positive CI extras in audit.

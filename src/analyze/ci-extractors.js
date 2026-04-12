@@ -5,6 +5,7 @@
  *
  * The GitHub Actions path already lives in src/governance/yaml-run.js
  * (extractRunCommands) and we reuse it here. This module adds support for:
+ *   - Forgejo / Gitea    (.forgejo/workflows/, .gitea/workflows/)
  *   - GitLab CI          (.gitlab-ci.yml)
  *   - CircleCI           (.circleci/config.yml)
  *   - Travis CI          (.travis.yml)
@@ -53,6 +54,20 @@ function extractCiCommands(dir) {
         if (cmds.length > 0) {
           unmanagedSources.push({ file, commands: cmds });
         }
+      }
+    }
+  }
+
+  // Forgejo / Gitea Actions (GitHub Actions-compatible YAML in .forgejo/ or .gitea/)
+  for (const actionsDir of ['.forgejo/workflows', '.gitea/workflows']) {
+    const fDir = path.join(dir, actionsDir);
+    if (fs.existsSync(fDir)) {
+      primary = primary || 'forgejo-actions';
+      for (const file of walkYaml(fDir)) {
+        const content = safeRead(file);
+        const cmds = extractRunCommands(content);
+        commands.push(...cmds);
+        managedCommands.push(...cmds);
       }
     }
   }

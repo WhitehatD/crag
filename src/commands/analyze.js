@@ -52,7 +52,7 @@ function analyze(args) {
   // its own project (Stack: unknown, Project: <subdir-basename>). That's
   // almost always wrong — the user meant to analyze the enclosing repo.
   const INFRA_SUBDIRS = new Set([
-    '.claude', '.buildkite', '.github', '.gitlab',
+    '.claude', '.buildkite', '.github', '.gitlab', '.forgejo', '.gitea',
     '.cursor', '.vscode', '.idea', '.husky',
   ]);
   const base = path.basename(cwd);
@@ -310,7 +310,10 @@ function analyzeProject(dir, opts = {}) {
   result.ci = ci.system;
   result.ciGates = normalizeCiGates(ci.commands.filter(c => isGateCommand(c)));
   if (ci.system) {
-    log(`  ${D}\u2192${X} ${ci.system === 'github-actions' ? '.github/workflows/' : ci.system}  ${D}${ci.commands.length} commands parsed${X}`);
+    const ciLabel = ci.system === 'github-actions' ? '.github/workflows/'
+      : ci.system === 'forgejo-actions' ? '.forgejo/workflows/'
+      : ci.system;
+    log(`  ${D}\u2192${X} ${ciLabel}  ${D}${ci.commands.length} commands parsed${X}`);
   }
 
   // Task runner target mining

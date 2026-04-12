@@ -52,7 +52,7 @@ Ask ONE question at a time. Wait for the answer. Adapt follow-ups. Skip obvious 
 
 ### 1.4 Deployment
 - How deployed? (Docker Compose, Kubernetes, Vercel, Fly.io, bare metal)
-- CI/CD? (GitHub Actions, GitLab CI, none)
+- CI/CD? (GitHub Actions, Forgejo Actions, GitLab CI, none)
 - Deploy strategy? (blue-green, rolling, recreate)
 
 ### 1.5 Quality Bar
@@ -131,7 +131,7 @@ Write `.claude/governance.md` from the interview answers:
 
 ## Deployment
 - Target: [Docker Compose / K8s / Vercel / etc.]
-- CI: [GitHub Actions / GitLab / none]
+- CI: [GitHub Actions / Forgejo Actions / GitLab / none]
 - Strategy: [blue-green / rolling / recreate]
 - [Verification command if applicable: health check URL, kubectl status, etc.]
 

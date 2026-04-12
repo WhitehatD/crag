@@ -8,7 +8,7 @@ One `governance.md` -> compiled to CI, hooks, and every agent. No drift.
 npx @whitehatd/crag
 ```
 
-> AGENTS.md | Claude Code | Cursor | Copilot | Gemini | Cline | Continue | Windsurf | Zed | Amazon Q | GitHub Actions | Husky | Pre-commit
+> AGENTS.md | Claude Code | Cursor | Copilot | Gemini | Cline | Continue | Windsurf | Zed | Amazon Q | GitHub Actions | Forgejo Actions | Husky | Pre-commit
 
 ![crag on django/django -- zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
 
@@ -26,13 +26,13 @@ npx @whitehatd/crag
 
 ## The problem
 
-Your CI is the ground truth for what quality means in your repo. Your AI agents don't know it. When you add a lint gate in GitHub Actions, your Cursor rules don't update. Your CLAUDE.md doesn't update. Thirteen tool-specific files -- all drifting apart.
+Your CI is the ground truth for what quality means in your repo. Your AI agents don't know it. When you add a lint gate in GitHub Actions, your Cursor rules don't update. Your CLAUDE.md doesn't update. Fourteen tool-specific files -- all drifting apart.
 
 Developers fix bad AI suggestions in 2 seconds and think "AI is dumb sometimes." They never aggregate the cost: 30 seconds per bad suggestion x 10 devs x 50 prompts per day = hours of wasted time. Nobody diffs their config files.
 
 ## The fix
 
-crag reads your CI and codebase once, writes a single `governance.md`, and compiles it to every tool's native format. One file in. Thirteen files out. Change a rule once, recompile, done.
+crag reads your CI and codebase once, writes a single `governance.md`, and compiles it to every tool's native format. One file in. Fourteen files out. Change a rule once, recompile, done.
 
 Deterministic. No LLM. No network. No API keys. Zero dependencies.
 
@@ -90,7 +90,7 @@ crag auto         # full pipeline: analyze, compile, audit, hook install
 | `crag` | Default: analyze + compile + audit in one shot |
 | `crag analyze` | Read CI, package manifests, code patterns. Write `governance.md` |
 | `crag compile --target <t>` | Compile governance.md to a specific target format |
-| `crag compile --target all` | Compile to all 13 targets at once |
+| `crag compile --target all` | Compile to all 14 targets at once |
 | `crag compile --target scaffold` | Generate hooks, settings, agents, CI playbook |
 | `crag audit` | Detect drift between governance.md and compiled configs |
 | `crag audit --json` | Machine-readable drift report |
@@ -114,11 +114,12 @@ crag auto         # full pipeline: analyze, compile, audit, hook install
 
 ## Compile targets
 
-`crag compile --target all` generates configs for 13 targets:
+`crag compile --target all` generates configs for 14 targets:
 
 | Target | Output file | Consumer |
 |---|---|---|
 | `github` | `.github/workflows/gates.yml` | GitHub Actions |
+| `forgejo` | `.forgejo/workflows/gates.yml` | Forgejo / Gitea Actions |
 | `husky` | `.husky/pre-commit` | Husky pre-commit hooks |
 | `pre-commit` | `.pre-commit-config.yaml` | pre-commit.com |
 | `agents-md` | `AGENTS.md` | Codex, Aider, Factory (60K+ repos) |
@@ -255,7 +256,7 @@ Previous benchmark (50 repos): [`benchmarks/phase1-benchmark.md`](./benchmarks/p
 
 ## How it works
 
-**Analyze.** Reads your repo with 25+ language detectors, 11 CI system extractors, and 8 framework convention engines. Writes `governance.md` with gates, architecture, testing profile, code style, and anti-patterns. Under a second, zero config.
+**Analyze.** Reads your repo with 25+ language detectors, 12 CI system extractors, and 8 framework convention engines. Writes `governance.md` with gates, architecture, testing profile, code style, and anti-patterns. Under a second, zero config.
 
 **Compile.** Converts `governance.md` to each tool's native format. MDC frontmatter for Cursor. YAML triggers for Windsurf. Numbered steps for AGENTS.md. Path-scoped files for monorepos. Custom content survives recompilation.
 

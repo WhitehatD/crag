@@ -58,6 +58,7 @@ function printUsage() {
       crag compile --target claude       CLAUDE.md
     CI / git hooks:
       crag compile --target github       .github/workflows/gates.yml
+      crag compile --target forgejo      .forgejo/workflows/gates.yml
       crag compile --target husky        .husky/pre-commit
       crag compile --target pre-commit   .pre-commit-config.yaml
     crag compile --target all            All ${ALL_TARGETS.length} targets at once

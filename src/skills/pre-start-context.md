@@ -222,6 +222,8 @@ If MemStack rules exist, follow them — they trigger context loading from the S
 Detect CI system and check recent runs:
 ```
 ls .github/workflows/*.yml 2>/dev/null && echo "CI: GitHub Actions" || true
+ls .forgejo/workflows/*.yml 2>/dev/null && echo "CI: Forgejo Actions" || true
+ls .gitea/workflows/*.yml 2>/dev/null && echo "CI: Gitea Actions" || true
 ls .gitlab-ci.yml 2>/dev/null && echo "CI: GitLab CI" || true
 ls Jenkinsfile 2>/dev/null && echo "CI: Jenkins" || true
 ```
@@ -500,7 +502,7 @@ Write `.claude/.discovery-cache.json` containing:
     "frontend": "<framework or null>",
     "backend": "<framework or null>",
     "services": ["<service names if multi-service>"],
-    "ci": "<github-actions|gitlab-ci|jenkins|none>"
+    "ci": "<github-actions|forgejo-actions|gitlab-ci|jenkins|none>"
   },
   "key_files": ["<list of discovered config/build files that exist>"]
 }

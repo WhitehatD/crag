@@ -24,7 +24,9 @@
     "cursor",
     "codex",
     "aider",
-    "gemini-cli"
+    "gemini-cli",
+    "forgejo",
+    "gitea"
   ],
   "author": "Alexandru Cioc (WhitehatD)",
   "license": "MIT",

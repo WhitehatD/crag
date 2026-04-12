@@ -1,6 +1,6 @@
 # Supported CI systems
 
-`crag analyze` parses gate commands from the following 11 CI formats.
+`crag analyze` parses gate commands from the following 12 CI formats.
 Each extractor handles inline scalars, block scalars (`run: |` /
 `run: >-`), list forms, and the system's equivalents. Output is
 normalized to drop shell plumbing, dedupe matrix expansions, and filter
@@ -9,6 +9,7 @@ background processes.
 | System | File(s) |
 |---|---|
 | GitHub Actions | `.github/workflows/*.yml` (recursive) |
+| Forgejo / Gitea Actions | `.forgejo/workflows/*.yml`, `.gitea/workflows/*.yml` (recursive) |
 | GitLab CI | `.gitlab-ci.yml` |
 | CircleCI | `.circleci/config.yml` |
 | Travis CI | `.travis.yml` |
