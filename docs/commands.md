@@ -39,6 +39,8 @@ crag compile --target <name>     Compile governance to a single target
 crag compile                     List available targets
 
 crag diff                        Compare governance against codebase reality
+  --ci                             Exit non-zero on drift/missing/extra (for CI)
+  --json                           Machine-readable JSON output
 
 crag doctor                      Deep diagnostic
   --ci                           CI mode: skip checks requiring runtime infra

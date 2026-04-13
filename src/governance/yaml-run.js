@@ -112,6 +112,9 @@ function isGateCommand(cmd) {
     /^\s*(if|for|while|case)\s+/,
     // Filesystem setup that is not a gate
     /^\s*(mkdir|rmdir|touch|ln|cp|mv|chmod|chown)\s/,
+    // crag's own meta-tooling (governance-guard workflow) — not a project gate
+    /\b@whitehatd\/crag\b/,
+    /\bcrag\s+(diff|audit|compile|analyze|sync|upgrade|hook|check|doctor|demo|init|workspace|auto|login|team)\b/,
   ];
   for (const rx of excludePatterns) {
     if (rx.test(cmd)) return false;

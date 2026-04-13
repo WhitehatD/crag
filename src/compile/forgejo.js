@@ -102,6 +102,19 @@ function generateForgejo(cwd, parsed) {
   const final = preserveCustomSections(outPath, yaml, 'comment');
   atomicWrite(outPath, final);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
+
+  // Guard workflow
+  const { generateGuardYaml } = require('./github-actions');
+  const guardYaml = generateGuardYaml(
+    'crag compile --target forgejo',
+    'https://code.forgejo.org/actions/checkout@v4',
+    'https://code.forgejo.org/actions/setup-node@v4',
+    nodeVersion,
+  );
+  const guardPath = path.join(dir, 'governance-guard.yml');
+  const guardFinal = preserveCustomSections(guardPath, guardYaml, 'comment');
+  atomicWrite(guardPath, guardFinal);
+  console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, guardPath)}`);
 }
 
 module.exports = { generateForgejo };

@@ -162,10 +162,65 @@ function generateGitHubActions(cwd, parsed) {
   const final = preserveCustomSections(outPath, yaml, 'comment');
   atomicWrite(outPath, final);
   console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, outPath)}`);
+
+  // Guard workflow — triggers when CI config files change, runs crag diff --ci
+  // to detect CI→governance divergence before it drifts silently.
+  const guardYaml = generateGuardYaml('crag compile --target github', 'actions/checkout@v4', 'actions/setup-node@v4', nodeVersion);
+  const guardPath = path.join(dir, 'governance-guard.yml');
+  const guardFinal = preserveCustomSections(guardPath, guardYaml, 'comment');
+  atomicWrite(guardPath, guardFinal);
+  console.log(`  \x1b[32m✓\x1b[0m ${path.relative(cwd, guardPath)}`);
+}
+
+/**
+ * Generate a governance-guard workflow YAML string.
+ * Shared between GitHub Actions and Forgejo compile targets.
+ */
+function generateGuardYaml(regenerateCmd, checkoutAction, setupNodeAction, nodeVersion) {
+  return [
+    '# Generated from governance.md by crag',
+    `# Regenerate: ${regenerateCmd}`,
+    'name: Governance Guard',
+    '',
+    'on:',
+    '  pull_request:',
+    '    paths:',
+    "      - '.github/workflows/**'",
+    "      - '.forgejo/workflows/**'",
+    "      - '.gitea/workflows/**'",
+    "      - '.gitlab-ci.yml'",
+    "      - '.circleci/**'",
+    "      - '.travis.yml'",
+    "      - 'azure-pipelines.yml'",
+    "      - '.buildkite/**'",
+    "      - '.drone.yml'",
+    "      - '.woodpecker/**'",
+    "      - 'bitbucket-pipelines.yml'",
+    "      - 'Jenkinsfile'",
+    "      - '.cirrus.yml'",
+    "      - 'Makefile'",
+    "      - 'Taskfile.yml'",
+    "      - 'justfile'",
+    '',
+    'jobs:',
+    '  guard:',
+    '    name: "CI \\u2194 Governance Sync"',
+    '    runs-on: ubuntu-latest',
+    '    steps:',
+    `      - uses: ${checkoutAction}`,
+    '      - name: Setup Node.js',
+    `        uses: ${setupNodeAction}`,
+    '        with:',
+    `          node-version: '${nodeVersion}'`,
+    '      - name: Check CI and governance are in sync',
+    '        run: npx @whitehatd/crag diff --ci',
+    '',
+  ].join('\n');
 }
 
 module.exports = {
   generateGitHubActions,
+  generateGuardYaml,
   detectNodeVersion,
   detectPythonVersion,
   detectJavaVersion,

@@ -30,7 +30,9 @@ function printUsage() {
     crag compile        Compile governance.md → CI, hooks, AGENTS.md, Cursor, Gemini
     crag audit          Drift report: stale configs, outdated rules, missing targets
     crag hook install   Install pre-commit hook (auto-recompile on governance change)
-    crag diff           Compare governance against codebase reality
+    crag diff                         Compare governance against codebase reality
+    crag diff --ci                     Exit non-zero on drift (for CI pipelines)
+    crag diff --json                   Machine-readable JSON output
     crag doctor         Deep diagnostic: governance integrity, drift, hook validity
     crag init           Interview → generate governance, hooks, agents
     crag check          Verify infrastructure is complete

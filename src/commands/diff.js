@@ -13,9 +13,18 @@ const { validateFlags } = require('../cli-args');
 
 /**
  * crag diff — compare governance.md against codebase reality.
+ *
+ * Flags:
+ *   --ci    Exit non-zero when drift, missing, or extra gates are found.
+ *           Designed for CI pipelines — add as a step triggered on CI file changes.
+ *   --json  Print results as JSON. Exits non-zero on issues (like --ci).
  */
 function diff(args) {
-  validateFlags('diff', args, {});
+  validateFlags('diff', args, {
+    boolean: ['--ci', '--json'],
+  });
+  const ciMode = args.includes('--ci');
+  const jsonMode = args.includes('--json');
   const cwd = process.cwd();
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
@@ -23,12 +32,12 @@ function diff(args) {
 
   const content = readFileOrExit(fs, govPath, 'governance.md');
   const parsed = parseGovernance(content);
-  if (parsed.warnings && parsed.warnings.length > 0) {
+  if (parsed.warnings && parsed.warnings.length > 0 && !jsonMode) {
     for (const w of parsed.warnings) console.warn(`  \x1b[33m!\x1b[0m ${w}`);
   }
   const flat = flattenGates(parsed.gates);
 
-  console.log(`\n  Governance vs Reality — ${parsed.name || 'project'}\n`);
+  if (!jsonMode) console.log(`\n  Governance vs Reality — ${parsed.name || 'project'}\n`);
 
   const results = { match: 0, drift: 0, missing: 0, extra: 0 };
 
@@ -39,12 +48,14 @@ function diff(args) {
   for (const gate of rich) {
     const checkDir = gate.path ? path.join(cwd, gate.path) : cwd;
     const check = checkGateReality(checkDir, gate.cmd);
-    const icon = check.status === 'match' ? '\x1b[32mMATCH\x1b[0m'
-      : check.status === 'drift' ? '\x1b[33mDRIFT\x1b[0m'
-      : '\x1b[31mMISSING\x1b[0m';
-    const prefix = gate.path ? `[${gate.path}] ` : '';
-    console.log(`  ${icon}   ${prefix}${gate.cmd}`);
-    if (check.detail) console.log(`          ${check.detail}`);
+    if (!jsonMode) {
+      const icon = check.status === 'match' ? '\x1b[32mMATCH\x1b[0m'
+        : check.status === 'drift' ? '\x1b[33mDRIFT\x1b[0m'
+        : '\x1b[31mMISSING\x1b[0m';
+      const prefix = gate.path ? `[${gate.path}] ` : '';
+      console.log(`  ${icon}   ${prefix}${gate.cmd}`);
+      if (check.detail) console.log(`          ${check.detail}`);
+    }
     results[check.status]++;
   }
 
@@ -57,8 +68,10 @@ function diff(args) {
     const normalized = normalizeCmd(ciGate);
     if (reportedExtras.has(normalized)) continue; // already reported
     if (!govCommands.some(g => normalizeCmd(g) === normalized)) {
-      console.log(`  \x1b[36mEXTRA\x1b[0m   ${ciGate}`);
-      console.log(`          In CI workflow but not in governance`);
+      if (!jsonMode) {
+        console.log(`  \x1b[36mEXTRA\x1b[0m   ${ciGate}`);
+        console.log(`          In CI workflow but not in governance`);
+      }
       results.extra++;
       reportedExtras.add(normalized);
     }
@@ -71,8 +84,20 @@ function diff(args) {
   checkCommitConvention(cwd, content, results);
 
   // Summary
-  const total = results.match + results.drift + results.missing + results.extra;
+  const issues = results.drift + results.missing + results.extra;
+  const total = results.match + issues;
+
+  if (jsonMode) {
+    console.log(JSON.stringify(results));
+    if (issues > 0) process.exit(EXIT_USER);
+    return;
+  }
+
   console.log(`\n  ${results.match} match, ${results.drift} drift, ${results.missing} missing, ${results.extra} extra (${total} total)\n`);
+
+  if (ciMode && issues > 0) {
+    process.exit(EXIT_USER);
+  }
 }
 
 // Binary→package mapping for tools where the CLI name differs from the npm
