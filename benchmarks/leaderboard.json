@@ -1,7 +1,7 @@
 [
   {
     "repo": "grafana/grafana",
-    "stars": 73143,
+    "stars": 73178,
     "stack": "node, react, typescript, go, docker",
     "gates": 67,
     "drift": {
@@ -18,11 +18,11 @@
     "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:40:06.685Z"
+    "timestamp": "2026-04-13T20:23:13.425Z"
   },
   {
     "repo": "astral-sh/ruff",
-    "stars": 46998,
+    "stars": 47030,
     "stack": "rust, python, docker",
     "gates": 53,
     "drift": {
@@ -39,11 +39,11 @@
     "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:35:36.379Z"
+    "timestamp": "2026-04-13T20:20:15.995Z"
   },
   {
     "repo": "calcom/cal.com",
-    "stars": 41106,
+    "stars": 41130,
     "stack": "node, typescript, docker, react, next.js",
     "gates": 53,
     "drift": {
@@ -61,11 +61,50 @@
     "aiConfigCount": 3,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:36:07.814Z"
+    "timestamp": "2026-04-13T20:21:05.632Z"
+  },
+  {
+    "repo": "astral-sh/uv",
+    "stars": 83195,
+    "stack": "rust, python, docker",
+    "gates": 52,
+    "drift": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 4
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:20:32.837Z"
+  },
+  {
+    "repo": "hashicorp/consul",
+    "stars": 29845,
+    "stack": "go, docker, node",
+    "gates": 50,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:23:38.538Z"
   },
   {
     "repo": "hashicorp/vault",
-    "stars": 35379,
+    "stars": 35392,
     "stack": "go, docker, node, typescript",
     "gates": 50,
     "drift": {
@@ -81,12 +120,30 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:40:39.425Z"
+    "timestamp": "2026-04-13T20:23:56.044Z"
   },
   {
-    "repo": "Shopify/hydrogen",
-    "stars": 1924,
-    "stack": "node, react, typescript",
+    "repo": "mermaid-js/mermaid",
+    "stars": 87327,
+    "stack": "node, typescript, docker",
+    "gates": 48,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:24:42.673Z"
+  },
+  {
+    "repo": "oven-sh/bun",
+    "stars": 89053,
+    "stack": "node, typescript, bun, zig, rust",
     "gates": 48,
     "drift": {
       "stale": 2,
@@ -96,16 +153,17 @@
       "total": 4
     },
     "aiConfigs": [
-      "CLAUDE.md"
+      "CLAUDE.md",
+      "AGENTS.md"
     ],
-    "aiConfigCount": 1,
+    "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:45:48.896Z"
+    "timestamp": "2026-04-13T20:25:43.529Z"
   },
   {
     "repo": "biomejs/biome",
-    "stars": 24332,
+    "stars": 24357,
     "stack": "node, rust, react, typescript",
     "gates": 47,
     "drift": {
@@ -122,11 +180,11 @@
     "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:35:49.725Z"
+    "timestamp": "2026-04-13T20:20:39.327Z"
   },
   {
     "repo": "prometheus/prometheus",
-    "stars": 63534,
+    "stars": 63575,
     "stack": "go, docker, node, typescript",
     "gates": 47,
     "drift": {
@@ -143,11 +201,11 @@
     "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:43:05.206Z"
+    "timestamp": "2026-04-13T20:26:22.076Z"
   },
   {
     "repo": "webpack/webpack",
-    "stars": 65839,
+    "stars": 65838,
     "stack": "node, typescript",
     "gates": 46,
     "drift": {
@@ -164,49 +222,11 @@
     "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:48:04.172Z"
-  },
-  {
-    "repo": "vitejs/vite",
-    "stars": 79847,
-    "stack": "node, typescript",
-    "gates": 44,
-    "drift": {
-      "stale": 1,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 2
-    },
-    "aiConfigs": [
-      ".github/copilot-instructions.md"
-    ],
-    "aiConfigCount": 1,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:47:54.304Z"
-  },
-  {
-    "repo": "etcd-io/etcd",
-    "stars": 51606,
-    "stack": "go, docker",
-    "gates": 44,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 1
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:39:13.194Z"
+    "timestamp": "2026-04-13T20:30:52.395Z"
   },
   {
     "repo": "facebook/docusaurus",
-    "stars": 64492,
+    "stars": 64549,
     "stack": "node, typescript",
     "gates": 44,
     "drift": {
@@ -222,29 +242,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:39:25.777Z"
-  },
-  {
-    "repo": "tauri-apps/tauri",
-    "stars": 105320,
-    "stack": "node, rust, typescript",
-    "gates": 44,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 1
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:46:50.965Z"
+    "timestamp": "2026-04-13T20:22:54.198Z"
   },
   {
     "repo": "nestjs/nest",
-    "stars": 75150,
+    "stars": 75173,
     "stack": "node, express, typescript, fastify",
     "gates": 44,
     "drift": {
@@ -258,11 +260,47 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:42:14.603Z"
+    "timestamp": "2026-04-13T20:25:26.375Z"
+  },
+  {
+    "repo": "tauri-apps/tauri",
+    "stars": 105417,
+    "stack": "node, rust, typescript",
+    "gates": 44,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:29:57.959Z"
+  },
+  {
+    "repo": "vuejs/core",
+    "stars": 53431,
+    "stack": "node, typescript",
+    "gates": 44,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:30:49.323Z"
   },
   {
     "repo": "junegunn/fzf",
-    "stars": 79388,
+    "stars": 79447,
     "stack": "go, ruby, docker",
     "gates": 43,
     "drift": {
@@ -276,11 +314,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:41:04.217Z"
+    "timestamp": "2026-04-13T20:24:20.581Z"
   },
   {
     "repo": "nuxt/nuxt",
-    "stars": 59999,
+    "stars": 60013,
     "stack": "node, typescript, vue",
     "gates": 43,
     "drift": {
@@ -294,50 +332,31 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:42:20.915Z"
+    "timestamp": "2026-04-13T20:25:37.142Z"
   },
   {
-    "repo": "containerd/containerd",
-    "stars": 20571,
-    "stack": "go",
-    "gates": 42,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 1
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:37:00.222Z"
-  },
-  {
-    "repo": "n8n-io/n8n",
-    "stars": 183589,
-    "stack": "node, typescript, express",
-    "gates": 42,
+    "repo": "Shopify/hydrogen",
+    "stars": 1925,
+    "stack": "node, react, typescript",
+    "gates": 43,
     "drift": {
       "stale": 2,
       "drift": 0,
       "extra": 0,
-      "missing": 1,
-      "total": 3
+      "missing": 2,
+      "total": 4
     },
     "aiConfigs": [
-      "CLAUDE.md",
-      "AGENTS.md"
+      "CLAUDE.md"
     ],
-    "aiConfigCount": 2,
+    "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:41:49.786Z"
+    "timestamp": "2026-04-13T20:28:52.903Z"
   },
   {
-    "repo": "traefik/traefik",
-    "stars": 62651,
+    "repo": "etcd-io/etcd",
+    "stars": 51621,
     "stack": "go, docker",
     "gates": 42,
     "drift": {
@@ -351,13 +370,13 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:47:03.333Z"
+    "timestamp": "2026-04-13T20:22:39.640Z"
   },
   {
-    "repo": "minio/minio",
-    "stars": 60668,
-    "stack": "go, docker",
-    "gates": 41,
+    "repo": "pmndrs/zustand",
+    "stars": 57729,
+    "stack": "node, typescript",
+    "gates": 42,
     "drift": {
       "stale": 0,
       "drift": 0,
@@ -369,11 +388,68 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:41:31.806Z"
+    "timestamp": "2026-04-13T20:26:15.341Z"
+  },
+  {
+    "repo": "supabase/supabase",
+    "stars": 100785,
+    "stack": "node, typescript, react, next.js, docker",
+    "gates": 42,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2,
+      "total": 3
+    },
+    "aiConfigs": [
+      ".cursor/rules",
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:29:10.473Z"
+  },
+  {
+    "repo": "traefik/traefik",
+    "stars": 62676,
+    "stack": "go, docker",
+    "gates": 42,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:30:11.045Z"
+  },
+  {
+    "repo": "vercel/swr",
+    "stars": 32348,
+    "stack": "node, typescript",
+    "gates": 42,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:30:30.354Z"
   },
   {
     "repo": "apache/airflow",
-    "stars": 45008,
+    "stars": 45035,
     "stack": "python, docker",
     "gates": 41,
     "drift": {
@@ -390,11 +466,67 @@
     "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:34:33.387Z"
+    "timestamp": "2026-04-13T20:19:41.935Z"
+  },
+  {
+    "repo": "containerd/containerd",
+    "stars": 20577,
+    "stack": "go",
+    "gates": 41,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:21:36.203Z"
+  },
+  {
+    "repo": "minio/minio",
+    "stars": 60690,
+    "stack": "go, docker",
+    "gates": 41,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:24:54.919Z"
+  },
+  {
+    "repo": "vitejs/vite",
+    "stars": 79889,
+    "stack": "node, typescript",
+    "gates": 41,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:30:41.788Z"
   },
   {
     "repo": "docker/compose",
-    "stars": 37259,
+    "stars": 37268,
     "stack": "go, docker",
     "gates": 40,
     "drift": {
@@ -410,51 +542,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:37:28.957Z"
-  },
-  {
-    "repo": "sveltejs/svelte",
-    "stars": 86279,
-    "stack": "node, typescript",
-    "gates": 40,
-    "drift": {
-      "stale": 1,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 2
-    },
-    "aiConfigs": [
-      "AGENTS.md"
-    ],
-    "aiConfigCount": 1,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:46:41.138Z"
-  },
-  {
-    "repo": "withastro/astro",
-    "stars": 58362,
-    "stack": "node, typescript",
-    "gates": 40,
-    "drift": {
-      "stale": 1,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 2
-    },
-    "aiConfigs": [
-      "AGENTS.md"
-    ],
-    "aiConfigCount": 1,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:48:12.852Z"
+    "timestamp": "2026-04-13T20:22:19.067Z"
   },
   {
     "repo": "evanw/esbuild",
-    "stars": 39835,
+    "stars": 39840,
     "stack": "go, node, typescript",
     "gates": 40,
     "drift": {
@@ -468,11 +560,67 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:39:16.987Z"
+    "timestamp": "2026-04-13T20:22:43.717Z"
   },
   {
-    "repo": "vitejs/vite-plugin-react",
-    "stars": 1062,
+    "repo": "sveltejs/svelte",
+    "stars": 86297,
+    "stack": "node, typescript",
+    "gates": 40,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:29:46.790Z"
+  },
+  {
+    "repo": "TanStack/query",
+    "stars": 49114,
+    "stack": "node, typescript",
+    "gates": 40,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:29:53.423Z"
+  },
+  {
+    "repo": "servo/servo",
+    "stars": 36284,
+    "stack": "rust, python",
+    "gates": 39,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:27:11.881Z"
+  },
+  {
+    "repo": "withastro/astro",
+    "stars": 58429,
     "stack": "node, typescript",
     "gates": 39,
     "drift": {
@@ -488,29 +636,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:47:58.218Z"
-  },
-  {
-    "repo": "servo/servo",
-    "stars": 36240,
-    "stack": "rust, python",
-    "gates": 39,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 1
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:44:10.398Z"
+    "timestamp": "2026-04-13T20:31:00.757Z"
   },
   {
     "repo": "yarnpkg/berry",
-    "stars": 8044,
+    "stars": 8046,
     "stack": "node, typescript, react",
     "gates": 39,
     "drift": {
@@ -524,11 +654,69 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:48:20.565Z"
+    "timestamp": "2026-04-13T20:31:08.829Z"
+  },
+  {
+    "repo": "angular/angular",
+    "stars": 100045,
+    "stack": "node, typescript",
+    "gates": 38,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:19:24.430Z"
+  },
+  {
+    "repo": "redwoodjs/redwood",
+    "stars": 17625,
+    "stack": "node, typescript, fastify, react, express",
+    "gates": 38,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:26:47.849Z"
+  },
+  {
+    "repo": "shadcn-ui/ui",
+    "stars": 112253,
+    "stack": "node, typescript, next.js",
+    "gates": 38,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2,
+      "total": 2
+    },
+    "aiConfigs": [
+      ".cursor/rules"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:28:45.504Z"
   },
   {
     "repo": "trpc/trpc",
-    "stars": 39965,
+    "stars": 39973,
     "stack": "node, express, typescript, fastify",
     "gates": 38,
     "drift": {
@@ -544,87 +732,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:47:08.994Z"
-  },
-  {
-    "repo": "angular/angular",
-    "stars": 100035,
-    "stack": "node, typescript",
-    "gates": 38,
-    "drift": {
-      "stale": 2,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 3
-    },
-    "aiConfigs": [
-      "AGENTS.md"
-    ],
-    "aiConfigCount": 1,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:34:14.663Z"
-  },
-  {
-    "repo": "django/django",
-    "stars": 87253,
-    "stack": "node, python",
-    "gates": 38,
-    "drift": {
-      "stale": 2,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 3
-    },
-    "aiConfigs": [
-      ".github/copilot-instructions.md"
-    ],
-    "aiConfigCount": 1,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:37:21.776Z"
-  },
-  {
-    "repo": "redwoodjs/redwood",
-    "stars": 17623,
-    "stack": "node, typescript, fastify, react, express",
-    "gates": 38,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 1
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:43:48.460Z"
-  },
-  {
-    "repo": "pydantic/pydantic",
-    "stars": 27442,
-    "stack": "python",
-    "gates": 38,
-    "drift": {
-      "stale": 1,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 2
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:43:13.829Z"
+    "timestamp": "2026-04-13T20:30:16.487Z"
   },
   {
     "repo": "zed-industries/zed",
-    "stars": 78925,
+    "stars": 79049,
     "stack": "rust",
     "gates": 38,
     "drift": {
@@ -643,11 +755,11 @@
     "aiConfigCount": 4,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:48:30.959Z"
+    "timestamp": "2026-04-13T20:31:21.118Z"
   },
   {
-    "repo": "remix-run/remix",
-    "stars": 32605,
+    "repo": "Effect-TS/effect",
+    "stars": 13822,
     "stack": "node, typescript",
     "gates": 37,
     "drift": {
@@ -663,11 +775,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:43:54.315Z"
+    "timestamp": "2026-04-13T20:22:26.107Z"
   },
   {
     "repo": "openai/openai-node",
-    "stars": 10798,
+    "stars": 10806,
     "stack": "node, typescript",
     "gates": 37,
     "drift": {
@@ -681,11 +793,67 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:42:24.236Z"
+    "timestamp": "2026-04-13T20:25:40.878Z"
+  },
+  {
+    "repo": "pydantic/pydantic",
+    "stars": 27464,
+    "stack": "python",
+    "gates": 37,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:26:32.256Z"
+  },
+  {
+    "repo": "remix-run/remix",
+    "stars": 32608,
+    "stack": "node, typescript",
+    "gates": 37,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:26:53.990Z"
+  },
+  {
+    "repo": "chartjs/Chart.js",
+    "stars": 67352,
+    "stack": "node, typescript, php",
+    "gates": 36,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:21:27.761Z"
   },
   {
     "repo": "denoland/deno",
-    "stars": 106438,
+    "stars": 106459,
     "stack": "rust",
     "gates": 36,
     "drift": {
@@ -702,11 +870,11 @@
     "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:37:12.376Z"
+    "timestamp": "2026-04-13T20:21:55.975Z"
   },
   {
     "repo": "huggingface/transformers",
-    "stars": 159204,
+    "stars": 159310,
     "stack": "python",
     "gates": 36,
     "drift": {
@@ -724,11 +892,31 @@
     "aiConfigCount": 3,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:40:52.067Z"
+    "timestamp": "2026-04-13T20:24:08.659Z"
+  },
+  {
+    "repo": "vitejs/vite-plugin-react",
+    "stars": 1063,
+    "stack": "node, typescript",
+    "gates": 36,
+    "drift": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:30:46.437Z"
   },
   {
     "repo": "pandas-dev/pandas",
-    "stars": 48471,
+    "stars": 48494,
     "stack": "python, c/meson",
     "gates": 35,
     "drift": {
@@ -744,29 +932,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:42:46.604Z"
-  },
-  {
-    "repo": "solidjs/solid",
-    "stars": 35391,
-    "stack": "node, typescript, solid",
-    "gates": 35,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 1
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:45:52.739Z"
+    "timestamp": "2026-04-13T20:26:04.882Z"
   },
   {
     "repo": "pnpm/pnpm",
-    "stars": 34576,
+    "stars": 34589,
     "stack": "node, typescript",
     "gates": 35,
     "drift": {
@@ -783,11 +953,11 @@
     "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:42:55.629Z"
+    "timestamp": "2026-04-13T20:26:17.754Z"
   },
   {
     "repo": "psf/black",
-    "stars": 41461,
+    "stars": 41462,
     "stack": "python, docker",
     "gates": 35,
     "drift": {
@@ -801,11 +971,32 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:43:09.226Z"
+    "timestamp": "2026-04-13T20:26:26.997Z"
+  },
+  {
+    "repo": "nushell/nushell",
+    "stars": 39030,
+    "stack": "rust",
+    "gates": 34,
+    "drift": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 3
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:25:33.228Z"
   },
   {
     "repo": "alacritty/alacritty",
-    "stars": 63375,
+    "stars": 63407,
     "stack": "rust",
     "gates": 33,
     "drift": {
@@ -819,11 +1010,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:34:12.436Z"
+    "timestamp": "2026-04-13T20:19:21.504Z"
   },
   {
-    "repo": "fastify/fastify",
-    "stars": 36022,
+    "repo": "date-fns/date-fns",
+    "stars": 36541,
     "stack": "node, typescript",
     "gates": 33,
     "drift": {
@@ -837,11 +1028,29 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:39:43.212Z"
+    "timestamp": "2026-04-13T20:21:52.416Z"
+  },
+  {
+    "repo": "fastify/fastify",
+    "stars": 36040,
+    "stack": "node, typescript",
+    "gates": 33,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:23:10.475Z"
   },
   {
     "repo": "hashicorp/terraform",
-    "stars": 48122,
+    "stars": 48133,
     "stack": "go, docker",
     "gates": 33,
     "drift": {
@@ -855,11 +1064,47 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:40:32.319Z"
+    "timestamp": "2026-04-13T20:23:48.824Z"
+  },
+  {
+    "repo": "solidjs/solid",
+    "stars": 35398,
+    "stack": "node, typescript, solid",
+    "gates": 33,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:28:59.219Z"
+  },
+  {
+    "repo": "leptos-rs/leptos",
+    "stars": 20561,
+    "stack": "rust",
+    "gates": 32,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:24:31.512Z"
   },
   {
     "repo": "neovim/neovim",
-    "stars": 98586,
+    "stars": 98667,
     "stack": "zig, lua, c++/cmake",
     "gates": 32,
     "drift": {
@@ -875,13 +1120,13 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:42:06.610Z"
+    "timestamp": "2026-04-13T20:25:18.405Z"
   },
   {
-    "repo": "leptos-rs/leptos",
-    "stars": 20553,
+    "repo": "BurntSushi/ripgrep",
+    "stars": 62350,
     "stack": "rust",
-    "gates": 32,
+    "gates": 31,
     "drift": {
       "stale": 0,
       "drift": 0,
@@ -893,11 +1138,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:41:14.136Z"
+    "timestamp": "2026-04-13T20:21:00.007Z"
   },
   {
     "repo": "rails/rails",
-    "stars": 58333,
+    "stars": 58341,
     "stack": "node, ruby, rails",
     "gates": 31,
     "drift": {
@@ -913,29 +1158,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:43:41.544Z"
-  },
-  {
-    "repo": "BurntSushi/ripgrep",
-    "stars": 62241,
-    "stack": "rust",
-    "gates": 31,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 1
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:36:03.308Z"
+    "timestamp": "2026-04-13T20:26:40.940Z"
   },
   {
     "repo": "cli/cli",
-    "stars": 43744,
+    "stars": 43799,
     "stack": "go",
     "gates": 30,
     "drift": {
@@ -951,11 +1178,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:36:25.802Z"
+    "timestamp": "2026-04-13T20:21:31.419Z"
   },
   {
     "repo": "drizzle-team/drizzle-orm",
-    "stars": 33814,
+    "stars": 33845,
     "stack": "node, typescript",
     "gates": 30,
     "drift": {
@@ -969,32 +1196,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:38:28.108Z"
-  },
-  {
-    "repo": "langchain-ai/langchain",
-    "stars": 133178,
-    "stack": "python",
-    "gates": 30,
-    "drift": {
-      "stale": 3,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 4
-    },
-    "aiConfigs": [
-      "CLAUDE.md",
-      "AGENTS.md"
-    ],
-    "aiConfigCount": 2,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:41:06.202Z"
+    "timestamp": "2026-04-13T20:22:21.827Z"
   },
   {
     "repo": "pallets/flask",
-    "stars": 71410,
+    "stars": 71414,
     "stack": "python",
     "gates": 30,
     "drift": {
@@ -1008,11 +1214,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:42:42.254Z"
+    "timestamp": "2026-04-13T20:25:59.763Z"
   },
   {
     "repo": "pallets/werkzeug",
-    "stars": 6855,
+    "stars": 6856,
     "stack": "python",
     "gates": 30,
     "drift": {
@@ -1026,7 +1232,7 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:42:44.454Z"
+    "timestamp": "2026-04-13T20:26:02.135Z"
   },
   {
     "repo": "micronaut-projects/micronaut-core",
@@ -1046,11 +1252,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:41:22.846Z"
+    "timestamp": "2026-04-13T20:24:46.357Z"
   },
   {
     "repo": "scikit-learn/scikit-learn",
-    "stars": 65774,
+    "stars": 65810,
     "stack": "python, c/meson",
     "gates": 29,
     "drift": {
@@ -1066,29 +1272,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:44:05.478Z"
-  },
-  {
-    "repo": "python/mypy",
-    "stars": 20359,
-    "stack": "python",
-    "gates": 29,
-    "drift": {
-      "stale": 1,
-      "drift": 0,
-      "extra": 0,
-      "missing": 1,
-      "total": 2
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:43:17.361Z"
+    "timestamp": "2026-04-13T20:27:07.043Z"
   },
   {
     "repo": "tiangolo/fastapi",
-    "stars": 97077,
+    "stars": 97162,
     "stack": "python",
     "gates": 29,
     "drift": {
@@ -1102,11 +1290,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:46:55.201Z"
+    "timestamp": "2026-04-13T20:30:01.762Z"
   },
   {
     "repo": "helix-editor/helix",
-    "stars": 43893,
+    "stars": 43934,
     "stack": "rust",
     "gates": 28,
     "drift": {
@@ -1120,11 +1308,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:40:48.999Z"
+    "timestamp": "2026-04-13T20:24:05.365Z"
   },
   {
     "repo": "phoenixframework/phoenix",
-    "stars": 22963,
+    "stars": 22962,
     "stack": "node, elixir, phoenix",
     "gates": 28,
     "drift": {
@@ -1138,11 +1326,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:42:53.251Z"
+    "timestamp": "2026-04-13T20:26:12.338Z"
   },
   {
     "repo": "ajeetdsouza/zoxide",
-    "stars": 35502,
+    "stars": 35579,
     "stack": "rust",
     "gates": 27,
     "drift": {
@@ -1156,11 +1344,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:34:10.575Z"
+    "timestamp": "2026-04-13T20:19:19.170Z"
   },
   {
     "repo": "caddyserver/caddy",
-    "stars": 71447,
+    "stars": 71510,
     "stack": "go",
     "gates": 27,
     "drift": {
@@ -1174,11 +1362,29 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:36:05.386Z"
+    "timestamp": "2026-04-13T20:21:02.468Z"
+  },
+  {
+    "repo": "sindresorhus/got",
+    "stars": 14899,
+    "stack": "node, typescript",
+    "gates": 27,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:28:56.922Z"
   },
   {
     "repo": "elixir-lang/elixir",
-    "stars": 26383,
+    "stars": 26386,
     "stack": "elixir",
     "gates": 26,
     "drift": {
@@ -1192,11 +1398,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:39:07.424Z"
+    "timestamp": "2026-04-13T20:22:32.618Z"
   },
   {
     "repo": "encode/starlette",
-    "stars": 12197,
+    "stars": 12200,
     "stack": "python",
     "gates": 26,
     "drift": {
@@ -1210,11 +1416,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:39:10.836Z"
+    "timestamp": "2026-04-13T20:22:36.502Z"
   },
   {
     "repo": "psf/requests",
-    "stars": 53880,
+    "stars": 53892,
     "stack": "python",
     "gates": 26,
     "drift": {
@@ -1228,11 +1434,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:43:11.602Z"
+    "timestamp": "2026-04-13T20:26:29.734Z"
   },
   {
     "repo": "apache/kafka",
-    "stars": 32354,
+    "stars": 32366,
     "stack": "java/gradle",
     "gates": 24,
     "drift": {
@@ -1246,11 +1452,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:35:17.610Z"
+    "timestamp": "2026-04-13T20:19:58.502Z"
   },
   {
     "repo": "charmbracelet/bubbletea",
-    "stars": 41476,
+    "stars": 41535,
     "stack": "go",
     "gates": 24,
     "drift": {
@@ -1264,11 +1470,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:36:23.697Z"
+    "timestamp": "2026-04-13T20:21:25.076Z"
   },
   {
     "repo": "expressjs/express",
-    "stars": 68924,
+    "stars": 68930,
     "stack": "node",
     "gates": 23,
     "drift": {
@@ -1282,11 +1488,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:39:23.815Z"
+    "timestamp": "2026-04-13T20:22:51.746Z"
   },
   {
     "repo": "laravel/laravel",
-    "stars": 83999,
+    "stars": 84023,
     "stack": "node, php, laravel",
     "gates": 22,
     "drift": {
@@ -1300,11 +1506,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:41:12.182Z"
+    "timestamp": "2026-04-13T20:24:29.356Z"
   },
   {
     "repo": "livebook-dev/livebook",
-    "stars": 5762,
+    "stars": 5764,
     "stack": "elixir, phoenix, docker",
     "gates": 22,
     "drift": {
@@ -1318,29 +1524,11 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:41:17.565Z"
-  },
-  {
-    "repo": "ziglang/zig",
-    "stars": 42813,
-    "stack": "zig, c++/cmake",
-    "gates": 21,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": null,
-    "timestamp": "2026-04-11T19:48:40.402Z"
+    "timestamp": "2026-04-13T20:24:35.036Z"
   },
   {
     "repo": "nicklockwood/SwiftFormat",
-    "stars": 8767,
+    "stars": 8771,
     "stack": "swift, docker",
     "gates": 21,
     "drift": {
@@ -1357,11 +1545,29 @@
     "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:42:17.541Z"
+    "timestamp": "2026-04-13T20:25:29.434Z"
+  },
+  {
+    "repo": "ziglang/zig",
+    "stars": 42824,
+    "stack": "zig, c++/cmake",
+    "gates": 21,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:31:31.626Z"
   },
   {
     "repo": "ansible/ansible",
-    "stars": 68348,
+    "stars": 68358,
     "stack": "python",
     "gates": 19,
     "drift": {
@@ -1378,11 +1584,11 @@
     "aiConfigCount": 2,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:34:27.617Z"
+    "timestamp": "2026-04-13T20:19:36.414Z"
   },
   {
     "repo": "apple/swift-package-manager",
-    "stars": 10121,
+    "stars": 10123,
     "stack": "swift, c++/cmake",
     "gates": 16,
     "drift": {
@@ -1396,11 +1602,29 @@
     "aiConfigCount": 0,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:35:31.301Z"
+    "timestamp": "2026-04-13T20:20:10.657Z"
+  },
+  {
+    "repo": "lucia-auth/lucia",
+    "stars": 10459,
+    "stack": "node",
+    "gates": 15,
+    "drift": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1,
+      "total": 1
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 100,
+    "error": null,
+    "timestamp": "2026-04-13T20:24:40.638Z"
   },
   {
     "repo": "vapor/vapor",
-    "stars": 26022,
+    "stars": 26023,
     "stack": "swift",
     "gates": 14,
     "drift": {
@@ -1416,245 +1640,11 @@
     "aiConfigCount": 1,
     "score": 100,
     "error": null,
-    "timestamp": "2026-04-11T19:47:12.740Z"
-  },
-  {
-    "repo": "apache/flink",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\apache__flink'...\nUpdating files:   0% (2/25937)\rUpdating files:   1% (260/25937)\rUpdating files:   2% (519/25937)\rUpdating files:   3% (7",
-    "timestamp": "2026-04-11T19:34:51.637Z"
-  },
-  {
-    "repo": "cockroachdb/cockroach",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\cockroachdb__cockroach'...\nUpdating files:   0% (2/20193)\rUpdating files:   1% (202/20193)\rUpdating files:   2% (404/20193)\rUpdating files",
-    "timestamp": "2026-04-11T19:36:29.458Z"
-  },
-  {
-    "repo": "dotnet/aspnetcore",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\dotnet__aspnetcore'...\nUpdating files:   0% (2/16646)\rUpdating files:   1% (167/16646)\rUpdating files:   2% (333/16646)\rUpdating files:   ",
-    "timestamp": "2026-04-11T19:37:31.498Z"
-  },
-  {
-    "repo": "dotnet/maui",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\dotnet__maui'...\nUpdating files:   0% (2/24709)\rUpdating files:   1% (248/24709)\rUpdating files:   2% (495/24709)\rUpdating files:   3% (74",
-    "timestamp": "2026-04-11T19:37:46.845Z"
-  },
-  {
-    "repo": "elastic/elasticsearch",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\elastic__elasticsearch'...\nUpdating files:   0% (2/40289)\rUpdating files:   1% (403/40289)\rUpdating files:   1% (517/40289)\rUpdating files",
-    "timestamp": "2026-04-11T19:38:31.467Z"
-  },
-  {
-    "repo": "facebook/react-native",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\facebook__react-native'...\nUpdating files:   0% (2/7858)\rUpdating files:   1% (79/7858)\rUpdating files:   2% (158/7858)\rUpdating files:   ",
-    "timestamp": "2026-04-11T19:39:32.767Z"
-  },
-  {
-    "repo": "flutter/flutter",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\flutter__flutter'...\nUpdating files:   0% (2/15749)\rUpdating files:   1% (158/15749)\rUpdating files:   2% (315/15749)\rUpdating files:   3%",
-    "timestamp": "2026-04-11T19:39:45.636Z"
-  },
-  {
-    "repo": "moby/moby",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\moby__moby'...\nUpdating files:   0% (2/12491)\rUpdating files:   1% (125/12491)\rUpdating files:   2% (250/12491)\rUpdating files:   3% (375/",
-    "timestamp": "2026-04-11T19:41:36.604Z"
-  },
-  {
-    "repo": "prisma/prisma",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\prisma__prisma'...\nUpdating files:   0% (2/4625)\rUpdating files:   1% (47/4625)\rUpdating files:   2% (93/4625)\rUpdating files:   3% (139/4",
-    "timestamp": "2026-04-11T19:42:59.580Z"
-  },
-  {
-    "repo": "quarkusio/quarkus",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\quarkusio__quarkus'...\nUpdating files:   0% (2/29969)\rUpdating files:   1% (300/29969)\rUpdating files:   2% (600/29969)\rUpdating files:   ",
-    "timestamp": "2026-04-11T19:43:22.112Z"
-  },
-  {
-    "repo": "spring-projects/spring-framework",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\spring-projects__spring-framework'...\nUpdating files:   0% (2/11368)\rUpdating files:   1% (114/11368)\rUpdating files:   2% (228/11368)\rUpd",
-    "timestamp": "2026-04-11T19:45:54.875Z"
-  },
-  {
-    "repo": "turbopack/turbopack",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\turbopack__turbopack'...\nremote: Repository not found.\nfatal: repository 'https://github.com/turbopack/turbopack.git/' not found\n",
-    "timestamp": "2026-04-11T19:47:12.162Z"
-  },
-  {
-    "repo": "vercel/next.js",
-    "stars": 0,
-    "stack": "",
-    "gates": 0,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 0,
-      "missing": 0,
-      "total": 0
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 100,
-    "error": "clone failed: Cloning into 'D:\\playground\\crag\\benchmarks\\leaderboard-repos\\vercel__next.js'...\nUpdating files:   0% (2/28547)\rUpdating files:   1% (286/28547)\rUpdating files:   2% (571/28547)\rUpdating files:   3% ",
-    "timestamp": "2026-04-11T19:47:22.621Z"
+    "timestamp": "2026-04-13T20:30:20.004Z"
   },
   {
     "repo": "excalidraw/excalidraw",
-    "stars": 120813,
+    "stars": 120960,
     "stack": "node, typescript, docker",
     "gates": 46,
     "drift": {
@@ -1671,32 +1661,11 @@
     "aiConfigCount": 2,
     "score": 95,
     "error": null,
-    "timestamp": "2026-04-11T19:39:19.693Z"
-  },
-  {
-    "repo": "supabase/supabase",
-    "stars": 100678,
-    "stack": "node, typescript, react, next.js, docker",
-    "gates": 43,
-    "drift": {
-      "stale": 1,
-      "drift": 1,
-      "extra": 0,
-      "missing": 2,
-      "total": 4
-    },
-    "aiConfigs": [
-      ".cursor/rules",
-      ".github/copilot-instructions.md"
-    ],
-    "aiConfigCount": 2,
-    "score": 95,
-    "error": null,
-    "timestamp": "2026-04-11T19:46:06.570Z"
+    "timestamp": "2026-04-13T20:22:47.049Z"
   },
   {
     "repo": "vercel/ai",
-    "stars": 23410,
+    "stars": 23467,
     "stack": "node, typescript, hono",
     "gates": 39,
     "drift": {
@@ -1713,31 +1682,11 @@
     "aiConfigCount": 2,
     "score": 95,
     "error": null,
-    "timestamp": "2026-04-11T19:47:14.890Z"
-  },
-  {
-    "repo": "shadcn-ui/ui",
-    "stars": 112115,
-    "stack": "node, typescript, next.js",
-    "gates": 38,
-    "drift": {
-      "stale": 0,
-      "drift": 1,
-      "extra": 0,
-      "missing": 2,
-      "total": 3
-    },
-    "aiConfigs": [
-      ".cursor/rules"
-    ],
-    "aiConfigCount": 1,
-    "score": 95,
-    "error": null,
-    "timestamp": "2026-04-11T19:45:41.442Z"
+    "timestamp": "2026-04-13T20:30:22.626Z"
   },
   {
     "repo": "tokio-rs/tokio",
-    "stars": 31637,
+    "stars": 31658,
     "stack": "rust",
     "gates": 31,
     "drift": {
@@ -1751,47 +1700,11 @@
     "aiConfigCount": 0,
     "score": 90,
     "error": null,
-    "timestamp": "2026-04-11T19:47:00.677Z"
-  },
-  {
-    "repo": "vuejs/core",
-    "stars": 53413,
-    "stack": "node, typescript",
-    "gates": 44,
-    "drift": {
-      "stale": 0,
-      "drift": 1,
-      "extra": 0,
-      "missing": 1,
-      "total": 2
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 85,
-    "error": null,
-    "timestamp": "2026-04-11T19:48:01.113Z"
-  },
-  {
-    "repo": "curl/curl",
-    "stars": 41265,
-    "stack": "c++/cmake, docker",
-    "gates": 35,
-    "drift": {
-      "stale": 0,
-      "drift": 0,
-      "extra": 3,
-      "missing": 1,
-      "total": 4
-    },
-    "aiConfigs": [],
-    "aiConfigCount": 0,
-    "score": 85,
-    "error": null,
-    "timestamp": "2026-04-11T19:37:07.591Z"
+    "timestamp": "2026-04-13T20:30:07.706Z"
   },
   {
     "repo": "loco-rs/loco",
-    "stars": 8813,
+    "stars": 8816,
     "stack": "rust",
     "gates": 31,
     "drift": {
@@ -1805,31 +1718,29 @@
     "aiConfigCount": 0,
     "score": 85,
     "error": null,
-    "timestamp": "2026-04-11T19:41:20.359Z"
+    "timestamp": "2026-04-13T20:24:37.940Z"
   },
   {
-    "repo": "vercel/turborepo",
-    "stars": 30166,
-    "stack": "node, typescript, rust",
-    "gates": 51,
+    "repo": "python/mypy",
+    "stars": 20362,
+    "stack": "python",
+    "gates": 29,
     "drift": {
       "stale": 1,
-      "drift": 2,
+      "drift": 1,
       "extra": 0,
-      "missing": 2,
-      "total": 5
+      "missing": 1,
+      "total": 3
     },
-    "aiConfigs": [
-      "AGENTS.md"
-    ],
-    "aiConfigCount": 1,
-    "score": 80,
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 85,
     "error": null,
-    "timestamp": "2026-04-11T19:47:46.642Z"
+    "timestamp": "2026-04-13T20:26:35.905Z"
   },
   {
     "repo": "rollup/rollup",
-    "stars": 26266,
+    "stars": 26265,
     "stack": "node, typescript",
     "gates": 50,
     "drift": {
@@ -1846,37 +1757,95 @@
     "aiConfigCount": 2,
     "score": 80,
     "error": null,
-    "timestamp": "2026-04-11T19:43:58.415Z"
+    "timestamp": "2026-04-13T20:26:58.110Z"
   },
   {
-    "repo": "TanStack/query",
-    "stars": 49093,
-    "stack": "node, typescript",
-    "gates": 42,
+    "repo": "django/django",
+    "stars": 87262,
+    "stack": "node, python",
+    "gates": 38,
     "drift": {
-      "stale": 0,
+      "stale": 2,
       "drift": 2,
       "extra": 0,
       "missing": 1,
-      "total": 3
+      "total": 5
+    },
+    "aiConfigs": [
+      ".github/copilot-instructions.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 80,
+    "error": null,
+    "timestamp": "2026-04-13T20:22:09.147Z"
+  },
+  {
+    "repo": "curl/curl",
+    "stars": 41285,
+    "stack": "c++/cmake, docker",
+    "gates": 35,
+    "drift": {
+      "stale": 0,
+      "drift": 1,
+      "extra": 2,
+      "missing": 1,
+      "total": 4
+    },
+    "aiConfigs": [],
+    "aiConfigCount": 0,
+    "score": 75,
+    "error": null,
+    "timestamp": "2026-04-13T20:21:46.438Z"
+  },
+  {
+    "repo": "strapi/strapi",
+    "stars": 71869,
+    "stack": "node, typescript",
+    "gates": 45,
+    "drift": {
+      "stale": 1,
+      "drift": 2,
+      "extra": 0,
+      "missing": 2,
+      "total": 5
     },
     "aiConfigs": [],
     "aiConfigCount": 0,
     "score": 70,
     "error": null,
-    "timestamp": "2026-04-11T19:46:47.004Z"
+    "timestamp": "2026-04-13T20:29:01.452Z"
   },
   {
-    "repo": "oven-sh/bun",
-    "stars": 88996,
-    "stack": "node, typescript, bun, zig, rust",
-    "gates": 48,
+    "repo": "facebook/react",
+    "stars": 244459,
+    "stack": "node, typescript",
+    "gates": 44,
+    "drift": {
+      "stale": 1,
+      "drift": 3,
+      "extra": 0,
+      "missing": 1,
+      "total": 5
+    },
+    "aiConfigs": [
+      "CLAUDE.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 65,
+    "error": null,
+    "timestamp": "2026-04-13T20:23:01.317Z"
+  },
+  {
+    "repo": "n8n-io/n8n",
+    "stars": 183870,
+    "stack": "node, typescript, express",
+    "gates": 42,
     "drift": {
       "stale": 2,
       "drift": 3,
       "extra": 0,
-      "missing": 2,
-      "total": 7
+      "missing": 1,
+      "total": 6
     },
     "aiConfigs": [
       "CLAUDE.md",
@@ -1885,11 +1854,11 @@
     "aiConfigCount": 2,
     "score": 65,
     "error": null,
-    "timestamp": "2026-04-11T19:42:26.731Z"
+    "timestamp": "2026-04-13T20:25:00.362Z"
   },
   {
     "repo": "astral-sh/ty",
-    "stars": 18264,
+    "stars": 18284,
     "stack": "python, docker",
     "gates": 37,
     "drift": {
@@ -1903,6 +1872,47 @@
     "aiConfigCount": 0,
     "score": 55,
     "error": null,
-    "timestamp": "2026-04-11T19:35:47.466Z"
+    "timestamp": "2026-04-13T20:20:30.236Z"
+  },
+  {
+    "repo": "vercel/turborepo",
+    "stars": 30184,
+    "stack": "node, typescript, rust",
+    "gates": 51,
+    "drift": {
+      "stale": 1,
+      "drift": 4,
+      "extra": 0,
+      "missing": 2,
+      "total": 7
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 1,
+    "score": 50,
+    "error": null,
+    "timestamp": "2026-04-13T20:30:32.683Z"
+  },
+  {
+    "repo": "langchain-ai/langchain",
+    "stars": 133437,
+    "stack": "python",
+    "gates": 30,
+    "drift": {
+      "stale": 3,
+      "drift": 4,
+      "extra": 0,
+      "missing": 1,
+      "total": 8
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "aiConfigCount": 2,
+    "score": 50,
+    "error": null,
+    "timestamp": "2026-04-13T20:24:23.128Z"
   }
 ]

@@ -1,33 +1,32 @@
 # Drift Leaderboard — 100 Top Repos
 # One owner/repo per line. Sorted alphabetically.
-# Existing 50 from Phase 1 benchmark + 50 new additions.
+# v2: replaced 13 repos that fail --depth 1 clone (too large) with cloneable alternatives.
 
 ajeetdsouza/zoxide
 alacritty/alacritty
 angular/angular
 ansible/ansible
 apache/airflow
-apache/flink
 apache/kafka
 apple/swift-package-manager
 astral-sh/ruff
 astral-sh/ty
+astral-sh/uv
 biomejs/biome
 BurntSushi/ripgrep
 caddyserver/caddy
 calcom/cal.com
 charmbracelet/bubbletea
+chartjs/Chart.js
 cli/cli
-cockroachdb/cockroach
 containerd/containerd
 curl/curl
+date-fns/date-fns
 denoland/deno
 django/django
 docker/compose
-dotnet/aspnetcore
-dotnet/maui
 drizzle-team/drizzle-orm
-elastic/elasticsearch
+Effect-TS/effect
 elixir-lang/elixir
 encode/starlette
 etcd-io/etcd
@@ -35,10 +34,10 @@ evanw/esbuild
 excalidraw/excalidraw
 expressjs/express
 facebook/docusaurus
-facebook/react-native
+facebook/react
 fastify/fastify
-flutter/flutter
 grafana/grafana
+hashicorp/consul
 hashicorp/terraform
 hashicorp/vault
 helix-editor/helix
@@ -49,13 +48,15 @@ laravel/laravel
 leptos-rs/leptos
 livebook-dev/livebook
 loco-rs/loco
+lucia-auth/lucia
+mermaid-js/mermaid
 micronaut-projects/micronaut-core
 minio/minio
-moby/moby
 n8n-io/n8n
 neovim/neovim
 nestjs/nest
 nicklockwood/SwiftFormat
+nushell/nushell
 nuxt/nuxt
 openai/openai-node
 oven-sh/bun
@@ -63,14 +64,13 @@ pallets/flask
 pallets/werkzeug
 pandas-dev/pandas
 phoenixframework/phoenix
+pmndrs/zustand
 pnpm/pnpm
-prisma/prisma
 prometheus/prometheus
 psf/black
 psf/requests
 pydantic/pydantic
 python/mypy
-quarkusio/quarkus
 rails/rails
 redwoodjs/redwood
 remix-run/remix
@@ -79,8 +79,9 @@ scikit-learn/scikit-learn
 servo/servo
 shadcn-ui/ui
 Shopify/hydrogen
+sindresorhus/got
 solidjs/solid
-spring-projects/spring-framework
+strapi/strapi
 supabase/supabase
 sveltejs/svelte
 TanStack/query
@@ -89,10 +90,9 @@ tiangolo/fastapi
 tokio-rs/tokio
 traefik/traefik
 trpc/trpc
-turbopack/turbopack
 vapor/vapor
 vercel/ai
-vercel/next.js
+vercel/swr
 vercel/turborepo
 vitejs/vite
 vitejs/vite-plugin-react

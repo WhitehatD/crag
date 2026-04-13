@@ -21,6 +21,6 @@ deeper.
 
 | File | Contents |
 |---|---|
-| [../benchmarks/phase1-benchmark.md](../benchmarks/phase1-benchmark.md) | 50-repo phase 1 benchmark, 1,809 gates, 46% drift found |
+| [../benchmarks/phase1-benchmark.md](../benchmarks/phase1-benchmark.md) | 50-repo phase 1 benchmark, 1,809 gates |
 | [../benchmarks/stress-test.md](../benchmarks/stress-test.md) | 101-repo stress-test audit, 4,400 invocations, 28 findings + resolutions |
 | [../benchmarks/results.md](../benchmarks/results.md) | 40-repo reference benchmark, 100 % Grade A, per-repo before/after |

@@ -135,6 +135,33 @@ function checkGateReality(cwd, cmd) {
     { pattern: /^(\.\/)?gradlew\s+/, check: () => fs.existsSync(path.join(cwd, 'gradlew')) || fs.existsSync(path.join(cwd, 'gradlew.bat')) },
     { pattern: /^pytest/, check: () => fs.existsSync(path.join(cwd, 'pyproject.toml')) || fs.existsSync(path.join(cwd, 'setup.py')) },
     { pattern: /^ruff\s+/, check: () => fs.existsSync(path.join(cwd, 'ruff.toml')) || fs.existsSync(path.join(cwd, '.ruff.toml')) || fs.existsSync(path.join(cwd, 'pyproject.toml')) },
+    // Python runner commands (uv run, poetry run, etc.) — valid if pyproject.toml exists
+    { pattern: /^(?:uv|poetry|pdm|hatch|rye|pipenv)\s+run\s+/, check: () => fs.existsSync(path.join(cwd, 'pyproject.toml')) || fs.existsSync(path.join(cwd, 'setup.py')) },
+    // Make / task / just — valid if any build system config exists.
+    // Autotools projects have Makefile.in or configure but no Makefile until ./configure runs.
+    { pattern: /^make\s+/, check: () => fs.existsSync(path.join(cwd, 'Makefile')) || fs.existsSync(path.join(cwd, 'GNUmakefile')) || fs.existsSync(path.join(cwd, 'makefile')) || fs.existsSync(path.join(cwd, 'Makefile.in')) || fs.existsSync(path.join(cwd, 'configure')) || fs.existsSync(path.join(cwd, 'configure.ac')) || fs.existsSync(path.join(cwd, 'CMakeLists.txt')) },
+    { pattern: /^task\s+/, check: () => fs.existsSync(path.join(cwd, 'Taskfile.yml')) || fs.existsSync(path.join(cwd, 'Taskfile.yaml')) },
+    { pattern: /^just\s+/, check: () => fs.existsSync(path.join(cwd, 'justfile')) || fs.existsSync(path.join(cwd, 'Justfile')) },
+    // Elixir
+    { pattern: /^mix\s+/, check: () => fs.existsSync(path.join(cwd, 'mix.exs')) },
+    // Ruby
+    { pattern: /^bundle\s+exec\s+/, check: () => fs.existsSync(path.join(cwd, 'Gemfile')) },
+    // PHP
+    { pattern: /^composer\s+/, check: () => fs.existsSync(path.join(cwd, 'composer.json')) },
+    { pattern: /^vendor\/bin\//, check: () => fs.existsSync(path.join(cwd, 'composer.json')) },
+    // .NET
+    { pattern: /^dotnet\s+/, check: () => {
+      if (fs.existsSync(path.join(cwd, 'Directory.Build.props'))) return true;
+      try { return fs.readdirSync(cwd).some(f => f.endsWith('.csproj') || f.endsWith('.fsproj') || f.endsWith('.sln') || f.endsWith('.slnx')); } catch { return false; }
+    }},
+    // Swift
+    { pattern: /^swift\s+/, check: () => fs.existsSync(path.join(cwd, 'Package.swift')) },
+    // CMake
+    { pattern: /^cmake\s+/, check: () => fs.existsSync(path.join(cwd, 'CMakeLists.txt')) },
+    { pattern: /^ctest\s+/, check: () => fs.existsSync(path.join(cwd, 'CMakeLists.txt')) },
+    // Zig
+    { pattern: /^zig\s+/, check: () => fs.existsSync(path.join(cwd, 'build.zig')) },
+    // Docker
     { pattern: /^docker\s+compose/, check: () => true }, // docker compose commands are CI orchestration, assume valid
     { pattern: /^docker\s+/, check: () => fs.existsSync(path.join(cwd, 'Dockerfile')) || fs.existsSync(path.join(cwd, 'docker-compose.yml')) || fs.existsSync(path.join(cwd, 'docker-compose.yaml')) },
   ];
@@ -169,13 +196,13 @@ function checkGateReality(cwd, cmd) {
 }
 
 /**
- * Monorepo fallback: check if any immediate subdirectory has the tool.
+ * Monorepo fallback: check if any workspace member directory has the tool.
+ * Scans 2 levels deep to handle packages/foo/package.json, apps/bar/go.mod, etc.
  * Returns true on the first match.
  */
 function checkSubdirs(rootCwd, cmd) {
-  const subdirs = getSubdirs(rootCwd);
-  for (const sub of subdirs) {
-    const subCwd = path.join(rootCwd, sub);
+  const dirs = getWorkspaceDirs(rootCwd);
+  for (const subCwd of dirs) {
     // npx <tool> — check subdir's deps or .bin
     const npxM = cmd.match(/^npx\s+(\w[\w-]*)/);
     if (npxM) {
@@ -193,32 +220,84 @@ function checkSubdirs(rootCwd, cmd) {
     if (/^cargo\s+/.test(cmd) && fs.existsSync(path.join(subCwd, 'Cargo.toml'))) return true;
     // go
     if (/^go\s+/.test(cmd) && fs.existsSync(path.join(subCwd, 'go.mod'))) return true;
-    // pytest
-    if (/^pytest/.test(cmd) && (fs.existsSync(path.join(subCwd, 'pyproject.toml')) || fs.existsSync(path.join(subCwd, 'setup.py')))) return true;
-    // ruff
-    if (/^ruff\s+/.test(cmd) && (fs.existsSync(path.join(subCwd, 'ruff.toml')) || fs.existsSync(path.join(subCwd, '.ruff.toml')) || fs.existsSync(path.join(subCwd, 'pyproject.toml')))) return true;
+    // pytest / uv run pytest / poetry run pytest
+    if (/(?:^|\s)pytest/.test(cmd) && (fs.existsSync(path.join(subCwd, 'pyproject.toml')) || fs.existsSync(path.join(subCwd, 'setup.py')))) return true;
+    // ruff / uv run ruff
+    if (/(?:^|\s)ruff\s+/.test(cmd) && (fs.existsSync(path.join(subCwd, 'ruff.toml')) || fs.existsSync(path.join(subCwd, '.ruff.toml')) || fs.existsSync(path.join(subCwd, 'pyproject.toml')))) return true;
+    // dotnet
+    if (/^dotnet\s+/.test(cmd) && (fs.existsSync(path.join(subCwd, 'Directory.Build.props')) || hasFileWithExt(subCwd, '.csproj') || hasFileWithExt(subCwd, '.fsproj') || hasFileWithExt(subCwd, '.sln'))) return true;
+    // mix (Elixir)
+    if (/^mix\s+/.test(cmd) && fs.existsSync(path.join(subCwd, 'mix.exs'))) return true;
+    // bundle exec (Ruby)
+    if (/^bundle\s+exec\s+/.test(cmd) && fs.existsSync(path.join(subCwd, 'Gemfile'))) return true;
+    // composer / vendor/bin (PHP)
+    if (/^(composer|vendor\/bin)/.test(cmd) && fs.existsSync(path.join(subCwd, 'composer.json'))) return true;
+    // uv run / poetry run / pdm run (Python runners)
+    if (/^(uv|poetry|pdm|hatch|rye|pipenv)\s+run\s+/.test(cmd) && fs.existsSync(path.join(subCwd, 'pyproject.toml'))) return true;
   }
   return false;
 }
 
 /**
- * Get immediate subdirectories of `dir`, excluding common non-source dirs.
- * Cached per invocation.
+ * Check if a directory has any file with the given extension.
+ * Used for .csproj, .fsproj, .sln detection.
+ */
+function hasFileWithExt(dir, ext) {
+  try {
+    return fs.readdirSync(dir).some(f => f.endsWith(ext));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get workspace member directories (2 levels deep).
+ * Level 1: immediate children (backend/, frontend/, src/, lib/, etc.)
+ * Level 2: children of common workspace parent dirs (packages/foo/, apps/bar/, etc.)
+ * Returns absolute paths. Cached per root dir.
  */
 const _subdirCache = new Map();
-function getSubdirs(dir) {
-  if (_subdirCache.has(dir)) return _subdirCache.get(dir);
-  const skip = new Set(['node_modules', '.git', 'dist', 'build', 'target', '.next', '__pycache__']);
-  let entries;
-  try {
-    entries = fs.readdirSync(dir, { withFileTypes: true })
-      .filter(e => e.isDirectory() && !skip.has(e.name) && !e.name.startsWith('.'))
-      .map(e => e.name);
-  } catch {
-    entries = [];
+function getWorkspaceDirs(rootCwd) {
+  if (_subdirCache.has(rootCwd)) return _subdirCache.get(rootCwd);
+  const skip = new Set(['node_modules', '.git', 'dist', 'build', 'target', '.next', '__pycache__', 'vendor', 'coverage']);
+  const dirs = [];
+
+  const listDirs = (dir) => {
+    try {
+      return fs.readdirSync(dir, { withFileTypes: true })
+        .filter(e => e.isDirectory() && !skip.has(e.name) && !e.name.startsWith('.'))
+        .map(e => path.join(dir, e.name));
+    } catch {
+      return [];
+    }
+  };
+
+  // Level 1: immediate children
+  const level1 = listDirs(rootCwd);
+  dirs.push(...level1);
+
+  // Level 2: children of workspace-like parent directories.
+  // Only recurse into dirs that look like workspace containers (no manifest
+  // of their own, or are common container names).
+  const containerNames = new Set([
+    'packages', 'apps', 'libs', 'modules', 'plugins', 'services',
+    'tools', 'internal', 'crates', 'sdk', 'examples', 'components',
+  ]);
+  for (const d of level1) {
+    const name = path.basename(d);
+    if (containerNames.has(name) || !fs.existsSync(path.join(d, 'package.json'))) {
+      const level2 = listDirs(d);
+      dirs.push(...level2);
+    }
   }
-  _subdirCache.set(dir, entries);
-  return entries;
+
+  _subdirCache.set(rootCwd, dirs);
+  return dirs;
+}
+
+/** Legacy alias for backward compat with tests. */
+function getSubdirs(dir) {
+  return getWorkspaceDirs(dir).map(d => path.relative(dir, d));
 }
 
 function checkBranchStrategy(cwd, content, results) {
@@ -326,6 +405,14 @@ function normalizeCmd(cmd) {
   c = c.replace(/^\.\/gradlew/, 'gradlew');
   c = c.replace(/^\.\/mvnw/, 'mvnw');
   c = c.replace(/^\.\/(\S+)/, '$1'); // any other ./x
+
+  // make parallelism flags: `make -j3 V=1` == `make V=1`
+  // -jN only controls parallelism, not what's built/tested.
+  c = c.replace(/\s+-j\d+\b/g, '');
+
+  // pnpm run == npm run for comparison purposes
+  c = c.replace(/^pnpm\s+run\s+/, 'npm run ');
+  c = c.replace(/^yarn\s+run\s+/, 'npm run ');
 
   return c;
 }

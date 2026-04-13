@@ -130,6 +130,21 @@ function isNoise(cmd) {
   // Action setup steps (rustup, etc.)
   if (/^rustup\s/.test(trimmed)) return true;
 
+  // node_modules/ direct references — setup scripts (e.g. puppeteer install),
+  // not quality gates. These fail in shallow clones anyway.
+  if (/^node\s+node_modules\//.test(trimmed)) return true;
+
+  // CI orchestration / distributed runner commands — not quality gates.
+  // Examples: nx-cloud start-ci-run, nx-cloud stop-all-agents, circleci step halt.
+  if (/\b(start-ci-run|stop-all-agents|step halt|setup-remote-docker)\b/.test(trimmed)) return true;
+  if (/^npx\s+nx-cloud\s/.test(trimmed)) return true;
+
+  // make install / make clean / make examples — build operations, not quality gates.
+  // Also filter `make -j1 install_sw` (OpenSSL build), `make -C bld install`.
+  if (/^(time\s+)?make\s+.*\b(install\w*|clean|uninstall)\b/.test(trimmed)) return true;
+  // make with -C (cross-directory build) is CI-specific build plumbing
+  if (/^(time\s+)?make\s+-C\s/.test(trimmed)) return true;
+
   // Release / publish steps — not gates
   if (/^npm\s+publish/.test(trimmed)) return true;
   if (/^cargo\s+publish/.test(trimmed)) return true;

@@ -283,3 +283,33 @@ test('normalizeCiGates: real-world axios-like matrix dump collapses to few gates
   assert.ok(!result.some(r => r.includes('npm install')), 'installs leaked');
   assert.ok(!result.some(r => r.includes('set-output')), 'set-output leaked');
 });
+
+test('isNoise: node_modules direct references (setup scripts)', () => {
+  assert.ok(isNoise('node node_modules/puppeteer/install.mjs'));
+  assert.ok(isNoise('node node_modules/.bin/some-tool'));
+  // Real node commands must not match
+  assert.ok(!isNoise('node bin/crag.js'));
+  assert.ok(!isNoise('node --check src/cli.js'));
+});
+
+test('isNoise: CI orchestration commands', () => {
+  assert.ok(isNoise('npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"'));
+  assert.ok(isNoise('npx nx-cloud stop-all-agents'));
+  // Real nx commands must not match
+  assert.ok(!isNoise('npx nx run test'));
+  assert.ok(!isNoise('npx nx affected --target=test'));
+});
+
+test('isNoise: make install/clean/cross-directory builds', () => {
+  assert.ok(isNoise('make install'));
+  assert.ok(isNoise('make clean'));
+  assert.ok(isNoise('make -j1 install_sw'));
+  assert.ok(isNoise('make -C bld V=1'));
+  assert.ok(isNoise('make -C bld -C tests'));
+  assert.ok(isNoise('time make -C bld install'));
+  // Real make targets must not match
+  assert.ok(!isNoise('make test'));
+  assert.ok(!isNoise('make V=1'));
+  assert.ok(!isNoise('make test-ci'));
+  assert.ok(!isNoise('make lint'));
+});

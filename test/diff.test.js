@@ -208,6 +208,16 @@ test('normalizeCmd: strips nested wrapping quotes iteratively', () => {
   assert.strictEqual(normalizeCmd(`"'npm test'"`), normalizeCmd('npm test'));
 });
 
+test('normalizeCmd: make -jN is stripped (parallelism only)', () => {
+  assert.strictEqual(normalizeCmd('make -j3 V=1'), normalizeCmd('make V=1'));
+  assert.strictEqual(normalizeCmd('make -j8 test'), normalizeCmd('make test'));
+});
+
+test('normalizeCmd: pnpm run ⇔ npm run', () => {
+  assert.strictEqual(normalizeCmd('pnpm run test'), normalizeCmd('npm run test'));
+  assert.strictEqual(normalizeCmd('yarn run test'), normalizeCmd('npm run test'));
+});
+
 // --- diff E2E on a temp repo with dedup check ----------------------------
 
 test('diff: deduplicates extras across multiple workflows', () => {

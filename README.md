@@ -17,8 +17,8 @@ npx @whitehatd/crag
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
-[![87 repos audited](https://img.shields.io/badge/benchmark-87%20repos%20%C2%B7%200%20crashes-brightgreen)](./benchmarks/leaderboard.md)
-[![99% have drift](https://img.shields.io/badge/audit-99%25%20drift%20in%2087%20top%20repos-orange)](./benchmarks/leaderboard.md)
+[![100 repos audited](https://img.shields.io/badge/benchmark-100%20repos%20%C2%B7%200%20crashes-brightgreen)](./benchmarks/leaderboard.md)
+[![55% zero AI config](https://img.shields.io/badge/audit-55%25%20zero%20AI%20config%20in%20100%20repos-orange)](./benchmarks/leaderboard.md)
 
 **[crag.sh](https://crag.sh)** | [Audit Tool](https://crag.sh/audit) | [Leaderboard](https://crag.sh/leaderboard) | [Dashboard](https://app.crag.sh) | [Docs](https://crag.sh/docs) | [VS Code](https://marketplace.visualstudio.com/items?itemName=whitehatd.vscode-crag) | [Neovim](https://github.com/WhitehatD/crag.nvim) | [Status](https://crag.sh/status)
 
@@ -224,17 +224,18 @@ Connect GitHub to also audit private repos.
 
 ---
 
-## Benchmark: 87 repos, 99% have drift
+## Benchmark: 100 repos audited
 
-We audited 87 of the most popular open-source repos. 20+ languages. Multiple CI systems. Monorepos to single-file libraries.
+We audited 100 of the most popular open-source repos. 20+ languages. Multiple CI systems. Monorepos to single-file libraries.
 
 | Metric | Result |
 |---|---|
-| Repos audited | 87 |
-| Repos with drift | 86 (99%) |
-| Zero AI config files | 46 (53%) |
-| Total gates inferred | 3,136 |
-| Mean gates per repo | 36.0 |
+| Repos audited | 100 |
+| Zero AI config files | 55 (55%) |
+| AI config adoption | 45 (45%) |
+| Repos with genuine drift | 15 (15%) |
+| Total gates inferred | 3,620 |
+| Mean gates per repo | 36.2 |
 | Crashes | 0 |
 
 Top repos by gate count:
@@ -244,9 +245,9 @@ Top repos by gate count:
 | grafana/grafana | Go + React + Docker | 67 | 100 |
 | astral-sh/ruff | Rust + Python + Docker | 53 | 100 |
 | calcom/cal.com | Next.js + React + Docker | 53 | 100 |
+| astral-sh/uv | Rust + Python + Docker | 52 | 100 |
 | hashicorp/vault | Go + Docker + Node | 50 | 100 |
-| vitejs/vite | TypeScript + Node | 45 | 100 |
-| sveltejs/svelte | TypeScript + Node | 43 | 100 |
+| rollup/rollup | TypeScript + Node | 50 | 80 |
 
 Full results: [`benchmarks/leaderboard.md`](./benchmarks/leaderboard.md) | [Live leaderboard](https://crag.sh/leaderboard)
 
@@ -292,12 +293,12 @@ The skills read `governance.md` and adapt. Nothing hardcoded. Works with Claude 
 
 | Metric | Result |
 |---|---|
-| 87-repo benchmark | [87 repos, 0 crashes, 3,136 gates, 99% drift](./benchmarks/leaderboard.md) |
-| 50-repo benchmark | [50 repos, 0 crashes, 1,809 gates, 46% drift](./benchmarks/phase1-benchmark.md) |
+| 100-repo benchmark | [100 repos, 0 crashes, 3,620 gates, 55% zero AI config](./benchmarks/leaderboard.md) |
+| 50-repo benchmark | [50 repos, 0 crashes, 1,809 gates](./benchmarks/phase1-benchmark.md) |
 | Stress test | [101 repos, 4,400 invocations, 0 crashes](./benchmarks/stress-test.md) |
 | Reference benchmark | [40/40 Grade A](./benchmarks/results.md) across 7 language families |
 | Determinism | SHA-verified, byte-identical across Ubuntu + macOS + Windows |
-| Tests | 593 passing |
+| Tests | 598 passing |
 | Dependencies | 0 |
 
 ---
