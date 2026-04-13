@@ -297,7 +297,7 @@ The skills read `governance.md` and adapt. Nothing hardcoded. Works with Claude 
 | Stress test | [101 repos, 4,400 invocations, 0 crashes](./benchmarks/stress-test.md) |
 | Reference benchmark | [40/40 Grade A](./benchmarks/results.md) across 7 language families |
 | Determinism | SHA-verified, byte-identical across Ubuntu + macOS + Windows |
-| Tests | 591 passing |
+| Tests | 593 passing |
 | Dependencies | 0 |
 
 ---

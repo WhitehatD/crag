@@ -95,7 +95,7 @@ src/
   skills/                 Universal skills (ship with crag, same for every project)
   crag-agent.md           Agent persona definition
 
-test/                     591 tests, run via `node test/all.js`
+test/                     593 tests, run via `node test/all.js`
 benchmarks/               Benchmark harness and results
 docs/                     Documentation
 ```
