@@ -11,9 +11,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.13] — 2026-04-13
 
+### Fixed
+- 5 false-positive drift detection bugs: `checkSubdirs` only scanned 1 level (missed nested workspace packages), `node_modules/` paths failed in shallow clones, nx-cloud CI orchestration not filtered as noise, `make -jN` parallelism flags not normalized, autotools `Makefile.in` not recognized by make verifier
+- `checkSubdirs` → `getWorkspaceDirs`: 2-level scan with container detection
+- 15 new command patterns in `checkGateReality` (`uv`, `make`, `mix`, `bundle`, etc.)
+- `isNoise`: filter `node_modules/`, `nx-cloud`, `make install/clean/-C`
+- `normalizeCmd`: strip `make -jN`, normalize `pnpm`/`yarn` to `npm`
+- README: corrected "99% drift" → "55% zero AI config" (verified on 100 repos, 3,620 gates)
+- 5 new tests (593 → 598)
+
 ## [0.5.12] — 2026-04-13
 
+### Fixed
+- Stale test counts in README and docs (591/589 → 593)
+
 ## [0.5.11] — 2026-04-13
+
+### Added
+- `crag diff --ci`: exits non-zero when CI has gates governance doesn't know about
+- `crag diff --json`: machine-readable output for programmatic use
+- `compile --target github` now generates `governance-guard.yml` alongside `gates.yml` — triggers on CI config file changes, runs `crag diff --ci`
+- Same guard workflow generated for Forgejo target
+- `isGateCommand()` excludes crag's own meta-tooling commands
 
 ## [0.5.10] — 2026-04-13
 
