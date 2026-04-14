@@ -1,1 +1,1618 @@
-[{"repo":"grafana/grafana","stars":73178,"stack":"node, react, typescript, go, docker","gates":67,"issues":4,"breakdown":{"stale":3,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"astral-sh/ruff","stars":47030,"stack":"rust, python, docker","gates":53,"issues":4,"breakdown":{"stale":3,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"calcom/cal.com","stars":41130,"stack":"node, typescript, docker, react, next.js","gates":53,"issues":5,"breakdown":{"stale":3,"drift":0,"extra":0,"missing":2},"aiConfigs":[".cursor/rules","CLAUDE.md","AGENTS.md"],"score":100},{"repo":"astral-sh/uv","stars":83195,"stack":"rust, python, docker","gates":52,"issues":4,"breakdown":{"stale":3,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"hashicorp/consul","stars":29845,"stack":"go, docker, node","gates":50,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"hashicorp/vault","stars":35392,"stack":"go, docker, node, typescript","gates":50,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[".github/copilot-instructions.md"],"score":100},{"repo":"mermaid-js/mermaid","stars":87327,"stack":"node, typescript, docker","gates":48,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"oven-sh/bun","stars":89053,"stack":"node, typescript, bun, zig, rust","gates":48,"issues":4,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":2},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"biomejs/biome","stars":24357,"stack":"node, rust, react, typescript","gates":47,"issues":3,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"prometheus/prometheus","stars":63575,"stack":"go, docker, node, typescript","gates":47,"issues":3,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"webpack/webpack","stars":65838,"stack":"node, typescript","gates":46,"issues":4,"breakdown":{"stale":3,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"facebook/docusaurus","stars":64549,"stack":"node, typescript","gates":44,"issues":3,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"nestjs/nest","stars":75173,"stack":"node, express, typescript, fastify","gates":44,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"tauri-apps/tauri","stars":105417,"stack":"node, rust, typescript","gates":44,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"vuejs/core","stars":53431,"stack":"node, typescript","gates":44,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"junegunn/fzf","stars":79447,"stack":"go, ruby, docker","gates":43,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"nuxt/nuxt","stars":60013,"stack":"node, typescript, vue","gates":43,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"Shopify/hydrogen","stars":1925,"stack":"node, react, typescript","gates":43,"issues":4,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":2},"aiConfigs":["CLAUDE.md"],"score":100},{"repo":"etcd-io/etcd","stars":51621,"stack":"go, docker","gates":42,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"pmndrs/zustand","stars":57729,"stack":"node, typescript","gates":42,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"supabase/supabase","stars":100785,"stack":"node, typescript, react, next.js, docker","gates":42,"issues":3,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":2},"aiConfigs":[".cursor/rules",".github/copilot-instructions.md"],"score":100},{"repo":"traefik/traefik","stars":62676,"stack":"go, docker","gates":42,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"vercel/swr","stars":32348,"stack":"node, typescript","gates":42,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"apache/airflow","stars":45035,"stack":"python, docker","gates":41,"issues":4,"breakdown":{"stale":3,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"containerd/containerd","stars":20577,"stack":"go","gates":41,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"minio/minio","stars":60690,"stack":"go, docker","gates":41,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"vitejs/vite","stars":79889,"stack":"node, typescript","gates":41,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[".github/copilot-instructions.md"],"score":100},{"repo":"docker/compose","stars":37268,"stack":"go, docker","gates":40,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md"],"score":100},{"repo":"evanw/esbuild","stars":39840,"stack":"go, node, typescript","gates":40,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"sveltejs/svelte","stars":86297,"stack":"node, typescript","gates":40,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"TanStack/query","stars":49114,"stack":"node, typescript","gates":40,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"servo/servo","stars":36284,"stack":"rust, python","gates":39,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"withastro/astro","stars":58429,"stack":"node, typescript","gates":39,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"yarnpkg/berry","stars":8046,"stack":"node, typescript, react","gates":39,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"angular/angular","stars":100045,"stack":"node, typescript","gates":38,"issues":3,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"redwoodjs/redwood","stars":17625,"stack":"node, typescript, fastify, react, express","gates":38,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"shadcn-ui/ui","stars":112253,"stack":"node, typescript, next.js","gates":38,"issues":2,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":2},"aiConfigs":[".cursor/rules"],"score":100},{"repo":"trpc/trpc","stars":39973,"stack":"node, express, typescript, fastify","gates":38,"issues":2,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":2},"aiConfigs":[".cursor/rules"],"score":100},{"repo":"zed-industries/zed","stars":79049,"stack":"rust","gates":38,"issues":5,"breakdown":{"stale":4,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md","GEMINI.md",".rules"],"score":100},{"repo":"Effect-TS/effect","stars":13822,"stack":"node, typescript","gates":37,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"openai/openai-node","stars":10806,"stack":"node, typescript","gates":37,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"pydantic/pydantic","stars":27464,"stack":"python","gates":37,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"remix-run/remix","stars":32608,"stack":"node, typescript","gates":37,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"chartjs/Chart.js","stars":67352,"stack":"node, typescript, php","gates":36,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"denoland/deno","stars":106459,"stack":"rust","gates":36,"issues":3,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md",".github/copilot-instructions.md"],"score":100},{"repo":"huggingface/transformers","stars":159310,"stack":"python","gates":36,"issues":4,"breakdown":{"stale":3,"drift":0,"extra":2,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md",".github/copilot-instructions.md"],"score":100},{"repo":"vitejs/vite-plugin-react","stars":1063,"stack":"node, typescript","gates":36,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"pandas-dev/pandas","stars":48494,"stack":"python, c/meson","gates":35,"issues":3,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"pnpm/pnpm","stars":34589,"stack":"node, typescript","gates":35,"issues":4,"breakdown":{"stale":3,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"psf/black","stars":41462,"stack":"python, docker","gates":35,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"nushell/nushell","stars":39030,"stack":"rust","gates":34,"issues":3,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"alacritty/alacritty","stars":63407,"stack":"rust","gates":33,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"date-fns/date-fns","stars":36541,"stack":"node, typescript","gates":33,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"fastify/fastify","stars":36040,"stack":"node, typescript","gates":33,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"hashicorp/terraform","stars":48133,"stack":"go, docker","gates":33,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"solidjs/solid","stars":35398,"stack":"node, typescript, solid","gates":33,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"leptos-rs/leptos","stars":20561,"stack":"rust","gates":32,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"neovim/neovim","stars":98667,"stack":"zig, lua, c++/cmake","gates":32,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"BurntSushi/ripgrep","stars":62350,"stack":"rust","gates":31,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"rails/rails","stars":58341,"stack":"node, ruby, rails","gates":31,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"cli/cli","stars":43799,"stack":"go","gates":30,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"drizzle-team/drizzle-orm","stars":33845,"stack":"node, typescript","gates":30,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"pallets/flask","stars":71414,"stack":"python","gates":30,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"pallets/werkzeug","stars":6856,"stack":"python","gates":30,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"micronaut-projects/micronaut-core","stars":6400,"stack":"java/gradle","gates":29,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[".clinerules"],"score":100},{"repo":"scikit-learn/scikit-learn","stars":65810,"stack":"python, c/meson","gates":29,"issues":3,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"tiangolo/fastapi","stars":97162,"stack":"python","gates":29,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"helix-editor/helix","stars":43934,"stack":"rust","gates":28,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"phoenixframework/phoenix","stars":22962,"stack":"node, elixir, phoenix","gates":28,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"ajeetdsouza/zoxide","stars":35579,"stack":"rust","gates":27,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"caddyserver/caddy","stars":71510,"stack":"go","gates":27,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"sindresorhus/got","stars":14899,"stack":"node, typescript","gates":27,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"elixir-lang/elixir","stars":26386,"stack":"elixir","gates":26,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"encode/starlette","stars":12200,"stack":"python","gates":26,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"psf/requests","stars":53892,"stack":"python","gates":26,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"apache/kafka","stars":32366,"stack":"java/gradle","gates":24,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"charmbracelet/bubbletea","stars":41535,"stack":"go","gates":24,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"expressjs/express","stars":68930,"stack":"node","gates":23,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"laravel/laravel","stars":84023,"stack":"node, php, laravel","gates":22,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"livebook-dev/livebook","stars":5764,"stack":"elixir, phoenix, docker","gates":22,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"nicklockwood/SwiftFormat","stars":8771,"stack":"swift, docker","gates":21,"issues":3,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"ziglang/zig","stars":42824,"stack":"zig, c++/cmake","gates":21,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"ansible/ansible","stars":68358,"stack":"python","gates":19,"issues":2,"breakdown":{"stale":2,"drift":0,"extra":0,"missing":0},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":100},{"repo":"apple/swift-package-manager","stars":10123,"stack":"swift, c++/cmake","gates":16,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"lucia-auth/lucia","stars":10459,"stack":"node","gates":15,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":0,"missing":1},"aiConfigs":[],"score":100},{"repo":"vapor/vapor","stars":26023,"stack":"swift","gates":14,"issues":2,"breakdown":{"stale":1,"drift":0,"extra":0,"missing":1},"aiConfigs":["AGENTS.md"],"score":100},{"repo":"excalidraw/excalidraw","stars":120960,"stack":"node, typescript, docker","gates":46,"issues":4,"breakdown":{"stale":3,"drift":1,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md",".github/copilot-instructions.md"],"score":95},{"repo":"vercel/ai","stars":23467,"stack":"node, typescript, hono","gates":39,"issues":5,"breakdown":{"stale":3,"drift":1,"extra":0,"missing":2},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":95},{"repo":"tokio-rs/tokio","stars":31658,"stack":"rust","gates":31,"issues":1,"breakdown":{"stale":0,"drift":0,"extra":2,"missing":1},"aiConfigs":[],"score":90},{"repo":"loco-rs/loco","stars":8816,"stack":"rust","gates":31,"issues":1,"breakdown":{"stale":0,"drift":1,"extra":0,"missing":1},"aiConfigs":[],"score":85},{"repo":"python/mypy","stars":20362,"stack":"python","gates":29,"issues":2,"breakdown":{"stale":1,"drift":1,"extra":0,"missing":1},"aiConfigs":[],"score":85},{"repo":"rollup/rollup","stars":26265,"stack":"node, typescript","gates":50,"issues":4,"breakdown":{"stale":3,"drift":2,"extra":0,"missing":1},"aiConfigs":["AGENTS.md",".github/copilot-instructions.md"],"score":80},{"repo":"django/django","stars":87262,"stack":"node, python","gates":38,"issues":3,"breakdown":{"stale":2,"drift":2,"extra":0,"missing":1},"aiConfigs":[".github/copilot-instructions.md"],"score":80},{"repo":"curl/curl","stars":41285,"stack":"c++/cmake, docker","gates":35,"issues":1,"breakdown":{"stale":0,"drift":1,"extra":2,"missing":1},"aiConfigs":[],"score":75},{"repo":"strapi/strapi","stars":71869,"stack":"node, typescript","gates":45,"issues":3,"breakdown":{"stale":1,"drift":2,"extra":0,"missing":2},"aiConfigs":[],"score":70},{"repo":"facebook/react","stars":244459,"stack":"node, typescript","gates":44,"issues":2,"breakdown":{"stale":1,"drift":3,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md"],"score":65},{"repo":"n8n-io/n8n","stars":183870,"stack":"node, typescript, express","gates":42,"issues":3,"breakdown":{"stale":2,"drift":3,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":65},{"repo":"astral-sh/ty","stars":18284,"stack":"python, docker","gates":37,"issues":2,"breakdown":{"stale":1,"drift":3,"extra":0,"missing":1},"aiConfigs":[],"score":55},{"repo":"vercel/turborepo","stars":30184,"stack":"node, typescript, rust","gates":51,"issues":3,"breakdown":{"stale":1,"drift":4,"extra":0,"missing":2},"aiConfigs":["AGENTS.md"],"score":50},{"repo":"langchain-ai/langchain","stars":133437,"stack":"python","gates":30,"issues":4,"breakdown":{"stale":3,"drift":4,"extra":0,"missing":1},"aiConfigs":["CLAUDE.md","AGENTS.md"],"score":50}]
+[
+  {
+    "repo": "ansible/ansible",
+    "stars": 68358,
+    "stack": "python",
+    "gates": 19,
+    "issues": 2,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 0
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 94
+  },
+  {
+    "repo": "biomejs/biome",
+    "stars": 24357,
+    "stack": "node, rust, react, typescript",
+    "gates": 47,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 91
+  },
+  {
+    "repo": "prometheus/prometheus",
+    "stars": 63575,
+    "stack": "go, docker, node, typescript",
+    "gates": 47,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 91
+  },
+  {
+    "repo": "supabase/supabase",
+    "stars": 100785,
+    "stack": "node, typescript, react, next.js, docker",
+    "gates": 42,
+    "issues": 3,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2
+    },
+    "aiConfigs": [
+      ".cursor/rules",
+      ".github/copilot-instructions.md"
+    ],
+    "score": 91
+  },
+  {
+    "repo": "denoland/deno",
+    "stars": 106459,
+    "stack": "rust",
+    "gates": 36,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      ".github/copilot-instructions.md"
+    ],
+    "score": 91
+  },
+  {
+    "repo": "nushell/nushell",
+    "stars": 39030,
+    "stack": "rust",
+    "gates": 34,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 91
+  },
+  {
+    "repo": "nicklockwood/SwiftFormat",
+    "stars": 8771,
+    "stack": "swift, docker",
+    "gates": 21,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 91
+  },
+  {
+    "repo": "grafana/grafana",
+    "stars": 73178,
+    "stack": "node, react, typescript, go, docker",
+    "gates": 67,
+    "issues": 4,
+    "breakdown": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 88
+  },
+  {
+    "repo": "astral-sh/ruff",
+    "stars": 47030,
+    "stack": "rust, python, docker",
+    "gates": 53,
+    "issues": 4,
+    "breakdown": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 88
+  },
+  {
+    "repo": "astral-sh/uv",
+    "stars": 83195,
+    "stack": "rust, python, docker",
+    "gates": 52,
+    "issues": 4,
+    "breakdown": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 88
+  },
+  {
+    "repo": "oven-sh/bun",
+    "stars": 89053,
+    "stack": "node, typescript, bun, zig, rust",
+    "gates": 48,
+    "issues": 4,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 88
+  },
+  {
+    "repo": "webpack/webpack",
+    "stars": 65838,
+    "stack": "node, typescript",
+    "gates": 46,
+    "issues": 4,
+    "breakdown": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 88
+  },
+  {
+    "repo": "apache/airflow",
+    "stars": 45035,
+    "stack": "python, docker",
+    "gates": 41,
+    "issues": 4,
+    "breakdown": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 88
+  },
+  {
+    "repo": "pnpm/pnpm",
+    "stars": 34589,
+    "stack": "node, typescript",
+    "gates": 35,
+    "issues": 4,
+    "breakdown": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 88
+  },
+  {
+    "repo": "calcom/cal.com",
+    "stars": 41130,
+    "stack": "node, typescript, docker, react, next.js",
+    "gates": 53,
+    "issues": 5,
+    "breakdown": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2
+    },
+    "aiConfigs": [
+      ".cursor/rules",
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 85
+  },
+  {
+    "repo": "zed-industries/zed",
+    "stars": 79049,
+    "stack": "rust",
+    "gates": 38,
+    "issues": 5,
+    "breakdown": {
+      "stale": 4,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md",
+      "GEMINI.md",
+      ".rules"
+    ],
+    "score": 85
+  },
+  {
+    "repo": "hashicorp/vault",
+    "stars": 35392,
+    "stack": "go, docker, node, typescript",
+    "gates": 50,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      ".github/copilot-instructions.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "vitejs/vite",
+    "stars": 79889,
+    "stack": "node, typescript",
+    "gates": 41,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      ".github/copilot-instructions.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "docker/compose",
+    "stars": 37268,
+    "stack": "go, docker",
+    "gates": 40,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "sveltejs/svelte",
+    "stars": 86297,
+    "stack": "node, typescript",
+    "gates": 40,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "withastro/astro",
+    "stars": 58429,
+    "stack": "node, typescript",
+    "gates": 39,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "shadcn-ui/ui",
+    "stars": 112253,
+    "stack": "node, typescript, next.js",
+    "gates": 38,
+    "issues": 2,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2
+    },
+    "aiConfigs": [
+      ".cursor/rules"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "trpc/trpc",
+    "stars": 39973,
+    "stack": "node, express, typescript, fastify",
+    "gates": 38,
+    "issues": 2,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2
+    },
+    "aiConfigs": [
+      ".cursor/rules"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "Effect-TS/effect",
+    "stars": 13822,
+    "stack": "node, typescript",
+    "gates": 37,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "remix-run/remix",
+    "stars": 32608,
+    "stack": "node, typescript",
+    "gates": 37,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "vitejs/vite-plugin-react",
+    "stars": 1063,
+    "stack": "node, typescript",
+    "gates": 36,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "neovim/neovim",
+    "stars": 98667,
+    "stack": "zig, lua, c++/cmake",
+    "gates": 32,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "rails/rails",
+    "stars": 58341,
+    "stack": "node, ruby, rails",
+    "gates": 31,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "cli/cli",
+    "stars": 43799,
+    "stack": "go",
+    "gates": 30,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "micronaut-projects/micronaut-core",
+    "stars": 6400,
+    "stack": "java/gradle",
+    "gates": 29,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      ".clinerules"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "vapor/vapor",
+    "stars": 26023,
+    "stack": "swift",
+    "gates": 14,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 79
+  },
+  {
+    "repo": "excalidraw/excalidraw",
+    "stars": 120960,
+    "stack": "node, typescript, docker",
+    "gates": 46,
+    "issues": 4,
+    "breakdown": {
+      "stale": 3,
+      "drift": 1,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      ".github/copilot-instructions.md"
+    ],
+    "score": 78
+  },
+  {
+    "repo": "huggingface/transformers",
+    "stars": 159310,
+    "stack": "python",
+    "gates": 36,
+    "issues": 4,
+    "breakdown": {
+      "stale": 3,
+      "drift": 0,
+      "extra": 2,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md",
+      ".github/copilot-instructions.md"
+    ],
+    "score": 78
+  },
+  {
+    "repo": "facebook/docusaurus",
+    "stars": 64549,
+    "stack": "node, typescript",
+    "gates": 44,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 76
+  },
+  {
+    "repo": "angular/angular",
+    "stars": 100045,
+    "stack": "node, typescript",
+    "gates": 38,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 76
+  },
+  {
+    "repo": "pandas-dev/pandas",
+    "stars": 48494,
+    "stack": "python, c/meson",
+    "gates": 35,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 76
+  },
+  {
+    "repo": "scikit-learn/scikit-learn",
+    "stars": 65810,
+    "stack": "python, c/meson",
+    "gates": 29,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 76
+  },
+  {
+    "repo": "vercel/ai",
+    "stars": 23467,
+    "stack": "node, typescript, hono",
+    "gates": 39,
+    "issues": 5,
+    "breakdown": {
+      "stale": 3,
+      "drift": 1,
+      "extra": 0,
+      "missing": 2
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 75
+  },
+  {
+    "repo": "Shopify/hydrogen",
+    "stars": 1925,
+    "stack": "node, react, typescript",
+    "gates": 43,
+    "issues": 4,
+    "breakdown": {
+      "stale": 2,
+      "drift": 0,
+      "extra": 0,
+      "missing": 2
+    },
+    "aiConfigs": [
+      "CLAUDE.md"
+    ],
+    "score": 73
+  },
+  {
+    "repo": "rollup/rollup",
+    "stars": 26265,
+    "stack": "node, typescript",
+    "gates": 50,
+    "issues": 4,
+    "breakdown": {
+      "stale": 3,
+      "drift": 2,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "AGENTS.md",
+      ".github/copilot-instructions.md"
+    ],
+    "score": 68
+  },
+  {
+    "repo": "n8n-io/n8n",
+    "stars": 183870,
+    "stack": "node, typescript, express",
+    "gates": 42,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 3,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 61
+  },
+  {
+    "repo": "tauri-apps/tauri",
+    "stars": 105417,
+    "stack": "node, rust, typescript",
+    "gates": 44,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "vuejs/core",
+    "stars": 53431,
+    "stack": "node, typescript",
+    "gates": 44,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "junegunn/fzf",
+    "stars": 79447,
+    "stack": "go, ruby, docker",
+    "gates": 43,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "nuxt/nuxt",
+    "stars": 60013,
+    "stack": "node, typescript, vue",
+    "gates": 43,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "etcd-io/etcd",
+    "stars": 51621,
+    "stack": "go, docker",
+    "gates": 42,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "pmndrs/zustand",
+    "stars": 57729,
+    "stack": "node, typescript",
+    "gates": 42,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "traefik/traefik",
+    "stars": 62676,
+    "stack": "go, docker",
+    "gates": 42,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "containerd/containerd",
+    "stars": 20577,
+    "stack": "go",
+    "gates": 41,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "minio/minio",
+    "stars": 60690,
+    "stack": "go, docker",
+    "gates": 41,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "evanw/esbuild",
+    "stars": 39840,
+    "stack": "go, node, typescript",
+    "gates": 40,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "TanStack/query",
+    "stars": 49114,
+    "stack": "node, typescript",
+    "gates": 40,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "servo/servo",
+    "stars": 36284,
+    "stack": "rust, python",
+    "gates": 39,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "yarnpkg/berry",
+    "stars": 8046,
+    "stack": "node, typescript, react",
+    "gates": 39,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "redwoodjs/redwood",
+    "stars": 17625,
+    "stack": "node, typescript, fastify, react, express",
+    "gates": 38,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "openai/openai-node",
+    "stars": 10806,
+    "stack": "node, typescript",
+    "gates": 37,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "chartjs/Chart.js",
+    "stars": 67352,
+    "stack": "node, typescript, php",
+    "gates": 36,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "alacritty/alacritty",
+    "stars": 63407,
+    "stack": "rust",
+    "gates": 33,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "date-fns/date-fns",
+    "stars": 36541,
+    "stack": "node, typescript",
+    "gates": 33,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "fastify/fastify",
+    "stars": 36040,
+    "stack": "node, typescript",
+    "gates": 33,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "hashicorp/terraform",
+    "stars": 48133,
+    "stack": "go, docker",
+    "gates": 33,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "solidjs/solid",
+    "stars": 35398,
+    "stack": "node, typescript, solid",
+    "gates": 33,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "leptos-rs/leptos",
+    "stars": 20561,
+    "stack": "rust",
+    "gates": 32,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "BurntSushi/ripgrep",
+    "stars": 62350,
+    "stack": "rust",
+    "gates": 31,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "drizzle-team/drizzle-orm",
+    "stars": 33845,
+    "stack": "node, typescript",
+    "gates": 30,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "helix-editor/helix",
+    "stars": 43934,
+    "stack": "rust",
+    "gates": 28,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "phoenixframework/phoenix",
+    "stars": 22962,
+    "stack": "node, elixir, phoenix",
+    "gates": 28,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "ajeetdsouza/zoxide",
+    "stars": 35579,
+    "stack": "rust",
+    "gates": 27,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "sindresorhus/got",
+    "stars": 14899,
+    "stack": "node, typescript",
+    "gates": 27,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "elixir-lang/elixir",
+    "stars": 26386,
+    "stack": "elixir",
+    "gates": 26,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "encode/starlette",
+    "stars": 12200,
+    "stack": "python",
+    "gates": 26,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "apache/kafka",
+    "stars": 32366,
+    "stack": "java/gradle",
+    "gates": 24,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "charmbracelet/bubbletea",
+    "stars": 41535,
+    "stack": "go",
+    "gates": 24,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "expressjs/express",
+    "stars": 68930,
+    "stack": "node",
+    "gates": 23,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "laravel/laravel",
+    "stars": 84023,
+    "stack": "node, php, laravel",
+    "gates": 22,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "livebook-dev/livebook",
+    "stars": 5764,
+    "stack": "elixir, phoenix, docker",
+    "gates": 22,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "ziglang/zig",
+    "stars": 42824,
+    "stack": "zig, c++/cmake",
+    "gates": 21,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "apple/swift-package-manager",
+    "stars": 10123,
+    "stack": "swift, c++/cmake",
+    "gates": 16,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "lucia-auth/lucia",
+    "stars": 10459,
+    "stack": "node",
+    "gates": 15,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 57
+  },
+  {
+    "repo": "django/django",
+    "stars": 87262,
+    "stack": "node, python",
+    "gates": 38,
+    "issues": 3,
+    "breakdown": {
+      "stale": 2,
+      "drift": 2,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      ".github/copilot-instructions.md"
+    ],
+    "score": 56
+  },
+  {
+    "repo": "hashicorp/consul",
+    "stars": 29845,
+    "stack": "go, docker, node",
+    "gates": 50,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "mermaid-js/mermaid",
+    "stars": 87327,
+    "stack": "node, typescript, docker",
+    "gates": 48,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "nestjs/nest",
+    "stars": 75173,
+    "stack": "node, express, typescript, fastify",
+    "gates": 44,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "vercel/swr",
+    "stars": 32348,
+    "stack": "node, typescript",
+    "gates": 42,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "pydantic/pydantic",
+    "stars": 27464,
+    "stack": "python",
+    "gates": 37,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "psf/black",
+    "stars": 41462,
+    "stack": "python, docker",
+    "gates": 35,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "pallets/flask",
+    "stars": 71414,
+    "stack": "python",
+    "gates": 30,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "pallets/werkzeug",
+    "stars": 6856,
+    "stack": "python",
+    "gates": 30,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "tiangolo/fastapi",
+    "stars": 97162,
+    "stack": "python",
+    "gates": 29,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "caddyserver/caddy",
+    "stars": 71510,
+    "stack": "go",
+    "gates": 27,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "psf/requests",
+    "stars": 53892,
+    "stack": "python",
+    "gates": 26,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 0,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 54
+  },
+  {
+    "repo": "facebook/react",
+    "stars": 244459,
+    "stack": "node, typescript",
+    "gates": 44,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 3,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md"
+    ],
+    "score": 49
+  },
+  {
+    "repo": "langchain-ai/langchain",
+    "stars": 133437,
+    "stack": "python",
+    "gates": 30,
+    "issues": 4,
+    "breakdown": {
+      "stale": 3,
+      "drift": 4,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "score": 48
+  },
+  {
+    "repo": "tokio-rs/tokio",
+    "stars": 31658,
+    "stack": "rust",
+    "gates": 31,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 0,
+      "extra": 2,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 47
+  },
+  {
+    "repo": "loco-rs/loco",
+    "stars": 8816,
+    "stack": "rust",
+    "gates": 31,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 1,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 47
+  },
+  {
+    "repo": "python/mypy",
+    "stars": 20362,
+    "stack": "python",
+    "gates": 29,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 1,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 44
+  },
+  {
+    "repo": "curl/curl",
+    "stars": 41285,
+    "stack": "c++/cmake, docker",
+    "gates": 35,
+    "issues": 1,
+    "breakdown": {
+      "stale": 0,
+      "drift": 1,
+      "extra": 2,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 37
+  },
+  {
+    "repo": "vercel/turborepo",
+    "stars": 30184,
+    "stack": "node, typescript, rust",
+    "gates": 51,
+    "issues": 3,
+    "breakdown": {
+      "stale": 1,
+      "drift": 4,
+      "extra": 0,
+      "missing": 2
+    },
+    "aiConfigs": [
+      "AGENTS.md"
+    ],
+    "score": 36
+  },
+  {
+    "repo": "strapi/strapi",
+    "stars": 71869,
+    "stack": "node, typescript",
+    "gates": 45,
+    "issues": 3,
+    "breakdown": {
+      "stale": 1,
+      "drift": 2,
+      "extra": 0,
+      "missing": 2
+    },
+    "aiConfigs": [],
+    "score": 31
+  },
+  {
+    "repo": "astral-sh/ty",
+    "stars": 18284,
+    "stack": "python, docker",
+    "gates": 37,
+    "issues": 2,
+    "breakdown": {
+      "stale": 1,
+      "drift": 3,
+      "extra": 0,
+      "missing": 1
+    },
+    "aiConfigs": [],
+    "score": 24
+  }
+]

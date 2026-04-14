@@ -146,16 +146,23 @@ function detectAIConfigs(repoDir) {
   return found;
 }
 
-function calcScore(drift) {
-  // Only count genuinely meaningful drift axes:
-  //   drift  = gate references tool that doesn't exist (always real)
-  //   extra  = CI has commands not in governance (always real)
-  // Exclude from scoring:
-  //   stale  = existing files older than freshly-generated governance.md (tautological)
-  //   missing = has .github/workflows but no crag-compiled gates.yml (tautological)
+function calcScore(drift, aiConfigCount) {
+  // Governance Health Score — how well-governed is this repo for AI agents?
+  //
+  // Penalties:
+  //   No AI configs at all:          -40  (agents get zero project guidance)
+  //   Only 1 AI config:              -15  (partial coverage)
+  //   drift (phantom gates):         -10 each (gates reference tools that don't exist)
+  //   extra (untracked CI commands):   -5 each (CI runs checks governance doesn't know about)
+  //   stale configs:                   -3 each (compiled configs older than governance)
+  //   missing compiled targets:        -3 each (has CI but no crag-compiled output)
   let score = 100;
-  score -= (drift.drift || 0) * 15;
+  if (aiConfigCount === 0) score -= 40;
+  else if (aiConfigCount === 1) score -= 15;
+  score -= (drift.drift || 0) * 10;
   score -= (drift.extra || 0) * 5;
+  score -= (drift.stale || 0) * 3;
+  score -= (drift.missing || 0) * 3;
   return Math.max(0, score);
 }
 
@@ -287,8 +294,7 @@ for (let i = 0; i < repos.length; i++) {
   }
 
   // Step 6: Calculate score
-  entry.score = calcScore(entry.drift);
-  if (entry.aiConfigCount > 0) entry.score = Math.min(100, entry.score + 10);
+  entry.score = calcScore(entry.drift, entry.aiConfigCount);
 
   // Log progress
   const statusIcon = entry.drift.total === 0 ? `${G}\u2713` : `${Y}!`;
