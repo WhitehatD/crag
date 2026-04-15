@@ -187,6 +187,15 @@ function isNoise(cmd) {
   if (trimmed.includes('clean-cspell')) return true;
   if (trimmed.includes('validate-ecosystem-links')) return true;
 
+  // Coverage report generation — these are CI artifacts, not quality gates.
+  // The actual coverage *enforcement* (--fail-under) may be a gate, but
+  // `coverage combine`, `coverage html`, `coverage report` without thresholds
+  // are just report generation.
+  if (/\bcoverage\s+(combine|html|xml|json|report)\b/.test(trimmed) && !trimmed.includes('--fail-under')) return true;
+
+  // Benchmark-specific test runs — require CI-only plugins (codspeed, etc.)
+  if (/--codspeed/.test(trimmed)) return true;
+
   // Benchmark/micro-regression one-offs
   if (/--debug-benchmark/.test(trimmed)) return true;
   if (/grep\s+"['"]?Latency avg/.test(trimmed)) return true;
@@ -204,6 +213,12 @@ function isNoise(cmd) {
 
   // License checkers are typically gates, but their exact invocation is
   // long and project-specific. Keep them.
+
+  // Commands with residual GitHub Actions expressions (${{ ... }}) — these
+  // can't run locally and indicate CI-specific plumbing that leaked through.
+  // matrix.* and env.* are already canonicalized; anything else (github.sha,
+  // secrets.*, steps.*.outputs.*, etc.) makes the command CI-only.
+  if (/\$\{\{(?!\s*(matrix|env)\.)/.test(trimmed)) return true;
 
   // Dev/maintenance scripts under a `scripts/` directory are one-off tasks,
   // not gates. FastAPI runs its doc, sponsor, people, translation pipelines

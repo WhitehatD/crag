@@ -339,10 +339,44 @@ const ANTI_PATTERNS = {
   ],
 };
 
+/**
+ * Determine which stacks are "primary" vs auxiliary.
+ *
+ * A project with `composer.json` (php/laravel) AND `package.json` (node, for
+ * Vite asset compilation) should get PHP anti-patterns, not Node ones. The
+ * heuristic: language-level stacks (node, python, go, rust, php, java, etc.)
+ * are ranked by specificity. Frameworks (react, next.js, docker) always emit
+ * their patterns because they're opt-in signals.
+ */
+const LANGUAGE_STACKS = new Set([
+  'node', 'python', 'go', 'rust', 'php', 'ruby', 'elixir', 'erlang',
+  'haskell', 'ocaml', 'zig', 'crystal', 'nim', 'julia', 'dart',
+  'java/maven', 'java/gradle', 'kotlin', 'dotnet', 'swift', 'c', 'c++/cmake',
+  'c/meson', 'c/autotools', 'deno', 'bun', 'typescript',
+]);
+
+// Stacks that indicate a secondary/auxiliary role when another language is primary.
+// E.g. `node` in a PHP project is likely just for asset bundling (Vite/Webpack).
+const AUXILIARY_INDICATORS = {
+  node: ['php', 'ruby', 'python', 'go', 'rust', 'elixir', 'java/maven', 'java/gradle', 'kotlin', 'dotnet', 'swift'],
+};
+
 function mineAntiPatterns(analysis) {
   const patterns = [];
-  for (const stack of analysis.stack) {
+  const stacks = analysis.stack;
+
+  // Identify auxiliary language stacks to skip
+  const skipStacks = new Set();
+  for (const [aux, primaries] of Object.entries(AUXILIARY_INDICATORS)) {
+    if (stacks.includes(aux) && primaries.some(p => stacks.includes(p))) {
+      skipStacks.add(aux);
+    }
+  }
+
+  for (const stack of stacks) {
     const key = stack.toLowerCase();
+    // Skip auxiliary language stacks (e.g. node in a PHP project)
+    if (LANGUAGE_STACKS.has(key) && skipStacks.has(key)) continue;
     if (ANTI_PATTERNS[key]) patterns.push(...ANTI_PATTERNS[key]);
   }
   // Dedupe (react + next.js might both exist)

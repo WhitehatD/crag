@@ -361,3 +361,31 @@ test('isNoise: go install/generate (not test/build)', () => {
   assert.ok(!isNoise('go build ./...'));
   assert.ok(!isNoise('go vet ./...'));
 });
+
+test('isNoise: GitHub Actions expressions (CI-only)', () => {
+  assert.ok(isNoise('uv run coverage html --title "Coverage for ${{ github.sha }}"'));
+  assert.ok(isNoise('echo ${{ secrets.NPM_TOKEN }}'));
+  assert.ok(isNoise('curl -H "Authorization: ${{ steps.auth.outputs.token }}"'));
+  // Note: matrix/env expressions are canonicalized BEFORE isNoise runs,
+  // so isNoise never sees raw ${{ matrix.* }} or ${{ env.* }}.
+  // After canonicalization they become e.g. "npm run test -- <node-version>"
+  // which isNoise correctly allows.
+});
+
+test('isNoise: coverage report commands (not enforcement)', () => {
+  assert.ok(isNoise('coverage combine coverage'));
+  assert.ok(isNoise('uv run coverage html --title "Coverage report"'));
+  assert.ok(isNoise('coverage xml'));
+  assert.ok(isNoise('coverage json'));
+  assert.ok(isNoise('coverage report'));
+  // coverage with --fail-under IS a gate
+  assert.ok(!isNoise('uv run coverage report --fail-under=100'));
+  assert.ok(!isNoise('coverage report --fail-under=80'));
+});
+
+test('isNoise: benchmark-specific test flags', () => {
+  assert.ok(isNoise('uv run --no-sync pytest tests/benchmarks --codspeed'));
+  // Regular pytest is NOT noise
+  assert.ok(!isNoise('uv run pytest'));
+  assert.ok(!isNoise('pytest tests/'));
+});
