@@ -132,6 +132,30 @@ function isNoise(cmd) {
   if (/^bundle\s+install/.test(trimmed)) return true;
   if (/^cargo\s+fetch/.test(trimmed)) return true;
 
+  // npx <tool> install — browser/dependency setup, not quality gates.
+  // Catches: npx playwright install, npx puppeteer install, npx cypress install,
+  // npx husky install, npx turbo install, etc.
+  if (/^npx\s+\S+\s+install/.test(trimmed)) return true;
+  // npx playwright install-deps (variant without "install" as second word)
+  if (/^npx\s+playwright\s+install-deps/.test(trimmed)) return true;
+  // npx setup utilities — not gates
+  if (/^npx\s+(browserslist|patch-package|husky|lefthook|simple-git-hooks)\b/.test(trimmed)) return true;
+  // npx prisma generate/migrate/db — ORM setup, not quality gates
+  if (/^npx\s+prisma\s+(generate|migrate|db\s)/.test(trimmed)) return true;
+
+  // node -e / node --eval — inline JS evaluation, not a gate
+  if (/^node\s+(-e|--eval|--print|-p)\s/.test(trimmed)) return true;
+
+  // docker run/pull/login — container setup, not quality gates
+  if (/^docker\s+(run|pull|login|logout|tag|stop|start|rm|exec)\s/.test(trimmed)) return true;
+  // docker compose up/down/pull — service orchestration setup
+  if (/^docker\s+compose\s+(up|down|pull|stop|start|restart|rm|exec|logs)\b/.test(trimmed)) return true;
+
+  // go install — fetching binaries, not a gate (go test/build/vet are gates)
+  if (/^go\s+install\s/.test(trimmed)) return true;
+  // go generate — code generation, not a quality gate
+  if (/^go\s+generate\b/.test(trimmed)) return true;
+
   // Action setup steps (rustup, etc.)
   if (/^rustup\s/.test(trimmed)) return true;
 

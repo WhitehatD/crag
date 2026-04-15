@@ -313,3 +313,51 @@ test('isNoise: make install/clean/cross-directory builds', () => {
   assert.ok(!isNoise('make test-ci'));
   assert.ok(!isNoise('make lint'));
 });
+
+test('isNoise: npx setup/install commands (not gates)', () => {
+  // Browser/tool installation via npx
+  assert.ok(isNoise('npx playwright install --with-deps chromium'));
+  assert.ok(isNoise('npx playwright install --with-deps'));
+  assert.ok(isNoise('npx playwright install-deps'));
+  assert.ok(isNoise('npx puppeteer install'));
+  assert.ok(isNoise('npx cypress install'));
+  assert.ok(isNoise('npx husky install'));
+  assert.ok(isNoise('npx browserslist --update-db'));
+  assert.ok(isNoise('npx patch-package'));
+  assert.ok(isNoise('npx prisma generate'));
+  assert.ok(isNoise('npx prisma migrate deploy'));
+  // Must NOT reject real npx gates
+  assert.ok(!isNoise('npx tsc --noEmit'));
+  assert.ok(!isNoise('npx eslint .'));
+  assert.ok(!isNoise('npx jest'));
+  assert.ok(!isNoise('npx nx run test'));
+  assert.ok(!isNoise('npx vitest'));
+});
+
+test('isNoise: node inline eval', () => {
+  assert.ok(isNoise('node -e "console.log(1)"'));
+  assert.ok(isNoise('node --eval "process.exit(0)"'));
+  assert.ok(isNoise('node -p "require(\'./package.json\').version"'));
+  // Must NOT reject real node gates
+  assert.ok(!isNoise('node bin/crag.js'));
+  assert.ok(!isNoise('node --check src/cli.js'));
+});
+
+test('isNoise: docker setup commands (not build)', () => {
+  assert.ok(isNoise('docker run --rm redis:7'));
+  assert.ok(isNoise('docker pull node:18'));
+  assert.ok(isNoise('docker compose up -d'));
+  assert.ok(isNoise('docker compose pull'));
+  // Must NOT reject real docker gates
+  assert.ok(!isNoise('docker build .'));
+  assert.ok(!isNoise('docker compose build'));
+});
+
+test('isNoise: go install/generate (not test/build)', () => {
+  assert.ok(isNoise('go install golang.org/x/tools/gopls@latest'));
+  assert.ok(isNoise('go generate ./...'));
+  // Must NOT reject real go gates
+  assert.ok(!isNoise('go test ./...'));
+  assert.ok(!isNoise('go build ./...'));
+  assert.ok(!isNoise('go vet ./...'));
+});
