@@ -43,15 +43,20 @@ function isNoise(cmd) {
   // Bare backslash (line-continuation remnant on its own)
   if (/^\\+$/.test(trimmed)) return true;
 
-  // Subshell fragments — leaked from multi-line shell compounds. A line
-  // starting with `)` means we captured the tail of a `(cmd; cmd)` block.
+  // Subshell / compound command fragments — leaked from shell compounds.
+  // `)` = tail of `(cmd; cmd)` subshell. `}` = tail of `{ cmd; cmd; }` group.
+  // `{` = head of a group command. `{ [` = test inside a group command.
+  if (/^[)}\{]$/.test(trimmed)) return true;
   if (/^\)/.test(trimmed)) return true;
+  // Group command fragments: `{ [ ... ] || (echo ...` — the naive split on
+  // && and ; breaks compound commands containing `{ cmd || cmd; }`.
+  if (/^\{\s*\[/.test(trimmed)) return true;
 
   // Standalone shell builtins — NEVER gates on their own. When a `run: |`
   // block scalar contains a retry loop like `for i in 1 2 3; do npm ci &&
   // break; done`, the line-based extractor pulls out `break` as a
   // pseudo-command. Same for `exit`, `continue`, `return`, `shift`.
-  if (/^(break|continue|return|exit|shift|trap|:)\s*\d*\s*$/.test(trimmed)) return true;
+  if (/^(break|continue|return|exit|shift|trap|:)\s*\d*\s*[)}\s]*$/.test(trimmed)) return true;
   if (/^(pushd|popd)(\s|$)/.test(trimmed)) return true;
 
   // Version / health probes — `node --version`, `go version`,
@@ -109,7 +114,7 @@ function isNoise(cmd) {
 
   // Throwaway setup
   if (/^(mkdir|rm|cp|mv|touch|ln)\s/.test(trimmed)) return true;
-  if (/^git\s+(config|submodule)/.test(trimmed)) return true;
+  if (/^git\s+(config|submodule|diff|show|log|status|rev-parse)/.test(trimmed)) return true;
   if (/^cd\s/.test(trimmed) && !trimmed.includes('&&')) return true;
 
   // npm install variants — these are setup, not gates (we capture npm test/lint directly)
