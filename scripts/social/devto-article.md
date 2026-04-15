@@ -1,12 +1,12 @@
 ---
-title: "I Audited 100 Top GitHub Repos — 55% Have No AI Agent Configs"
+title: "I Audited 99 Top GitHub Repos — 55% Have No AI Agent Configs"
 published: false
-description: "AI coding tools are guessing at your quality standards. I built a tool to fix it and audited 100 repos to prove it."
+description: "AI coding tools are guessing at your quality standards. I built a tool to fix it and audited 99 repos to prove it."
 tags: ai, devtools, opensource, productivity
 # cover_image: https://crag.sh/og-image.png
 ---
 
-# I Audited 100 Top GitHub Repos — 55% Have No AI Agent Configs
+# I Audited 99 Top GitHub Repos — 55% Have No AI Agent Configs
 
 AI coding tools are everywhere. Claude Code, Cursor, GitHub Copilot, Codex, Gemini — they're writing real code in real repos every day. But there's a gap nobody talks about: **most repos don't tell these tools what the rules are.**
 
@@ -16,7 +16,7 @@ So what happens? The AI guesses. Sometimes it's right. Often it runs `npm test` 
 
 ## The audit
 
-I wanted to quantify this. I took 100 of the most popular open-source repos on GitHub — React, Django, FastAPI, Tauri, Svelte, Grafana, Terraform, and more — and checked three things:
+I wanted to quantify this. I took 100 of the most popular open-source repos on GitHub — React, Django, FastAPI, Tauri, Svelte, Grafana, Terraform, and more — and checked three things (1 repo failed to clone due to size):
 
 1. **Do they have AI agent config files?** (CLAUDE.md, AGENTS.md, .cursorrules, etc.)
 2. **If they do, are those configs in sync with CI?**
@@ -26,18 +26,17 @@ I wanted to quantify this. I took 100 of the most popular open-source repos on G
 
 | Metric | Result |
 |---|---|
-| Repos audited | 100 |
-| Repos with zero AI configs | **55 (55%)** |
+| Repos audited | 99 |
+| Repos with zero AI configs | **54 (55%)** |
 | Repos with at least one AI config | 45 (45%) |
-| Total quality gates inferred | 3,620 |
-| Average gates per repo | 36.2 |
+| Total quality gates inferred | 3,540 |
+| Average gates per repo | 35.8 |
 
 Some notable repos with **zero** AI config files:
 
-- **tauri** — 105K stars, 44 quality gates, no AI configs
-- **fastapi** — 97K stars, 29 gates, no AI configs
-- **svelte** — 86K stars, 40 gates, no AI configs
-- **laravel** — 84K stars, 22 gates, no AI configs
+- **tauri** — 105K stars, 42 quality gates, no AI configs
+- **fastapi** — 97K stars, 26 gates, no AI configs
+- **laravel** — 84K stars, 20 gates, no AI configs
 - **express** — 69K stars, 23 gates, no AI configs
 
 These are well-maintained projects with solid CI pipelines. They just don't have a way to communicate those rules to AI tools.
@@ -46,9 +45,8 @@ These are well-maintained projects with solid CI pipelines. They just don't have
 
 Having a CLAUDE.md doesn't mean it's correct. Some examples:
 
-- **facebook/react** — Has CLAUDE.md, but references 3 tools that aren't in the project's dependencies. Grade: D.
-- **langchain** — Has both CLAUDE.md and AGENTS.md, but 4 phantom gates. Grade: D.
-- **n8n** — Has configs, but 3 drift issues. Grade: C.
+- **langchain** — Has both CLAUDE.md and AGENTS.md, but 4 phantom gates (references tools not in the project).
+- **n8n** — Has configs, but 3 drift issues between AI config and CI.
 
 "Drift" means the AI config says one thing, but CI enforces something different. The AI tool follows the stale config, generates code that fails CI, and the developer wastes time figuring out why.
 
@@ -107,7 +105,7 @@ npx @whitehatd/crag hook install
 - **Deterministic** — same input produces byte-identical output across platforms
 - **25+ language detectors** — Node, Python, Rust, Go, Java, Swift, Elixir, PHP, and more
 - **12 CI system extractors** — GitHub Actions, GitLab CI, CircleCI, Jenkins (Groovy parsing), Travis, Azure Pipelines, Buildkite, Drone, and more
-- **598 tests passing**
+- **605 tests passing**
 - **MIT licensed**
 
 It runs entirely offline. No LLM, no API calls, no account required.
@@ -131,7 +129,7 @@ npx @whitehatd/crag audit
 npx @whitehatd/crag audit --fix
 ```
 
-**See the full leaderboard:** [crag.sh/leaderboard](https://crag.sh/leaderboard) — 100 repos scored and graded.
+**See the full leaderboard:** [crag.sh/leaderboard](https://crag.sh/leaderboard) — 99 repos scored and graded.
 
 **GitHub:** [github.com/WhitehatD/crag](https://github.com/WhitehatD/crag)
 

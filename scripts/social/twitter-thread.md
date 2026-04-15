@@ -4,7 +4,7 @@ Post as a thread. Each numbered item is one tweet (under 280 chars).
 
 ---
 
-1/ I audited 100 of the most popular open-source repos for AI agent config health.
+1/ I audited 99 of the most popular open-source repos for AI agent config health.
 
 55% have zero AI config files. No CLAUDE.md, no .cursorrules, no AGENTS.md. Nothing.
 
@@ -14,7 +14,6 @@ Your AI tools are guessing at your quality standards.
 
 - tauri (105K stars)
 - fastapi (97K stars)
-- svelte (86K stars)
 - laravel (84K stars)
 - express (69K stars)
 
@@ -22,11 +21,10 @@ These projects have solid CI pipelines. But none of that reaches the AI tools wr
 
 3/ Even repos that DO have AI configs are drifting.
 
-facebook/react: grade D
-langchain: grade D
-n8n: grade C
+langchain: 4 phantom gates — config references tools not in the project
+n8n: 3 drift issues between AI config and CI
 
-Their CLAUDE.md and .cursorrules exist but don't match what CI actually enforces.
+Their CLAUDE.md exists but doesn't match what CI actually enforces.
 
 4/ The root cause: your CI pipeline is the source of truth for quality. But there's no mechanism to sync those rules to AI agent config files.
 
@@ -42,9 +40,9 @@ npx @whitehatd/crag
 
 crag.sh/audit
 
-Paste any GitHub repo URL. Takes ~10 seconds. You get a letter grade (A-F) and exactly what's broken.
+Paste any GitHub repo URL. Takes ~10 seconds. You get a drift report and exactly what's broken.
 
-7/ Full data: 100 repos, 3,620 quality gates found, 0 crashes. MIT licensed, 598 tests.
+7/ Full data: 99 repos, 3,540 quality gates found, 0 crashes. MIT licensed, 605 tests.
 
 GitHub: github.com/WhitehatD/crag
 
