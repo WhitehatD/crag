@@ -54,9 +54,11 @@ echo "[2/5] Running crag analyze..."
 (cd "$CLONE_DIR" && crag analyze --no-install-skills 2>&1 | tail -3)
 echo ""
 
-# 3. Compile
-echo "[3/5] Running crag compile --target all..."
-(cd "$CLONE_DIR" && crag compile --target all 2>&1 | tail -3)
+# 3. Compile (AI agent targets only — skip CI/hooks to avoid conflicts)
+echo "[3/5] Compiling AI agent targets..."
+for target in agents-md claude cursor gemini copilot cline continue windsurf zed amazonq; do
+  (cd "$CLONE_DIR" && crag compile --target "$target" 2>&1 | tail -1)
+done
 echo ""
 
 # 4. Branch + commit
