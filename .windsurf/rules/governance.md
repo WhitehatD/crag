@@ -32,7 +32,7 @@ When Windsurf's Cascade agent operates on this project:
 
 ## Quality Gates (run in order)
 
-1. `npm run test`
+1. `node test/all.js`
 2. `node --check bin/crag.js`
 3. `node bin/crag.js help > /dev/null`
 4. `node bin/crag.js version`

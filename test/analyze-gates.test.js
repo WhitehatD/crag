@@ -242,6 +242,21 @@ test('inferGates: Node with eslint config file → npx eslint', () => {
   assert.ok(result.linters.includes('npx eslint . --max-warnings 0'));
 });
 
+test('inferGates: Node scripts.test via npm → npm run test', () => {
+  const { result } = analyze({
+    'package.json': JSON.stringify({ name: 'x', scripts: { test: 'jest' } }),
+  });
+  assert.ok(result.testers.includes('npm run test'));
+});
+
+test('inferGates: Node scripts.test via node directly → raw command, not npm run test', () => {
+  const { result } = analyze({
+    'package.json': JSON.stringify({ name: 'x', scripts: { test: 'node test/all.js' } }),
+  });
+  assert.ok(result.testers.includes('node test/all.js'));
+  assert.ok(!result.testers.includes('npm run test'));
+});
+
 // --- Rust + Go ---
 test('inferGates: Rust → cargo test + clippy + fmt', () => {
   const { result } = analyze({ 'Cargo.toml': '[package]\nname = "x"\nversion = "0.1.0"' });

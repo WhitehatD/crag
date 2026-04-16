@@ -100,3 +100,18 @@ benchmarks/raw2/
 benchmarks/raw3/
 benchmarks/raw-tier2/
 benchmarks/full-capability/
+benchmarks/leaderboard.jsonl
+
+# Forgejo CI — compile artifact (like .github/workflows/gates.yml)
+.forgejo/
+
+# Test artifacts that may leak from benchmark fixture repos
+created-by-build*.txt
+should-be-added-by-build*.txt
+should-be-modified-by-build*.txt
+files/
+link-to-a-dir
+link-to-a-file
+
+# npm lockfile — no external deps, no value
+package-lock.json

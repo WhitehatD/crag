@@ -12,7 +12,7 @@ Make every AI agent obey your codebase. One governance.md → compiled to CI, ho
 
 Run these in order before committing. Stop on first MANDATORY failure:
 
-- `npm run test`
+- `node test/all.js`
 - `node --check bin/crag.js`
 - `node bin/crag.js help > /dev/null`
 - `node bin/crag.js version`

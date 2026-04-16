@@ -56,8 +56,13 @@ function inferNodeGates(dir, result) {
   const scripts = pkg.scripts || {};
   const deps = { ...pkg.dependencies, ...pkg.devDependencies };
 
-  // Prefer explicit scripts (most reliable signal)
-  if (scripts.test) push(result.testers, 'npm run test');
+  // Prefer explicit scripts (most reliable signal).
+  // If the test script invokes node directly (no npm needed), use the raw
+  // command so generated hooks don't require npm on PATH.
+  if (scripts.test) {
+    const isDirectNode = /^node(\s|$)/.test(scripts.test);
+    push(result.testers, isDirectNode ? scripts.test : 'npm run test');
+  }
   if (scripts.lint) push(result.linters, 'npm run lint');
   if (scripts.build) push(result.builders, 'npm run build');
   if (scripts.typecheck || scripts['type-check']) {

@@ -19,7 +19,7 @@ When suggesting edits or running the inline assistant:
 
 These must pass before any commit. Run them via Zed's terminal integration:
 
-- `npm run test`
+- `node test/all.js`
 - `node --check bin/crag.js`
 - `node bin/crag.js help > /dev/null`
 - `node bin/crag.js version`
