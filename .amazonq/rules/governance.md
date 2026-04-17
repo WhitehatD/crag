@@ -1,7 +1,7 @@
 <!-- crag:auto-start -->
 # Amazon Q Rules — @whitehatd/crag
 
-> Generated from governance.md by crag. Regenerate: `crag compile --target amazonq`
+> Generated from governance.md by [crag](https://crag.sh). Regenerate: `crag compile --target amazonq`
 
 ## About
 
@@ -30,6 +30,7 @@ Make every AI agent obey your codebase. One governance.md → compiled to CI, ho
 - `node bin/crag.js analyze --dry-run > /dev/null`
 - `node bin/crag.js upgrade --check > /dev/null`
 - `node bin/crag.js workspace --json > /dev/null`
+- `node bin/crag.js analyze > /dev/null`
 
 ### Commit Style
 
@@ -48,7 +49,7 @@ When these instructions seem to conflict with something in the repo, **`.claude/
 
 ---
 
-**Tool:** crag — https://www.npmjs.com/package/@whitehatd/crag
+**Tool:** crag — https://crag.sh
 
 <!-- crag:auto-end -->
 

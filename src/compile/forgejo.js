@@ -78,7 +78,7 @@ function generateForgejo(cwd, parsed) {
   }
 
   const yaml = [
-    '# Generated from governance.md by crag',
+    '# Generated from governance.md by crag — https://crag.sh',
     '# Regenerate: crag compile --target forgejo',
     'name: Governance Gates',
     '',

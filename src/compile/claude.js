@@ -38,7 +38,7 @@ function generateClaude(cwd, parsed) {
 
   const content = `# CLAUDE.md — ${parsed.name || 'project'}
 
-> Generated from governance.md by crag. Regenerate: \`crag compile --target claude\`
+> Generated from governance.md by [crag](https://crag.sh). Regenerate: \`crag compile --target claude\`
 
 ${parsed.description || ''}
 ${parsed.stack.length > 0 ? `\n**Stack:** ${parsed.stack.join(', ')}` : ''}
@@ -65,7 +65,7 @@ ${parsed.security || '- Never commit hardcoded secrets (grep for sk_live, sk_tes
 
 ## Tool Context
 
-This project uses **crag** (https://www.npmjs.com/package/@whitehatd/crag) as its governance engine. The \`governance.md\` file is the authoritative source. Run \`crag audit\` to detect drift and \`crag compile --target all\` to recompile all targets.
+This project uses **crag** (https://crag.sh) as its governance engine. The \`governance.md\` file is the authoritative source. Run \`crag audit\` to detect drift and \`crag compile --target all\` to recompile all targets.
 `;
 
   const outPath = path.join(cwd, 'CLAUDE.md');

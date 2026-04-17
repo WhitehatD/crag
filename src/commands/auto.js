@@ -6,6 +6,16 @@ const { parseGovernance, flattenGates } = require('../governance/parse');
 const { validateFlags } = require('../cli-args');
 const { cliError, EXIT_INTERNAL, requireGovernance } = require('../cli-errors');
 
+function getShareUrl(cwd) {
+  try {
+    const { execSync } = require('child_process');
+    const remote = execSync('git remote get-url origin', { cwd, stdio: ['pipe', 'pipe', 'pipe'] }).toString().trim();
+    const m = remote.match(/github\.com[/:]([^/]+\/[^/\s.]+?)(?:\.git)?$/);
+    if (m) return 'https://crag.sh/audit?repo=' + encodeURIComponent(m[1]);
+  } catch {}
+  return null;
+}
+
 // Project markers — if any of these exist in cwd, it looks like a project.
 const PROJECT_MARKERS = [
   'package.json', 'Cargo.toml', 'go.mod', 'pyproject.toml',
@@ -139,6 +149,12 @@ function auto(args) {
     console.log(`  ${D}Review .claude/governance.md \u2014 sections marked "Inferred" should be verified.${X}`);
   }
   console.log(`  ${D}Next:${X} crag audit ${D}\u00b7${X} crag hook install ${D}\u00b7${X} crag doctor\n`);
+
+  const shareUrl = getShareUrl(cwd);
+  if (shareUrl) {
+    console.log('');
+    console.log('  \x1b[2mScore your repo: ' + shareUrl + '\x1b[0m');
+  }
 }
 
 module.exports = { auto, looksLikeProject };

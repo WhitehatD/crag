@@ -51,7 +51,7 @@ function generateHusky(cwd, parsed) {
 
   const script = [
     '#!/bin/sh',
-    '# Generated from governance.md by crag',
+    '# Generated from governance.md by crag — https://crag.sh',
     '# Regenerate: crag compile --target husky',
     'set -e',
     '',

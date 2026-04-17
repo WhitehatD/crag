@@ -33,7 +33,7 @@ function generateCline(cwd, parsed) {
 
   const content = `# Cline Rules — ${parsed.name || 'project'}
 
-Generated from governance.md by crag. Regenerate with: \`crag compile --target cline\`
+Generated from governance.md by [crag](https://crag.sh). Regenerate with: \`crag compile --target cline\`
 
 ## About this project
 
@@ -71,7 +71,7 @@ For every task:
 
 ## Tool context
 
-This project uses **crag** — the governance engine for AI coding agents. https://www.npmjs.com/package/@whitehatd/crag
+This project uses **crag** — the governance engine for AI coding agents. https://crag.sh
 `;
 
   const outPath = path.join(cwd, '.clinerules');

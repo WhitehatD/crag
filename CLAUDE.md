@@ -1,7 +1,7 @@
 <!-- crag:auto-start -->
 # CLAUDE.md — @whitehatd/crag
 
-> Generated from governance.md by crag. Regenerate: `crag compile --target claude`
+> Generated from governance.md by [crag](https://crag.sh). Regenerate: `crag compile --target claude`
 
 Make every AI agent obey your codebase. One governance.md → compiled to CI, hooks, and every agent. No drift.
 
@@ -19,6 +19,7 @@ Run these in order before committing. Stop on first MANDATORY failure:
 - `node bin/crag.js analyze --dry-run > /dev/null`
 - `node bin/crag.js upgrade --check > /dev/null`
 - `node bin/crag.js workspace --json > /dev/null`
+- `node bin/crag.js analyze > /dev/null`
 
 ## Rules
 
@@ -36,7 +37,7 @@ Run these in order before committing. Stop on first MANDATORY failure:
 
 ## Tool Context
 
-This project uses **crag** (https://www.npmjs.com/package/@whitehatd/crag) as its governance engine. The `governance.md` file is the authoritative source. Run `crag audit` to detect drift and `crag compile --target all` to recompile all targets.
+This project uses **crag** (https://crag.sh) as its governance engine. The `governance.md` file is the authoritative source. Run `crag audit` to detect drift and `crag compile --target all` to recompile all targets.
 
 <!-- crag:auto-end -->
 

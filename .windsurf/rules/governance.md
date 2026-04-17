@@ -5,7 +5,7 @@ description: Governance rules for @whitehatd/crag — compiled from governance.m
 
 # Windsurf Rules — @whitehatd/crag
 
-Generated from governance.md by crag. Regenerate: `crag compile --target windsurf`
+Generated from governance.md by [crag](https://crag.sh). Regenerate: `crag compile --target windsurf`
 
 ## Project
 
@@ -39,6 +39,7 @@ When Windsurf's Cascade agent operates on this project:
 5. `node bin/crag.js analyze --dry-run > /dev/null`
 6. `node bin/crag.js upgrade --check > /dev/null`
 7. `node bin/crag.js workspace --json > /dev/null`
+8. `node bin/crag.js analyze > /dev/null`
 
 ## Rules of Engagement
 
@@ -50,4 +51,4 @@ When Windsurf's Cascade agent operates on this project:
 
 ---
 
-**Tool:** crag — https://www.npmjs.com/package/@whitehatd/crag
+**Tool:** crag — https://crag.sh

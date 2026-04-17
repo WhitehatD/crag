@@ -138,7 +138,7 @@ function generateGitHubActions(cwd, parsed) {
   }
 
   const yaml = [
-    '# Generated from governance.md by crag',
+    '# Generated from governance.md by crag — https://crag.sh',
     '# Regenerate: crag compile --target github',
     'name: Governance Gates',
     '',
@@ -178,7 +178,7 @@ function generateGitHubActions(cwd, parsed) {
  */
 function generateGuardYaml(regenerateCmd, checkoutAction, setupNodeAction, nodeVersion) {
   return [
-    '# Generated from governance.md by crag',
+    '# Generated from governance.md by crag — https://crag.sh',
     `# Regenerate: ${regenerateCmd}`,
     'name: Governance Guard',
     '',

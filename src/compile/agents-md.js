@@ -60,7 +60,7 @@ function generateAgentsMd(cwd, parsed) {
   const content = [
     '# AGENTS.md',
     '',
-    `> Generated from governance.md by crag. Regenerate: \`crag compile --target agents-md\``,
+    `> Generated from governance.md by [crag](https://crag.sh). Regenerate: \`crag compile --target agents-md\``,
     '',
     `## Project: ${parsed.name || 'Unnamed'}`,
     '',

@@ -34,7 +34,7 @@ function generateAmazonQ(cwd, parsed) {
 
   const content = `# Amazon Q Rules — ${parsed.name || 'project'}
 
-> Generated from governance.md by crag. Regenerate: \`crag compile --target amazonq\`
+> Generated from governance.md by [crag](https://crag.sh). Regenerate: \`crag compile --target amazonq\`
 
 ## About
 
@@ -72,7 +72,7 @@ When these instructions seem to conflict with something in the repo, **\`.claude
 
 ---
 
-**Tool:** crag — https://www.npmjs.com/package/@whitehatd/crag
+**Tool:** crag — https://crag.sh
 `;
 
   const outPath = path.join(cwd, '.amazonq', 'rules', 'governance.md');
