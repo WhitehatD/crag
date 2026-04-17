@@ -213,6 +213,15 @@ test('normalizeCmd: make -jN is stripped (parallelism only)', () => {
   assert.strictEqual(normalizeCmd('make -j8 test'), normalizeCmd('make test'));
 });
 
+test('normalizeCmd: make VAR=value assignments stripped (CI infrastructure)', () => {
+  assert.strictEqual(normalizeCmd("make -j3 V=1 test-ci TFLAGS='-j14'"), normalizeCmd('make test-ci'));
+  assert.strictEqual(normalizeCmd('make V=1 test-ci'), normalizeCmd('make test-ci'));
+  assert.strictEqual(normalizeCmd("make test-ci TFLAGS='-j14'"), normalizeCmd('make test-ci'));
+  assert.strictEqual(normalizeCmd('make CFLAGS=-O2 CC=gcc all'), normalizeCmd('make all'));
+  // must NOT strip from non-make commands
+  assert.notStrictEqual(normalizeCmd('npm run TEST=1 test'), normalizeCmd('npm run test'));
+});
+
 test('normalizeCmd: pnpm run ⇔ npm run', () => {
   assert.strictEqual(normalizeCmd('pnpm run test'), normalizeCmd('npm run test'));
   assert.strictEqual(normalizeCmd('yarn run test'), normalizeCmd('npm run test'));

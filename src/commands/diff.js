@@ -410,6 +410,14 @@ function normalizeCmd(cmd) {
   // -jN only controls parallelism, not what's built/tested.
   c = c.replace(/\s+-j\d+\b/g, '');
 
+  // make variable assignments: `make V=1 test-ci TFLAGS='-j14'` == `make test-ci`
+  // These are CI infrastructure (verbosity, parallelism, flag passing) — strip them
+  // only for make commands so `npm run test:ci` is unaffected.
+  // NOTE: `c` is already lowercased here, so match lowercase key pattern [a-z][a-z0-9_]*.
+  if (c.startsWith('make ')) {
+    c = c.replace(/\s+[a-z][a-z0-9_]*=(?:'[^']*'|"[^"]*"|\S*)/g, '');
+  }
+
   // pnpm run == npm run for comparison purposes
   c = c.replace(/^pnpm\s+run\s+/, 'npm run ');
   c = c.replace(/^yarn\s+run\s+/, 'npm run ');
