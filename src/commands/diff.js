@@ -394,6 +394,11 @@ function normalizeCmd(cmd) {
 
   let c = raw.replace(/\s+/g, ' ').trim().toLowerCase();
 
+  // Strip trailing shell comments so `make test  # from CONTRIBUTING.md` compares
+  // equal to `make test`. Doc-mined gates carry a `# from <path>` annotation that
+  // must not affect command identity comparisons.
+  c = c.replace(/\s+#.*$/, '');
+
   // npm lifecycle aliases: `npm <script>` → `npm run <script>` (except reserved verbs)
   const npmMatch = c.match(/^npm\s+(\S+)(\s+.*)?$/);
   if (npmMatch && (npmMatch[1] === 'test' || npmMatch[1] === 'start' || npmMatch[1] === 'stop' || npmMatch[1] === 'restart')) {

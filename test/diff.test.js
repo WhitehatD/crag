@@ -227,6 +227,16 @@ test('normalizeCmd: pnpm run ⇔ npm run', () => {
   assert.strictEqual(normalizeCmd('yarn run test'), normalizeCmd('npm run test'));
 });
 
+test('normalizeCmd: strips trailing shell comments (doc-mining annotations)', () => {
+  // Doc-mined gates carry `# from <path>` annotations — must not affect identity
+  assert.strictEqual(normalizeCmd('make test  # from CONTRIBUTING.md'), normalizeCmd('make test'));
+  assert.strictEqual(normalizeCmd('npm run lint  # from docs/HACKING.md'), normalizeCmd('npm run lint'));
+  assert.strictEqual(normalizeCmd('cargo test  # from README.md'), normalizeCmd('cargo test'));
+  assert.strictEqual(normalizeCmd('pytest  # some comment'), normalizeCmd('pytest'));
+  // Commands without comments are unaffected
+  assert.strictEqual(normalizeCmd('make test'), 'make test');
+});
+
 // --- diff E2E on a temp repo with dedup check ----------------------------
 
 test('diff: deduplicates extras across multiple workflows', () => {
