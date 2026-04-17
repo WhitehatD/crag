@@ -21,8 +21,11 @@ const DOC_FILES = [
   'CONTRIBUTING',
   '.github/CONTRIBUTING.md',
   'docs/CONTRIBUTING.md',
-  '.github/PULL_REQUEST_TEMPLATE.md',
-  '.github/pull_request_template.md',
+  // PR templates are author checklists, not authoritative contribution guides —
+  // mining them produces false-positive drift (commands that exist in CI but not
+  // in the repo root, or vice versa).
+  // '.github/PULL_REQUEST_TEMPLATE.md',
+  // '.github/pull_request_template.md',
   'DEVELOPING.md',
   'DEVELOPMENT.md',
   'HACKING.md',
