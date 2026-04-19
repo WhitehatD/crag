@@ -17,7 +17,7 @@ const { flattenGates } = require('../governance/parse');
  *   - .claude/agents/security-reviewer.md (from governance security)
  *   - .claude/ci-playbook.md             (template with CI system)
  *
- * Unlike the 14 AI-config targets in `compile --target all`, scaffold
+ * Unlike the 23 AI-config targets in `compile --target all`, scaffold
  * files are commit-once infrastructure. `scaffold` is intentionally NOT
  * included in `all` — run it explicitly or via the VS Code extension fix.
  *

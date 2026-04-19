@@ -26,13 +26,13 @@ npx @whitehatd/crag
 
 ## The problem
 
-Your CI is the ground truth for what quality means in your repo. Your AI agents don't know it. When you add a lint gate in GitHub Actions, your Cursor rules don't update. Your CLAUDE.md doesn't update. Fourteen tool-specific files -- all drifting apart.
+Your CI is the ground truth for what quality means in your repo. Your AI agents don't know it. When you add a lint gate in GitHub Actions, your Cursor rules don't update. Your CLAUDE.md doesn't update. 23 tool-specific files -- all drifting apart.
 
 Developers fix bad AI suggestions in 2 seconds and think "AI is dumb sometimes." They never aggregate the cost: 30 seconds per bad suggestion x 10 devs x 50 prompts per day = hours of wasted time. Nobody diffs their config files.
 
 ## The fix
 
-crag reads your CI and codebase once, writes a single `governance.md`, and compiles it to every tool's native format. One file in. Fourteen files out. Change a rule once, recompile, done.
+crag reads your CI and codebase once, writes a single `governance.md`, and compiles it to every tool's native format. One file in. 23 files out. Change a rule once, recompile, done.
 
 Deterministic. No LLM. No network. No API keys. Zero dependencies.
 
