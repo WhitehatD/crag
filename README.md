@@ -8,7 +8,7 @@ One `governance.md` -> compiled to CI, hooks, and every agent. No drift.
 npx @whitehatd/crag
 ```
 
-> AGENTS.md | Claude Code | Cursor | Copilot | Gemini | Cline | Continue | Windsurf | Zed | Amazon Q | GitHub Actions | Forgejo Actions | Husky | Pre-commit
+> AGENTS.md | Claude Code | Cursor | Copilot | Gemini | Cline | Continue | Windsurf | Zed | Amazon Q | GitHub Actions | Forgejo Actions | Husky | Pre-commit | Aider | Goose | Junie | Kiro | CodeRabbit | GitLab CI | CircleCI | Azure DevOps | Lefthook
 
 ![crag on django/django -- zero config to 38 gates in 390ms](https://raw.githubusercontent.com/WhitehatD/crag/master/assets/poster-demo.gif)
 
@@ -89,11 +89,13 @@ crag auto         # full pipeline: analyze, compile, audit, hook install
 |---|---|
 | `crag` | Default: analyze + compile + audit in one shot |
 | `crag analyze` | Read CI, package manifests, code patterns. Write `governance.md` |
+| `crag analyze --write-governance` | Generate `governance.md` from scratch. Add `--force` to overwrite existing. |
 | `crag compile --target <t>` | Compile governance.md to a specific target format |
-| `crag compile --target all` | Compile to all 14 targets at once |
+| `crag compile --target all` | Compile to all 23 targets at once |
 | `crag compile --target scaffold` | Generate hooks, settings, agents, CI playbook |
 | `crag audit` | Detect drift between governance.md and compiled configs |
 | `crag audit --json` | Machine-readable drift report |
+| `crag audit --explain` | Show actionable fix hint per drift finding |
 | `crag audit --fix` | Auto-recompile stale targets |
 | `crag auto` | Full pipeline: analyze, compile, audit, hook install |
 | `crag check` | Verify crag infrastructure is complete and current |
@@ -114,7 +116,7 @@ crag auto         # full pipeline: analyze, compile, audit, hook install
 
 ## Compile targets
 
-`crag compile --target all` generates configs for 14 targets:
+`crag compile --target all` generates configs for 23 targets:
 
 | Target | Output file | Consumer |
 |---|---|---|
@@ -132,6 +134,15 @@ crag auto         # full pipeline: analyze, compile, audit, hook install
 | `zed` | `.rules` | Zed |
 | `amazonq` | `.amazonq/rules/governance.md` | Amazon Q Developer |
 | `claude` | `CLAUDE.md` | Claude Code |
+| `aider` | `CONVENTIONS.md` | Aider |
+| `lefthook` | `lefthook.yml` | Lefthook |
+| `gitlab` | `.gitlab-ci.yml` | GitLab CI |
+| `coderabbit` | `.coderabbit.yaml` | CodeRabbit |
+| `junie` | `.junie/guidelines.md` | Junie |
+| `kiro` | `.kiro/steering/quality-gates.md` | Kiro |
+| `circleci` | `.circleci/config.yml` | CircleCI |
+| `azuredevops` | `azure-pipelines.yml` | Azure DevOps |
+| `goose` | `.goose/GOOSEHINTS` | Goose |
 
 Each target uses the tool's native format: MDC frontmatter for Cursor, YAML triggers for Windsurf, numbered steps for AGENTS.md, path-scoped files for monorepos.
 
@@ -257,11 +268,11 @@ Previous benchmark (50 repos): [`benchmarks/phase1-benchmark.md`](./benchmarks/p
 
 ## How it works
 
-**Analyze.** Reads your repo with 25+ language detectors, 12 CI system extractors, and 8 framework convention engines. Writes `governance.md` with gates, architecture, testing profile, code style, and anti-patterns. Under a second, zero config.
+**Analyze.** Reads your repo with 25+ language detectors, 12 CI system extractors, and 8 framework convention engines. Writes `governance.md` with gates, architecture, testing profile, code style, and anti-patterns. Under a second, zero config. Use `--write-governance` to generate a `governance.md` from scratch (guarded by `--force` if one already exists).
 
 **Compile.** Converts `governance.md` to each tool's native format. MDC frontmatter for Cursor. YAML triggers for Windsurf. Numbered steps for AGENTS.md. Path-scoped files for monorepos. Custom content survives recompilation.
 
-**Audit.** Three detection axes: staleness (compiled configs older than governance.md), reality (governance references tools that don't exist), completeness (AI tool directories present but no compiled config).
+**Audit.** Three detection axes: staleness (compiled configs older than governance.md), reality (governance references tools that don't exist), completeness (AI tool directories present but no compiled config). Run with `--explain` to see actionable fix hints inline.
 
 **Diff.** Shows where governance and codebase diverge: gates in governance missing from CI, gates in CI missing from governance, and which files caused the discrepancy.
 
