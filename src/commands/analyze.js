@@ -6,7 +6,7 @@ const path = require('path');
 const { detectWorkspace } = require('../workspace/detect');
 const { enumerateMembers } = require('../workspace/enumerate');
 const { isGateCommand } = require('../governance/yaml-run');
-const { cliWarn, cliError, EXIT_INTERNAL, safeMtime } = require('../cli-errors');
+const { cliWarn, cliError, EXIT_USER, EXIT_INTERNAL, safeMtime } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 const { detectStack } = require('../analyze/stacks');
 const { inferGates } = require('../analyze/gates');
@@ -47,6 +47,18 @@ function analyze(args) {
   const writeGovernance = args.includes('--write-governance');
   const force = args.includes('--force');
   const cwd = process.cwd();
+
+  // Fail fast: if --write-governance was requested but governance.md already
+  // exists (and --force wasn't passed), tell the user immediately — before
+  // running the full analysis which takes 5-10s.
+  if (writeGovernance && !force && !merge) {
+    const earlyGovPath = path.join(cwd, '.claude', 'governance.md');
+    if (fs.existsSync(earlyGovPath)) {
+      console.log(`  ℹ governance.md already exists. Pass --force to overwrite, or run:`);
+      console.log(`    crag compile --target all   (recompile existing governance)`);
+      process.exit(EXIT_USER);
+    }
+  }
 
   // Guard: refuse to analyze inside a known-AI-infra subdirectory.
   // When a user cds into `.claude/`, `.buildkite/`, `.github/`, etc. and
@@ -145,15 +157,6 @@ function analyze(args) {
 
   const govPath = path.join(cwd, '.claude', 'governance.md');
   const govDir = path.dirname(govPath);
-
-  // When --write-governance is passed, guard against accidental overwrites:
-  // abort if governance.md already exists unless --force is also given.
-  if (writeGovernance && fs.existsSync(govPath) && !force && !merge) {
-    cliError(
-      `governance.md already exists — use --force to overwrite`,
-      EXIT_INTERNAL
-    );
-  }
 
   // Validate that the generated content parses cleanly before writing.
   if (writeGovernance) {
