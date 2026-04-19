@@ -124,7 +124,7 @@ test('compile: --verbose --dry-run prints byte sizes for every target', () => {
   // Strip ANSI before regex-matching plan lines.
   const clean = stdout.replace(/\x1b\[[0-9;]*m/g, '');
   const planLines = clean.split('\n').filter(l => /^\s*plan\s/.test(l));
-  assert.ok(planLines.length === 14, `expected 14 plan lines, got ${planLines.length}:\n${clean}`);
+  assert.ok(planLines.length === 18, `expected 18 plan lines, got ${planLines.length}:\n${clean}`);
   for (const line of planLines) {
     assert.ok(
       /\b\d+(?:\.\d+)?\s*(?:B|KB|MB)\s*$/.test(line.trim()),

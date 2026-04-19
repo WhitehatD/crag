@@ -46,7 +46,7 @@ function extractCiCommands(dir) {
     primary = primary || 'github-actions';
     for (const file of walkYaml(ghDir)) {
       const content = safeRead(file);
-      const cmds = extractRunCommands(content);
+      const cmds = extractRunCommandsGitHubActions(content);
       commands.push(...cmds);
       if (content.includes('# crag:auto-start')) {
         managedCommands.push(...cmds);
@@ -202,6 +202,91 @@ function extractCiCommands(dir) {
   managedCommands.push(...shellCmds);
 
   return { system: primary, commands, managedCommands, unmanagedSources };
+}
+
+/**
+ * Extract run: commands from a GitHub Actions workflow, skipping any jobs
+ * that check out a foreign repository via `actions/checkout` with an explicit
+ * `repository:` field. Commands from such jobs produce false-positive drift
+ * against the current project root (e.g. a job that checks out prisma-engines
+ * and runs `cargo build` inside it is not a gate for the host project).
+ *
+ * Strategy: split the workflow into per-job blocks using the 2-space indented
+ * job key pattern, then check each block for a foreign checkout before
+ * extracting run: commands from it.
+ */
+function extractRunCommandsGitHubActions(content) {
+  const lines = String(content).split(/\r?\n/);
+
+  // Find the `jobs:` section start
+  let jobsSectionStart = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^jobs\s*:/.test(lines[i])) {
+      jobsSectionStart = i;
+      break;
+    }
+  }
+
+  // If there's no jobs: section, fall back to simple extraction
+  if (jobsSectionStart === -1) return extractRunCommands(content);
+
+  // Find each job block: lines under jobs: that are indented with exactly 2 spaces
+  // (standard GitHub Actions format: `  job-name:`).
+  const jobStarts = [];
+  for (let i = jobsSectionStart + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^  [a-zA-Z0-9_-]+\s*:/.test(line) && !/^\s{3}/.test(line)) {
+      jobStarts.push(i);
+    }
+  }
+
+  if (jobStarts.length === 0) {
+    // No job headers found — fall back to simple extraction
+    return extractRunCommands(content);
+  }
+
+  const commands = [];
+
+  for (let ji = 0; ji < jobStarts.length; ji++) {
+    const jobStart = jobStarts[ji];
+    const jobEnd = ji + 1 < jobStarts.length ? jobStarts[ji + 1] : lines.length;
+    const jobLines = lines.slice(jobStart, jobEnd);
+
+    // Skip jobs that checkout a foreign repository
+    if (detectForeignCheckout(jobLines)) continue;
+
+    const jobCmds = extractRunCommands(jobLines.join('\n'));
+    commands.push(...jobCmds);
+  }
+
+  return commands;
+}
+
+/**
+ * Detect if a job's lines contain an `actions/checkout` step with an explicit
+ * `repository:` key (meaning it checks out a different repo).
+ */
+function detectForeignCheckout(jobLines) {
+  for (let i = 0; i < jobLines.length; i++) {
+    const line = jobLines[i];
+    // Match a `uses: actions/checkout...` step
+    if (!/uses\s*:\s*actions\/checkout/.test(line)) continue;
+
+    // Determine the indent level of this `uses:` line to find the step boundary
+    const usesIndent = (line.match(/^(\s*)/) || ['', ''])[1].length;
+
+    // Scan following lines within the same step for `repository:` key
+    for (let j = i + 1; j < jobLines.length; j++) {
+      const inner = jobLines[j];
+      if (inner.trim() === '') continue;
+      const innerIndent = (inner.match(/^(\s*)/) || ['', ''])[1].length;
+      // If we've exited the current step's indentation level, stop
+      if (innerIndent <= usesIndent) break;
+      // `repository:` with any non-empty value signals a foreign checkout
+      if (/^\s*repository\s*:\s*\S/.test(inner)) return true;
+    }
+  }
+  return false;
 }
 
 function walkYaml(dir) {
@@ -584,4 +669,6 @@ module.exports = {
   extractJenkinsfileCommands,
   extractCirrusCommands,
   extractCiShellScripts,
+  extractRunCommandsGitHubActions,
+  detectForeignCheckout,
 };

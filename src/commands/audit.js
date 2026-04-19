@@ -23,7 +23,11 @@ function hasAnyAIConfig(cwd) {
     '.clinerules',
     '.continuerules',
     '.rules',
+    'CONVENTIONS.md',        // aider
+    '.coderabbit.yaml',      // coderabbit
     // '.pre-commit-config.yaml' — excluded: pre-commit is a hook system, not AI governance
+    // 'lefthook.yml' — excluded: hook system, not AI governance
+    // '.gitlab-ci.yml' — excluded: CI system, not AI governance
   ];
   const dirTargets = [
     '.cursor',

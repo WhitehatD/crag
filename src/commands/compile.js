@@ -17,12 +17,16 @@ const { generateWindsurf } = require('../compile/windsurf');
 const { generateZed } = require('../compile/zed');
 const { generateAmazonQ } = require('../compile/amazonq');
 const { generateClaude } = require('../compile/claude');
+const { generateAider } = require('../compile/aider');
+const { generateLefthook } = require('../compile/lefthook');
+const { generateGitlabCI } = require('../compile/gitlab-ci');
+const { generateCoderabbit } = require('../compile/coderabbit');
 const { generateScaffold } = require('../compile/scaffold');
 const { cliError, readFileOrExit, EXIT_USER, EXIT_INTERNAL, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 
 // All supported compile targets in dispatch order.
-// Grouped: CI (3) + AI agent native (3) + AI agent extras (6)
+// Grouped: CI (3) + AI agent native (3) + AI agent extras (6) + new (4)
 const ALL_TARGETS = [
   'github',
   'forgejo',
@@ -38,6 +42,10 @@ const ALL_TARGETS = [
   'zed',
   'amazonq',
   'claude',
+  'aider',
+  'lefthook',
+  'gitlab',
+  'coderabbit',
 ];
 
 function compile(args) {
@@ -81,7 +89,9 @@ function compile(args) {
     console.log('    crag compile --target github       .github/workflows/gates.yml');
     console.log('    crag compile --target forgejo      .forgejo/workflows/gates.yml');
     console.log('    crag compile --target husky        .husky/pre-commit');
-    console.log('    crag compile --target pre-commit   .pre-commit-config.yaml\n');
+    console.log('    crag compile --target pre-commit   .pre-commit-config.yaml');
+    console.log('    crag compile --target lefthook     lefthook.yml');
+    console.log('    crag compile --target gitlab       .gitlab-ci.yml\n');
     console.log('  AI coding agents — native formats:');
     console.log('    crag compile --target agents-md    AGENTS.md (Codex, Aider, Factory)');
     console.log('    crag compile --target cursor       .cursor/rules/governance.mdc');
@@ -93,7 +103,9 @@ function compile(args) {
     console.log('    crag compile --target windsurf     .windsurf/rules/governance.md');
     console.log('    crag compile --target zed          .rules');
     console.log('    crag compile --target amazonq      .amazonq/rules/governance.md');
-    console.log('    crag compile --target claude       CLAUDE.md\n');
+    console.log('    crag compile --target claude       CLAUDE.md');
+    console.log('    crag compile --target aider        CONVENTIONS.md');
+    console.log('    crag compile --target coderabbit   .coderabbit.yaml\n');
     console.log('  Infrastructure:');
     console.log('    crag compile --target scaffold     Hooks, settings, agents, CI playbook\n');
     console.log('  Combined:');
@@ -225,6 +237,10 @@ function runGenerator(target, cwd, parsed) {
     case 'zed':        generateZed(cwd, parsed); break;
     case 'amazonq':    generateAmazonQ(cwd, parsed); break;
     case 'claude':     generateClaude(cwd, parsed); break;
+    case 'aider':      generateAider(cwd, parsed); break;
+    case 'lefthook':   generateLefthook(cwd, parsed); break;
+    case 'gitlab':     generateGitlabCI(cwd, parsed); break;
+    case 'coderabbit': generateCoderabbit(cwd, parsed); break;
     default:
       console.error(`  Unknown target: ${target}`);
       console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
@@ -295,6 +311,10 @@ function planOutputPath(cwd, target) {
     'zed':        path.join(cwd, '.rules'),
     'amazonq':    path.join(cwd, '.amazonq', 'rules', 'governance.md'),
     'claude':     path.join(cwd, 'CLAUDE.md'),
+    'aider':      path.join(cwd, 'CONVENTIONS.md'),
+    'lefthook':   path.join(cwd, 'lefthook.yml'),
+    'gitlab':     path.join(cwd, '.gitlab-ci.yml'),
+    'coderabbit': path.join(cwd, '.coderabbit.yaml'),
   };
   return map[target] || null;
 }

@@ -185,8 +185,14 @@ function checkGateReality(cwd, cmd) {
       hint: () => 'No build.zig found — is this a Zig project?' },
     // Docker
     { pattern: /^docker\s+compose/, check: () => true }, // docker compose commands are CI orchestration, assume valid
-    { pattern: /^docker\s+/, check: () => fs.existsSync(path.join(cwd, 'Dockerfile')) || fs.existsSync(path.join(cwd, 'docker-compose.yml')) || fs.existsSync(path.join(cwd, 'docker-compose.yaml')),
-      hint: () => 'No Dockerfile or docker-compose.yml found — add one to the project root' },
+    { pattern: /^docker\s+/, check: (m, fullCmd) => {
+      // If -f <path> is specified, check that specific Dockerfile
+      const fFlag = fullCmd.match(/\s-f\s+(\S+)/);
+      if (fFlag) return fs.existsSync(path.join(cwd, fFlag[1]));
+      return fs.existsSync(path.join(cwd, 'Dockerfile')) ||
+             fs.existsSync(path.join(cwd, 'docker-compose.yml')) ||
+             fs.existsSync(path.join(cwd, 'docker-compose.yaml'));
+    }, hint: () => 'No Dockerfile or docker-compose.yml found — add one to the project root' },
   ];
 
   // Verify commands
@@ -202,7 +208,7 @@ function checkGateReality(cwd, cmd) {
   for (const { pattern, check, hint } of toolChecks) {
     const m = cmd.match(pattern);
     if (m) {
-      if (check(m[1])) return { status: 'match', detail: null };
+      if (check(m[1], cmd)) return { status: 'match', detail: null };
 
       // Monorepo fallback: if the tool isn't at root, scan immediate
       // subdirectories (backend/, frontend/, services/*, packages/*, etc.).
@@ -258,6 +264,8 @@ function checkSubdirs(rootCwd, cmd) {
     if (/^(composer|vendor\/bin)/.test(cmd) && fs.existsSync(path.join(subCwd, 'composer.json'))) return true;
     // uv run / poetry run / pdm run (Python runners)
     if (/^(uv|poetry|pdm|hatch|rye|pipenv)\s+run\s+/.test(cmd) && fs.existsSync(path.join(subCwd, 'pyproject.toml'))) return true;
+    // make — check subdirs for Makefile (monorepos with cli/Makefile, server/Makefile, etc.)
+    if (/^make\b/.test(cmd) && (fs.existsSync(path.join(subCwd, 'Makefile')) || fs.existsSync(path.join(subCwd, 'makefile')))) return true;
   }
   return false;
 }
