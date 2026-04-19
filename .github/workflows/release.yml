@@ -400,11 +400,41 @@ jobs:
           make_latest: ${{ !contains(needs.gates.outputs.version, '-') }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Notify crag-cloud to deploy latest CLI
+        # Fires a repository_dispatch to WhitehatD/crag-cloud, triggering its
+        # deploy workflow which resolves the latest npm version and rebuilds the
+        # API container. The VPS is running the new crag CLI within ~3 minutes.
+        #
+        # Requires: CRAG_CLOUD_DISPATCH_TOKEN secret — a fine-grained PAT with
+        # "Actions: Write" on WhitehatD/crag-cloud, or a classic PAT with `workflow` scope.
+        continue-on-error: true   # never fail the release if the notification fails
+        env:
+          DISPATCH_TOKEN: ${{ secrets.CRAG_CLOUD_DISPATCH_TOKEN }}
+        shell: bash
+        run: |
+          VERSION="${{ needs.gates.outputs.version }}"
+          if [ -z "$DISPATCH_TOKEN" ]; then
+            echo "::warning::CRAG_CLOUD_DISPATCH_TOKEN not set — crag-cloud deploy not triggered. Add the secret to enable auto-deploy."
+            exit 0
+          fi
+          HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $DISPATCH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/WhitehatD/crag-cloud/dispatches" \
+            -d "{\"event_type\":\"crag-released\",\"client_payload\":{\"version\":\"$VERSION\"}}")
+          if [ "$HTTP_STATUS" = "204" ]; then
+            echo "::notice::Triggered crag-cloud deploy for crag v$VERSION (VPS will run latest in ~3 min)"
+          else
+            echo "::warning::crag-cloud dispatch returned HTTP $HTTP_STATUS — VPS may need a manual deploy"
+          fi
+
       - name: Summary
         shell: bash
         run: |
           VERSION="${{ needs.gates.outputs.version }}"
-          echo "## 🚀 Released crag v$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Released crag v$VERSION" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "- **npm:** https://www.npmjs.com/package/@whitehatd/crag/v/$VERSION" >> "$GITHUB_STEP_SUMMARY"
           echo "- **GitHub release:** https://github.com/${{ github.repository }}/releases/tag/v$VERSION" >> "$GITHUB_STEP_SUMMARY"
