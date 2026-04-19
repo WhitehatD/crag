@@ -1,6 +1,6 @@
 ---
 name: post-start-validation
-version: 0.5.30
+version: 0.5.31
 source_hash: 5a64dfe68b13577dff818fa63ddb6185be360c80b100f205bc586aac39e19e80
 description: Universal validation and knowledge capture. Detects what changed, runs governance gates, captures knowledge, verifies deployment. Works for any project.
 ---
