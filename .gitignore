@@ -63,6 +63,20 @@ GEMINI.md.bak
 .pre-commit-config.yaml
 .github/copilot-instructions.md
 .github/workflows/gates.yml
+# New compile targets (aider, lefthook, gitlab, coderabbit, junie, kiro, circleci, azuredevops, goose)
+CONVENTIONS.md
+CONVENTIONS.md.bak
+lefthook.yml
+lefthook.yml.bak
+.gitlab-ci.yml
+.coderabbit.yaml
+.coderabbit.yaml.bak
+.junie/
+.kiro/
+.goose/
+.circleci/
+azure-pipelines.yml
+azure-pipelines.yml.bak
 
 # Private code — lives in crag-cloud repo
 /cloud/
