@@ -28,9 +28,9 @@ Their CLAUDE.md exists but doesn't match what CI actually enforces.
 
 4/ The root cause: your CI pipeline is the source of truth for quality. But there's no mechanism to sync those rules to AI agent config files.
 
-You add an eslint rule in CI. Your Cursor rules don't update. Your CLAUDE.md doesn't update. 14 files, all drifting.
+You add an eslint rule in CI. Your Cursor rules don't update. Your CLAUDE.md doesn't update. 23 files, all drifting.
 
-5/ I built an open-source tool that fixes this. It reads your CI + codebase, writes one governance.md, and compiles it to all 14 AI tool formats.
+5/ I built an open-source tool that fixes this. It reads your CI + codebase, writes one governance.md, and compiles it to all 23 AI tool formats.
 
 Deterministic. No LLM. Zero dependencies.
 

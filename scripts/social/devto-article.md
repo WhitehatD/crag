@@ -56,7 +56,7 @@ I built [crag](https://github.com/WhitehatD/crag) to solve this. It's a CLI that
 
 1. **Analyzes** your repo — reads CI configs, package manifests, and code patterns to infer your actual rules
 2. **Generates** a single `governance.md` — your source of truth
-3. **Compiles** that to 14 tool-specific config files
+3. **Compiles** that to 23 tool-specific config files
 
 ```bash
 npx @whitehatd/crag

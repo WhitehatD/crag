@@ -1,6 +1,6 @@
 # Hacker News — Show HN
 
-**Title:** Show HN: Crag -- Compile CI rules to 14 AI agent config formats, no LLM
+**Title:** Show HN: Crag -- Compile CI rules to 23 AI agent config formats, no LLM
 
 **URL:** https://github.com/WhitehatD/crag
 
@@ -10,7 +10,7 @@
 
 I built crag to solve a problem I kept hitting: AI coding tools (Claude Code, Cursor, Copilot, Codex) don't know what your CI pipeline enforces. They generate code that passes locally but fails CI.
 
-crag reads your repo — package.json, CI workflows, Cargo.toml, pyproject.toml, whatever you have — and generates a single governance.md. Then it compiles that to 14 tool-specific config files: CLAUDE.md, .cursor/rules/governance.mdc, AGENTS.md, .github/copilot-instructions.md, GEMINI.md, and so on.
+crag reads your repo — package.json, CI workflows, Cargo.toml, pyproject.toml, whatever you have — and generates a single governance.md. Then it compiles that to 23 tool-specific config files: CLAUDE.md, .cursor/rules/governance.mdc, AGENTS.md, .github/copilot-instructions.md, GEMINI.md, and so on.
 
 Deterministic compiler, no LLM, no network calls, no API keys. Zero npm dependencies. Node >= 18.
 

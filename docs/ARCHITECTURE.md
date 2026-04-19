@@ -151,13 +151,14 @@ Content exceeding 256 KB is truncated at the last section boundary to prevent Re
 
 ### Target registry
 
-14 compile targets, stored in `ALL_TARGETS` (line 25):
+23 compile targets, stored in `ALL_TARGETS` (line 25):
 
 | Group | Targets |
 |-------|---------|
-| CI / git hooks | `github`, `forgejo`, `husky`, `pre-commit` |
+| CI / git hooks | `github`, `forgejo`, `husky`, `pre-commit`, `lefthook`, `gitlab`, `circleci`, `azuredevops` |
 | AI agents (native) | `agents-md`, `cursor`, `gemini` |
 | AI agents (additional) | `copilot`, `cline`, `continue`, `windsurf`, `zed`, `amazonq`, `claude` |
+| AI agents (new) | `aider`, `junie`, `kiro`, `goose`, `coderabbit` |
 
 Plus `scaffold` (separate from `all` -- generates hooks, settings, agents, CI playbook).
 
@@ -194,7 +195,7 @@ Three drift detection axes:
 
 ### Axis 1: Staleness (line 50)
 
-For each of the 14 compile targets, compare `mtime` of the compiled config against `mtime` of `governance.md`. If governance is newer, the config is **stale**.
+For each of the 23 compile targets, compare `mtime` of the compiled config against `mtime` of `governance.md`. If governance is newer, the config is **stale**.
 
 ### Axis 2: Reality (line 79)
 

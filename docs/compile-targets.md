@@ -19,11 +19,20 @@ failures leave prior state intact (temp-file + rename).
 | `zed` | `.rules` | Zed |
 | `amazonq` | `.amazonq/rules/governance.md` | Amazon Q Developer |
 | `claude` | `CLAUDE.md` | Claude Code |
+| `aider` | `CONVENTIONS.md` | Aider |
+| `junie` | `.junie/guidelines.md` | JetBrains Junie |
+| `kiro` | `.kiro/steering/quality-gates.md` | Amazon Kiro |
+| `goose` | `.goose/GOOSEHINTS` | Block Goose |
+| `lefthook` | `lefthook.yml` | Lefthook |
+| `gitlab` | `.gitlab-ci.yml` | GitLab CI |
+| `circleci` | `.circleci/config.yml` | CircleCI |
+| `azuredevops` | `azure-pipelines.yml` | Azure DevOps Pipelines |
+| `coderabbit` | `.coderabbit.yaml` | CodeRabbit |
 
 ## Scaffold target
 
 `crag compile --target scaffold` generates project infrastructure that
-`crag doctor` and `crag check` expect. Unlike the 14 AI-config targets
+`crag doctor` and `crag check` expect. Unlike the 23 AI-config targets
 above, scaffold is **not** included in `--target all` — it's run
 separately because these files are commit-once infrastructure, not
 frequently recompiled.
@@ -51,16 +60,17 @@ project automatically.
 
 ## Refusal behavior
 
-`crag compile` refuses to emit the `github`, `forgejo`, `husky`, and `pre-commit`
-targets when the governance has zero gates — these targets produce valid
-YAML but broken artifacts in that state. Doc-only targets (`cursor`,
-`agents-md`, `gemini`, `copilot`, `cline`, `continue`, `windsurf`, `zed`,
-`amazonq`) still work with zero gates because they're reference material,
-not executable.
+`crag compile` refuses to emit the `github`, `forgejo`, `husky`, `pre-commit`,
+`lefthook`, `gitlab`, `circleci`, and `azuredevops` targets when the governance
+has zero gates — these targets produce valid YAML/config but broken artifacts
+in that state. Doc-only targets (`cursor`, `agents-md`, `gemini`, `copilot`,
+`cline`, `continue`, `windsurf`, `zed`, `amazonq`, `claude`, `aider`, `junie`,
+`kiro`, `goose`, `coderabbit`) still work with zero gates because they're
+reference material, not executable.
 
 ## Atomicity
 
-All 14 compilers route file writes through `src/compile/atomic-write.js`,
+All 23 compilers route file writes through `src/compile/atomic-write.js`,
 which writes to a crypto-random temp file and then renames. This means:
 
 - A crash during compile never leaves a half-written file.
