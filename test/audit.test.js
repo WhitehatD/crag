@@ -174,3 +174,56 @@ test('audit: help text mentions crag audit', () => {
   const out = run(['help']);
   assert.ok(out.includes('crag audit'));
 });
+
+test('audit: drift detail mentions "script" for missing npm script', () => {
+  const gov = `# Governance — test
+## Identity
+- Project: test
+- Stack: node
+
+## Gates (run in order, stop on failure)
+### Test
+- npm run nonexistent-script
+`;
+  const dir = mkProject({
+    '.claude/governance.md': gov,
+    'package.json': '{"scripts":{}}', // script does not exist
+    'CLAUDE.md': '# governance',
+  });
+
+  let out;
+  try {
+    out = run(['audit', '--json'], { cwd: dir });
+  } catch (err) {
+    out = err.stdout || '';
+  }
+  const parsed = JSON.parse(out.trim());
+  assert.ok(parsed.drift.length > 0, 'should detect drift for missing npm script');
+  const detail = parsed.drift[0].detail || '';
+  assert.ok(/script/i.test(detail), `detail should mention "script", got: "${detail}"`);
+});
+
+test('audit: human-readable output contains → when drift is present', () => {
+  const gov = `# Governance — test
+## Identity
+- Project: test
+- Stack: node
+
+## Gates (run in order, stop on failure)
+### Test
+- npm run nonexistent-script
+`;
+  const dir = mkProject({
+    '.claude/governance.md': gov,
+    'package.json': '{"scripts":{}}', // script does not exist
+    'CLAUDE.md': '# governance',
+  });
+
+  let out;
+  try {
+    out = run(['audit'], { cwd: dir });
+  } catch (err) {
+    out = err.stdout || '';
+  }
+  assert.ok(out.includes('→'), `human output should contain →, got:\n${out}`);
+});

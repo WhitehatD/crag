@@ -23,7 +23,7 @@ function hasAnyAIConfig(cwd) {
     '.clinerules',
     '.continuerules',
     '.rules',
-    '.pre-commit-config.yaml',
+    // '.pre-commit-config.yaml' — excluded: pre-commit is a hook system, not AI governance
   ];
   const dirTargets = [
     '.cursor',
@@ -237,7 +237,7 @@ function audit(args) {
     console.log(`  ${D}Gate reality${X}`);
     for (const d of report.drift) {
       console.log(`  ${Y}\u2717${X} ${d.command}`);
-      if (d.detail) console.log(`    ${D}${d.detail}${X}`);
+      if (d.detail) console.log(`          ${Y}\u2192${X} ${d.detail}`);
       issues++;
     }
     console.log('');

@@ -125,45 +125,68 @@ function checkGateReality(cwd, cmd) {
       const alias = BINARY_PKG_ALIASES[tool];
       if (alias && hasNpmDep(cwd, alias)) return true;
       return false;
+    }, hint: (tool) => {
+      const alias = BINARY_PKG_ALIASES[tool];
+      const pkg = alias || tool;
+      return `${pkg} not in dependencies — run: npm install ${pkg} --save-dev`;
     }},
-    { pattern: /^npm\s+run\s+(\w[\w-]*)/, check: (script) => hasNpmScript(cwd, script) },
+    { pattern: /^npm\s+run\s+(\w[\w-]*)/, check: (script) => hasNpmScript(cwd, script),
+      hint: (script) => `Add "${script}" script to package.json scripts` },
     { pattern: /^node\s+--check\s+(.+)/, check: (file) => fs.existsSync(path.join(cwd, file.trim())) },
     // node <file> — skip flags (--flag) before capturing the file argument
     { pattern: /^node\s+(?:--\S+\s+)*(\S+\.(?:js|mjs|cjs|ts|mts))/, check: (file) => fs.existsSync(path.join(cwd, file.replace(/^['"]|['"]$/g, ''))) },
-    { pattern: /^cargo\s+/, check: () => fs.existsSync(path.join(cwd, 'Cargo.toml')) },
-    { pattern: /^go\s+/, check: () => fs.existsSync(path.join(cwd, 'go.mod')) },
-    { pattern: /^(\.\/)?gradlew\s+/, check: () => fs.existsSync(path.join(cwd, 'gradlew')) || fs.existsSync(path.join(cwd, 'gradlew.bat')) },
-    { pattern: /^pytest/, check: () => fs.existsSync(path.join(cwd, 'pyproject.toml')) || fs.existsSync(path.join(cwd, 'setup.py')) },
-    { pattern: /^ruff\s+/, check: () => fs.existsSync(path.join(cwd, 'ruff.toml')) || fs.existsSync(path.join(cwd, '.ruff.toml')) || fs.existsSync(path.join(cwd, 'pyproject.toml')) },
+    { pattern: /^cargo\s+/, check: () => fs.existsSync(path.join(cwd, 'Cargo.toml')),
+      hint: () => 'No Cargo.toml found — is this a Rust project?' },
+    { pattern: /^go\s+/, check: () => fs.existsSync(path.join(cwd, 'go.mod')),
+      hint: () => 'No go.mod found — is this a Go project?' },
+    { pattern: /^(\.\/)?gradlew\s+/, check: () => fs.existsSync(path.join(cwd, 'gradlew')) || fs.existsSync(path.join(cwd, 'gradlew.bat')),
+      hint: () => 'gradlew script not found — run: gradle wrapper to generate it' },
+    { pattern: /^pytest/, check: () => fs.existsSync(path.join(cwd, 'pyproject.toml')) || fs.existsSync(path.join(cwd, 'setup.py')),
+      hint: () => 'No pyproject.toml or setup.py found — is this a Python project?' },
+    { pattern: /^ruff\s+/, check: () => fs.existsSync(path.join(cwd, 'ruff.toml')) || fs.existsSync(path.join(cwd, '.ruff.toml')) || fs.existsSync(path.join(cwd, 'pyproject.toml')),
+      hint: () => 'No ruff.toml or pyproject.toml found — add ruff config or run: pip install ruff' },
     // Python runner commands (uv run, poetry run, etc.) — valid if pyproject.toml exists
-    { pattern: /^(?:uv|poetry|pdm|hatch|rye|pipenv)\s+run\s+/, check: () => fs.existsSync(path.join(cwd, 'pyproject.toml')) || fs.existsSync(path.join(cwd, 'setup.py')) },
+    { pattern: /^(?:uv|poetry|pdm|hatch|rye|pipenv)\s+run\s+/, check: () => fs.existsSync(path.join(cwd, 'pyproject.toml')) || fs.existsSync(path.join(cwd, 'setup.py')),
+      hint: () => 'No pyproject.toml or setup.py found — is this a Python project?' },
     // Make / task / just — valid if any build system config exists.
     // Autotools projects have Makefile.in or configure but no Makefile until ./configure runs.
-    { pattern: /^make\s+/, check: () => fs.existsSync(path.join(cwd, 'Makefile')) || fs.existsSync(path.join(cwd, 'GNUmakefile')) || fs.existsSync(path.join(cwd, 'makefile')) || fs.existsSync(path.join(cwd, 'Makefile.in')) || fs.existsSync(path.join(cwd, 'configure')) || fs.existsSync(path.join(cwd, 'configure.ac')) || fs.existsSync(path.join(cwd, 'CMakeLists.txt')) },
-    { pattern: /^task\s+/, check: () => fs.existsSync(path.join(cwd, 'Taskfile.yml')) || fs.existsSync(path.join(cwd, 'Taskfile.yaml')) },
-    { pattern: /^just\s+/, check: () => fs.existsSync(path.join(cwd, 'justfile')) || fs.existsSync(path.join(cwd, 'Justfile')) },
+    { pattern: /^make\s+/, check: () => fs.existsSync(path.join(cwd, 'Makefile')) || fs.existsSync(path.join(cwd, 'GNUmakefile')) || fs.existsSync(path.join(cwd, 'makefile')) || fs.existsSync(path.join(cwd, 'Makefile.in')) || fs.existsSync(path.join(cwd, 'configure')) || fs.existsSync(path.join(cwd, 'configure.ac')) || fs.existsSync(path.join(cwd, 'CMakeLists.txt')),
+      hint: () => 'No Makefile found — create one or check your build system setup' },
+    { pattern: /^task\s+/, check: () => fs.existsSync(path.join(cwd, 'Taskfile.yml')) || fs.existsSync(path.join(cwd, 'Taskfile.yaml')),
+      hint: () => 'No Taskfile.yml found — run: task --init to create one' },
+    { pattern: /^just\s+/, check: () => fs.existsSync(path.join(cwd, 'justfile')) || fs.existsSync(path.join(cwd, 'Justfile')),
+      hint: () => 'No justfile found — create one with your recipe definitions' },
     // Elixir
-    { pattern: /^mix\s+/, check: () => fs.existsSync(path.join(cwd, 'mix.exs')) },
+    { pattern: /^mix\s+/, check: () => fs.existsSync(path.join(cwd, 'mix.exs')),
+      hint: () => 'No mix.exs found — is this an Elixir project?' },
     // Ruby
-    { pattern: /^bundle\s+exec\s+/, check: () => fs.existsSync(path.join(cwd, 'Gemfile')) },
+    { pattern: /^bundle\s+exec\s+/, check: () => fs.existsSync(path.join(cwd, 'Gemfile')),
+      hint: () => 'No Gemfile found — run: bundle init to create one' },
     // PHP
-    { pattern: /^composer\s+/, check: () => fs.existsSync(path.join(cwd, 'composer.json')) },
-    { pattern: /^vendor\/bin\//, check: () => fs.existsSync(path.join(cwd, 'composer.json')) },
+    { pattern: /^composer\s+/, check: () => fs.existsSync(path.join(cwd, 'composer.json')),
+      hint: () => 'No composer.json found — run: composer init to create one' },
+    { pattern: /^vendor\/bin\//, check: () => fs.existsSync(path.join(cwd, 'composer.json')),
+      hint: () => 'No composer.json found — run: composer init to create one' },
     // .NET
     { pattern: /^dotnet\s+/, check: () => {
       if (fs.existsSync(path.join(cwd, 'Directory.Build.props'))) return true;
       try { return fs.readdirSync(cwd).some(f => f.endsWith('.csproj') || f.endsWith('.fsproj') || f.endsWith('.sln') || f.endsWith('.slnx')); } catch { return false; }
-    }},
+    }, hint: () => 'No .csproj/.sln found — is this a .NET project?' },
     // Swift
-    { pattern: /^swift\s+/, check: () => fs.existsSync(path.join(cwd, 'Package.swift')) },
+    { pattern: /^swift\s+/, check: () => fs.existsSync(path.join(cwd, 'Package.swift')),
+      hint: () => 'No Package.swift found — run: swift package init to create one' },
     // CMake
-    { pattern: /^cmake\s+/, check: () => fs.existsSync(path.join(cwd, 'CMakeLists.txt')) },
-    { pattern: /^ctest\s+/, check: () => fs.existsSync(path.join(cwd, 'CMakeLists.txt')) },
+    { pattern: /^cmake\s+/, check: () => fs.existsSync(path.join(cwd, 'CMakeLists.txt')),
+      hint: () => 'No CMakeLists.txt found — is this a CMake project?' },
+    { pattern: /^ctest\s+/, check: () => fs.existsSync(path.join(cwd, 'CMakeLists.txt')),
+      hint: () => 'No CMakeLists.txt found — is this a CMake project?' },
     // Zig
-    { pattern: /^zig\s+/, check: () => fs.existsSync(path.join(cwd, 'build.zig')) },
+    { pattern: /^zig\s+/, check: () => fs.existsSync(path.join(cwd, 'build.zig')),
+      hint: () => 'No build.zig found — is this a Zig project?' },
     // Docker
     { pattern: /^docker\s+compose/, check: () => true }, // docker compose commands are CI orchestration, assume valid
-    { pattern: /^docker\s+/, check: () => fs.existsSync(path.join(cwd, 'Dockerfile')) || fs.existsSync(path.join(cwd, 'docker-compose.yml')) || fs.existsSync(path.join(cwd, 'docker-compose.yaml')) },
+    { pattern: /^docker\s+/, check: () => fs.existsSync(path.join(cwd, 'Dockerfile')) || fs.existsSync(path.join(cwd, 'docker-compose.yml')) || fs.existsSync(path.join(cwd, 'docker-compose.yaml')),
+      hint: () => 'No Dockerfile or docker-compose.yml found — add one to the project root' },
   ];
 
   // Verify commands
@@ -176,7 +199,7 @@ function checkGateReality(cwd, cmd) {
     return { status: 'match', detail: null };
   }
 
-  for (const { pattern, check } of toolChecks) {
+  for (const { pattern, check, hint } of toolChecks) {
     const m = cmd.match(pattern);
     if (m) {
       if (check(m[1])) return { status: 'match', detail: null };
@@ -187,7 +210,8 @@ function checkGateReality(cwd, cmd) {
       // live in workspace members without path-scoped sections.
       if (checkSubdirs(cwd, cmd)) return { status: 'match', detail: null };
 
-      return { status: 'drift', detail: `Tool or dependency not found for: ${cmd}` };
+      const detail = hint ? hint(m[1]) : `Tool or dependency not found for: ${cmd}`;
+      return { status: 'drift', detail };
     }
   }
 
