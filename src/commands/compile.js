@@ -21,6 +21,11 @@ const { generateAider } = require('../compile/aider');
 const { generateLefthook } = require('../compile/lefthook');
 const { generateGitlabCI } = require('../compile/gitlab-ci');
 const { generateCoderabbit } = require('../compile/coderabbit');
+const { generateJunie } = require('../compile/junie');
+const { generateKiro } = require('../compile/kiro');
+const { generateCircleCI } = require('../compile/circleci');
+const { generateAzureDevOps } = require('../compile/azuredevops');
+const { generateGoose } = require('../compile/goose');
 const { generateScaffold } = require('../compile/scaffold');
 const { cliError, readFileOrExit, EXIT_USER, EXIT_INTERNAL, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
@@ -46,6 +51,11 @@ const ALL_TARGETS = [
   'lefthook',
   'gitlab',
   'coderabbit',
+  'junie',
+  'kiro',
+  'circleci',
+  'azuredevops',
+  'goose',
 ];
 
 function compile(args) {
@@ -91,7 +101,9 @@ function compile(args) {
     console.log('    crag compile --target husky        .husky/pre-commit');
     console.log('    crag compile --target pre-commit   .pre-commit-config.yaml');
     console.log('    crag compile --target lefthook     lefthook.yml');
-    console.log('    crag compile --target gitlab       .gitlab-ci.yml\n');
+    console.log('    crag compile --target gitlab       .gitlab-ci.yml');
+    console.log('    crag compile --target circleci     .circleci/config.yml');
+    console.log('    crag compile --target azuredevops  azure-pipelines.yml\n');
     console.log('  AI coding agents — native formats:');
     console.log('    crag compile --target agents-md    AGENTS.md (Codex, Aider, Factory)');
     console.log('    crag compile --target cursor       .cursor/rules/governance.mdc');
@@ -105,7 +117,10 @@ function compile(args) {
     console.log('    crag compile --target amazonq      .amazonq/rules/governance.md');
     console.log('    crag compile --target claude       CLAUDE.md');
     console.log('    crag compile --target aider        CONVENTIONS.md');
-    console.log('    crag compile --target coderabbit   .coderabbit.yaml\n');
+    console.log('    crag compile --target coderabbit   .coderabbit.yaml');
+    console.log('    crag compile --target junie        .junie/guidelines.md');
+    console.log('    crag compile --target kiro         .kiro/steering/quality-gates.md');
+    console.log('    crag compile --target goose        .goose/GOOSEHINTS\n');
     console.log('  Infrastructure:');
     console.log('    crag compile --target scaffold     Hooks, settings, agents, CI playbook\n');
     console.log('  Combined:');
@@ -241,6 +256,11 @@ function runGenerator(target, cwd, parsed) {
     case 'lefthook':   generateLefthook(cwd, parsed); break;
     case 'gitlab':     generateGitlabCI(cwd, parsed); break;
     case 'coderabbit': generateCoderabbit(cwd, parsed); break;
+    case 'junie':      generateJunie(cwd, parsed); break;
+    case 'kiro':       generateKiro(cwd, parsed); break;
+    case 'circleci':   generateCircleCI(cwd, parsed); break;
+    case 'azuredevops': generateAzureDevOps(cwd, parsed); break;
+    case 'goose':      generateGoose(cwd, parsed); break;
     default:
       console.error(`  Unknown target: ${target}`);
       console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
@@ -315,6 +335,11 @@ function planOutputPath(cwd, target) {
     'lefthook':   path.join(cwd, 'lefthook.yml'),
     'gitlab':     path.join(cwd, '.gitlab-ci.yml'),
     'coderabbit': path.join(cwd, '.coderabbit.yaml'),
+    'junie':      path.join(cwd, '.junie', 'guidelines.md'),
+    'kiro':       path.join(cwd, '.kiro', 'steering', 'quality-gates.md'),
+    'circleci':   path.join(cwd, '.circleci', 'config.yml'),
+    'azuredevops': path.join(cwd, 'azure-pipelines.yml'),
+    'goose':      path.join(cwd, '.goose', 'GOOSEHINTS'),
   };
   return map[target] || null;
 }

@@ -106,13 +106,13 @@ test('demo: diff step surfaces real drift (extra > 0)', () => {
     `demo should also show matching gates, got ${diffStep.diffCounts.match}`);
 });
 
-test('demo: compile step plans all 18 targets', () => {
+test('demo: compile step plans all 23 targets', () => {
   const { stdout } = runCrag(['demo', '--json']);
   const parsed = JSON.parse(stdout);
   const compileStep = parsed.steps.find(s => s.step.includes('compile'));
   assert.ok(compileStep, 'expected a compile step');
-  assert.ok(/18 files/.test(compileStep.detail),
-    `expected "18 files" in compile detail, got: ${compileStep.detail}`);
+  assert.ok(/23 files/.test(compileStep.detail),
+    `expected "23 files" in compile detail, got: ${compileStep.detail}`);
 });
 
 test('demo: cleans up temp directory by default', () => {
