@@ -9,6 +9,44 @@ const { planOutputPath, ALL_TARGETS } = require('./compile');
 const { checkGateReality, extractCIGateCommands, extractUnmanagedCIFiles, normalizeCmd } = require('./diff');
 
 /**
+ * Detect whether the repo has ANY AI governance artifacts. If none exist,
+ * Axis 2 (drift) findings are semantically meaningless — crag is inferring
+ * governance from CI commands and flagging them against a baseline that
+ * doesn't exist. In that case we skip Axis 2.
+ */
+function hasAnyAIConfig(cwd) {
+  const fileTargets = [
+    'CLAUDE.md',
+    'AGENTS.md',
+    'GEMINI.md',
+    '.github/copilot-instructions.md',
+    '.clinerules',
+    '.continuerules',
+    '.rules',
+    '.pre-commit-config.yaml',
+  ];
+  const dirTargets = [
+    '.cursor',
+    '.windsurf',
+    '.amazonq',
+    '.husky',
+  ];
+  for (const rel of fileTargets) {
+    const p = path.join(cwd, rel);
+    try {
+      if (fs.existsSync(p) && fs.statSync(p).isFile()) return true;
+    } catch (_) { /* ignore */ }
+  }
+  for (const rel of dirTargets) {
+    const p = path.join(cwd, rel);
+    try {
+      if (fs.existsSync(p) && fs.statSync(p).isDirectory()) return true;
+    } catch (_) { /* ignore */ }
+  }
+  return false;
+}
+
+/**
  * crag audit — drift detection across governance, compiled configs, and reality.
  *
  * Three detection axes:
@@ -76,12 +114,20 @@ function audit(args) {
   // `path: frontend/`, we resolve tools against that subdirectory instead
   // of the project root. This prevents false-positive drift in monorepos
   // where e.g. `npx tsc` lives in frontend/node_modules, not root.
+  //
+  // Skip this axis entirely when the repo has NO authoritative AI config.
+  // Without a governance source on disk (CLAUDE.md, AGENTS.md, husky,
+  // pre-commit, etc.), drift findings are spurious — crag is just flagging
+  // CI commands against a baseline that doesn't exist.
   const richGates = flattenGatesRich(parsed.gates);
-  for (const gate of richGates) {
-    const checkDir = gate.path ? path.join(cwd, gate.path) : cwd;
-    const check = checkGateReality(checkDir, gate.cmd);
-    if (check.status === 'drift' || check.status === 'missing') {
-      report.drift.push({ command: gate.cmd, detail: check.detail });
+  const aiConfigPresent = hasAnyAIConfig(cwd);
+  if (aiConfigPresent) {
+    for (const gate of richGates) {
+      const checkDir = gate.path ? path.join(cwd, gate.path) : cwd;
+      const check = checkGateReality(checkDir, gate.cmd);
+      if (check.status === 'drift' || check.status === 'missing') {
+        report.drift.push({ command: gate.cmd, detail: check.detail });
+      }
     }
   }
 

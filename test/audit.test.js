@@ -136,6 +136,8 @@ test('audit: detects reality drift (missing npm script)', () => {
   const dir = mkProject({
     '.claude/governance.md': SAMPLE_GOV,
     'package.json': '{"scripts":{}}', // no "test" script
+    // CLAUDE.md ensures Axis 2 is not skipped (repo has an AI config)
+    'CLAUDE.md': '# governance',
   });
 
   let out;
@@ -146,6 +148,26 @@ test('audit: detects reality drift (missing npm script)', () => {
   }
   const parsed = JSON.parse(out.trim());
   assert.ok(parsed.drift.length > 0, 'should detect drift for missing npm script');
+});
+
+test('audit: no AI config → zero drift even if gate unresolvable', () => {
+  // Repo has governance.md with a gate but NO AI config files at all.
+  // Axis 2 should be skipped entirely → drift must be empty.
+  const dir = mkProject({
+    '.claude/governance.md': SAMPLE_GOV,
+    'package.json': '{"scripts":{}}', // no "test" script → would normally drift
+    // Intentionally: no CLAUDE.md, no AGENTS.md, no .husky, no pre-commit, etc.
+  });
+
+  let out;
+  try {
+    out = run(['audit', '--json'], { cwd: dir });
+  } catch (err) {
+    out = err.stdout || '';
+  }
+  const parsed = JSON.parse(out.trim());
+  assert.strictEqual(parsed.drift.length, 0,
+    'drift should be empty when no AI config exists in the repo');
 });
 
 test('audit: help text mentions crag audit', () => {
