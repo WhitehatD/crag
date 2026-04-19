@@ -141,12 +141,23 @@ jobs:
           test -f .windsurf/rules/governance.md
           test -f .rules
           test -f .amazonq/rules/governance.md
-          echo "All 12 compile targets produced artifacts."
+          test -f CONVENTIONS.md
+          test -f lefthook.yml
+          test -f .gitlab-ci.yml
+          test -f .coderabbit.yaml
+          test -f .junie/guidelines.md
+          test -f .kiro/steering/quality-gates.md
+          test -f .circleci/config.yml
+          test -f azure-pipelines.yml
+          test -f .goose/GOOSEHINTS
+          echo "All 23 compile targets produced artifacts."
           # Clean up — these are all gitignored, so we just rm them.
           rm -f .github/workflows/gates.yml
           rm -rf .husky .cursor .windsurf .amazonq
           rm -f .pre-commit-config.yaml AGENTS.md GEMINI.md .clinerules .continuerules .rules
           rm -f .github/copilot-instructions.md
+          rm -f CONVENTIONS.md lefthook.yml .gitlab-ci.yml .coderabbit.yaml azure-pipelines.yml
+          rm -rf .junie .kiro .circleci .goose
           # Also clean the bootstrapped .claude/ so subsequent steps don't
           # see a polluted tree. They already passed their checks.
           rm -rf .claude
