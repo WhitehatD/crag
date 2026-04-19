@@ -10,7 +10,7 @@ function getShareUrl(cwd) {
   try {
     const { execSync } = require('child_process');
     const remote = execSync('git remote get-url origin', { cwd, stdio: ['pipe', 'pipe', 'pipe'] }).toString().trim();
-    const m = remote.match(/github\.com[/:]([^/]+\/[^/\s.]+?)(?:\.git)?$/);
+    const m = remote.match(/github\.com[/:]([^/]+\/[^/\s]+?)(?:\.git)?$/);
     if (m) return 'https://crag.sh/audit?repo=' + encodeURIComponent(m[1]);
   } catch {}
   return null;
