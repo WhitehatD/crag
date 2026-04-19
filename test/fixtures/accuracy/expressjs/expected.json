@@ -1,0 +1,4 @@
+{
+  "gates": ["npm test", "npm run lint"],
+  "stack": "node"
+}

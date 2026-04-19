@@ -1,0 +1,4 @@
+{
+  "gates": ["mix test", "mix format --check-formatted"],
+  "stack": "elixir"
+}

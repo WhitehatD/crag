@@ -1,0 +1,4 @@
+{
+  "gates": ["./mvnw test", "./mvnw verify"],
+  "stack": "java/maven"
+}

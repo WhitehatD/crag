@@ -1,0 +1,4 @@
+{
+  "gates": ["bundle exec rspec", "bundle exec rubocop"],
+  "stack": "ruby"
+}

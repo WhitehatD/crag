@@ -1,0 +1,4 @@
+{
+  "gates": ["pnpm test", "pnpm run check"],
+  "stack": "node"
+}

@@ -1,0 +1,4 @@
+{
+  "gates": ["go test ./...", "go vet ./..."],
+  "stack": "go"
+}

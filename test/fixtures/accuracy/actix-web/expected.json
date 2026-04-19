@@ -1,0 +1,4 @@
+{
+  "gates": ["cargo test", "cargo clippy"],
+  "stack": "rust"
+}

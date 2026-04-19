@@ -1,0 +1,14 @@
+{
+  "name": "express",
+  "version": "4.21.2",
+  "description": "Fast, unopinionated, minimalist web framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --reporter spec --bail test/",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "mocha": "^10.0.0"
+  }
+}

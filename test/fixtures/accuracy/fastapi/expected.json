@@ -1,0 +1,4 @@
+{
+  "gates": ["pytest", "ruff check ."],
+  "stack": "python"
+}

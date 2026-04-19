@@ -1,0 +1,12 @@
+[package]
+name = "actix-web"
+version = "4.9.0"
+edition = "2021"
+description = "Actix Web is a powerful, pragmatic, and extremely fast web framework for Rust"
+
+[dependencies]
+actix-rt = "2"
+tokio = { version = "1", features = ["sync"] }
+
+[dev-dependencies]
+actix-test = "*"
