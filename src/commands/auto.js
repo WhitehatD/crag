@@ -38,7 +38,7 @@ function looksLikeProject(cwd) {
  *   $ npx @whitehatd/crag
  *   Detected: Node 25 · TypeScript · Vitest · pnpm · GitHub Actions
  *   Generated: .claude/governance.md (34 lines)
- *   Compiled: 14 targets in 487ms
+ *   Compiled: 23 targets in 487ms
  */
 function auto(args) {
   validateFlags('auto', args, {
