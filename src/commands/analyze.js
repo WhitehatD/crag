@@ -38,12 +38,14 @@ const FIXTURE_DIR_PATTERNS = [
  */
 function analyze(args) {
   validateFlags('analyze', args, {
-    boolean: ['--dry-run', '--workspace', '--merge', '--no-install-skills'],
+    boolean: ['--dry-run', '--workspace', '--merge', '--no-install-skills', '--write-governance', '--force'],
   });
   const dryRun = args.includes('--dry-run');
   const workspaceFlag = args.includes('--workspace');
   const merge = args.includes('--merge');
   const noInstallSkills = args.includes('--no-install-skills');
+  const writeGovernance = args.includes('--write-governance');
+  const force = args.includes('--force');
   const cwd = process.cwd();
 
   // Guard: refuse to analyze inside a known-AI-infra subdirectory.
@@ -143,6 +145,26 @@ function analyze(args) {
 
   const govPath = path.join(cwd, '.claude', 'governance.md');
   const govDir = path.dirname(govPath);
+
+  // When --write-governance is passed, guard against accidental overwrites:
+  // abort if governance.md already exists unless --force is also given.
+  if (writeGovernance && fs.existsSync(govPath) && !force && !merge) {
+    cliError(
+      `governance.md already exists — use --force to overwrite`,
+      EXIT_INTERNAL
+    );
+  }
+
+  // Validate that the generated content parses cleanly before writing.
+  if (writeGovernance) {
+    try {
+      const { parseGovernance } = require('../governance/parse');
+      parseGovernance(governance);
+    } catch (err) {
+      cliError(`generated governance.md failed validation: ${err.message}`, EXIT_INTERNAL);
+    }
+  }
+
   try {
     if (!fs.existsSync(govDir)) fs.mkdirSync(govDir, { recursive: true });
 
@@ -177,9 +199,13 @@ function analyze(args) {
     }
   }
 
-  console.log(`  \x1b[32m✓\x1b[0m Generated ${path.relative(cwd, govPath)}`);
-  console.log(`\n  Review the file — sections marked "# Inferred" should be verified.`);
-  console.log(`  Run 'crag check' to verify infrastructure.\n`);
+  if (writeGovernance) {
+    console.log(`  \x1b[32m✓\x1b[0m Wrote ${path.relative(cwd, govPath)} — review and run: crag compile --target all`);
+  } else {
+    console.log(`  \x1b[32m✓\x1b[0m Generated ${path.relative(cwd, govPath)}`);
+    console.log(`\n  Review the file — sections marked "# Inferred" should be verified.`);
+    console.log(`  Run 'crag check' to verify infrastructure.\n`);
+  }
 }
 
 /**

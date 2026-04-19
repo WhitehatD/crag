@@ -80,6 +80,8 @@ function printUsage() {
     crag analyze --dry-run            Print inferred governance without writing
     crag analyze --workspace          Analyze all workspace members
     crag analyze --merge              Merge with existing governance
+    crag analyze --write-governance   Write .claude/governance.md (abort if exists)
+    crag analyze --write-governance --force  Overwrite existing governance.md
 
   Compile options:
     crag compile --target <t> --dry-run  Preview output paths without writing
