@@ -212,10 +212,10 @@ git diff --stat HEAD~5 -- . ':!node_modules' ':!.next' ':!build' ':!target' ':!d
 
 Check for MemStack:
 ```
-ls .claude/rules/echo.md 2>/dev/null && echo "MemStack rules: loaded" || echo "MemStack: not configured"
+ls .claude/rules/memstack.md .claude/rules/echo.md 2>/dev/null | head -1 | grep -q . && echo "MemStack rules: loaded" || echo "MemStack: not configured"
 ```
 
-If MemStack rules exist, follow them — they trigger context loading from the SQLite database (get-context, get-sessions, get-insights, stale-insights verification).
+If MemStack rules exist (`.claude/rules/memstack.md` or legacy `echo.md`), follow them — they trigger context loading from the SQLite database (get-context, get-sessions, get-insights, stale-insights verification).
 
 ### Step 2: Check CI health
 

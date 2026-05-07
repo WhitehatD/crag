@@ -84,7 +84,7 @@ function generateGitHubActions(cwd, parsed) {
   let setupSteps = '';
   if (parsed.runtimes.includes('node')) {
     setupSteps += '      - name: Setup Node.js\n';
-    setupSteps += '        uses: actions/setup-node@v4\n';
+    setupSteps += '        uses: actions/setup-node@v5\n';
     setupSteps += `        with:\n          node-version: '${nodeVersion}'\n`;
     setupSteps += '      - run: npm ci\n';
   }
@@ -148,12 +148,16 @@ function generateGitHubActions(cwd, parsed) {
     '  pull_request:',
     '    branches: [main, master]',
     '',
+    'concurrency:',
+    '  group: gates-${{ github.ref }}',
+    '  cancel-in-progress: true',
+    '',
     'jobs:',
     '  gates:',
     '    name: Governance Gates',
     '    runs-on: ubuntu-latest',
     '    steps:',
-    '      - uses: actions/checkout@v4',
+    '      - uses: actions/checkout@v5',
     setupSteps + gateSteps,
   ].join('\n');
 
@@ -165,7 +169,7 @@ function generateGitHubActions(cwd, parsed) {
 
   // Guard workflow — triggers when CI config files change, runs crag diff --ci
   // to detect CI→governance divergence before it drifts silently.
-  const guardYaml = generateGuardYaml('crag compile --target github', 'actions/checkout@v4', 'actions/setup-node@v4', nodeVersion);
+  const guardYaml = generateGuardYaml('crag compile --target github', 'actions/checkout@v5', 'actions/setup-node@v5', nodeVersion);
   const guardPath = path.join(dir, 'governance-guard.yml');
   const guardFinal = preserveCustomSections(guardPath, guardYaml, 'comment');
   atomicWrite(guardPath, guardFinal);

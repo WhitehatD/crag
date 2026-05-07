@@ -141,6 +141,7 @@ function compile(args) {
         '.claude/agents/test-runner.md',
         '.claude/agents/security-reviewer.md',
         '.claude/ci-playbook.md',
+        '.claude/rules/memstack.md',
       ];
       for (const f of scaffoldFiles) {
         console.log(`  \x1b[36mplan\x1b[0m ${f}`);
