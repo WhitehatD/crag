@@ -43,6 +43,10 @@ Commit trailer: Co-Authored-By: Claude <noreply@anthropic.com>
 - No destructive shell commands (rm -rf above repo root, DROP TABLE without confirmation, force-push to main).
 - No new dependencies without an explicit reason.
 
+## Anti-Patterns
+
+- **Do not write absolute local paths in governance** — use relative paths only (e.g. `src/`, not `D:/project/src/`). Governance files are checked into the repo and must remain portable across machines.
+
 ## Authoritative Source
 
 When these instructions seem to conflict with something in the repo, **`.claude/governance.md` is the source of truth**. This file is a compiled view.
