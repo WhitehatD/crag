@@ -36,6 +36,10 @@ function generateClaude(cwd, parsed) {
     ? `- Use conventional commits (feat:, fix:, docs:, etc.)${parsed.commitTrailer ? `\n- Commit trailer: \`${parsed.commitTrailer}\`` : ''}`
     : '- Follow project commit conventions';
 
+  const antiPatternsBlock = parsed.antiPatterns && parsed.antiPatterns.trim()
+    ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n`
+    : '';
+
   const content = `# CLAUDE.md — ${parsed.name || 'project'}
 
 > Generated from governance.md by [crag](https://crag.sh). Regenerate: \`crag compile --target claude\`
@@ -58,7 +62,7 @@ ${gatesList}
 4. Never modify files outside this repository.
 5. Never run destructive system commands (\`rm -rf /\`, \`DROP TABLE\`, force-push to main).
 ${commitLine}
-
+${antiPatternsBlock}
 ## Security
 
 ${parsed.security || '- Never commit hardcoded secrets (grep for sk_live, sk_test, AKIA, password=)'}

@@ -59,7 +59,7 @@ ${gatesList}
 ## Security
 
 ${parsed.security || '- Never commit hardcoded secrets (grep for sk_live, sk_test, AKIA, password=)'}
-
+${parsed.antiPatterns && parsed.antiPatterns.trim() ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n` : ''}
 ## Workflow
 
 For every task:

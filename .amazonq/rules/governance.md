@@ -37,15 +37,18 @@ Make every AI agent obey your codebase. One governance.md → compiled to CI, ho
 Use conventional commits: `feat(scope): description`, `fix(scope): description`, `docs: description`, etc.
 Commit trailer: Co-Authored-By: Claude <noreply@anthropic.com>
 
+### Anti-Patterns
+
+Do not:
+- Do not leave `console.log` in production code — use a proper logger
+- Do not use synchronous filesystem APIs in request handlers
+- Do not write absolute local paths in governance (e.g. `D:/project/src/`) — use relative paths only (e.g. `src/`). Governance files are checked into the repo and must remain portable across machines.
+
 ### Boundaries
 
 - All file operations must stay within this repository.
 - No destructive shell commands (rm -rf above repo root, DROP TABLE without confirmation, force-push to main).
 - No new dependencies without an explicit reason.
-
-## Anti-Patterns
-
-- **Do not write absolute local paths in governance** — use relative paths only (e.g. `src/`, not `D:/project/src/`). Governance files are checked into the repo and must remain portable across machines.
 
 ## Authoritative Source
 

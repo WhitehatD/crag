@@ -44,6 +44,10 @@ function generateCursorRules(cwd, parsed) {
     ? `\n## Security\n\n${parsed.security}\n`
     : '\n## Security\n\n- No hardcoded secrets — grep for sk_live, AKIA, password= before commit\n';
 
+  const antiPatternsBlock = parsed.antiPatterns && parsed.antiPatterns.trim()
+    ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n`
+    : '';
+
   const branchBlock = parsed.commitConvention === 'conventional'
     ? `- Conventional commits (feat:, fix:, docs:, etc.)${parsed.commitTrailer ? `\n- Commit trailer: ${parsed.commitTrailer}` : ''}`
     : '- Follow project commit conventions';
@@ -66,6 +70,8 @@ function generateCursorRules(cwd, parsed) {
     'Run these checks in order before committing:',
     gatesList.trim(),
     securityBlock.trim(),
+    antiPatternsBlock.trim() ? antiPatternsBlock.trim() : null,
+    antiPatternsBlock.trim() ? '' : null,
     '',
     '## Conventions',
     '',

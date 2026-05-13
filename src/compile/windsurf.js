@@ -83,7 +83,7 @@ ${gatesList}
 3. **Prefer editing** existing files over creating new ones.
 4. **Always explain** non-obvious changes in commit messages.
 5. **Ask before** destructive operations (delete, rename, migrate schema).
-
+${parsed.antiPatterns && parsed.antiPatterns.trim() ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.split('\n').filter(l => l.trim()).map(l => `- ${l.replace(/^- /, '')}`).join('\n')}\n` : ''}
 ---
 
 **Tool:** crag — https://crag.sh

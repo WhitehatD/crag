@@ -293,6 +293,10 @@ function mineDependencyPolicy(cwd, analysis) {
 // ── 7. Anti-Patterns ────────────────────────────────────────────────
 
 const ANTI_PATTERNS = {
+  // Applied to every project regardless of stack — meta-rules for crag governance portability
+  universal: [
+    'Do not write absolute local paths in governance (e.g. `D:/project/src/`) — use relative paths only (e.g. `src/`). Governance files are checked into the repo and must remain portable across machines.',
+  ],
   typescript: [
     'Do not use `any` type — use `unknown` or proper types instead',
     'Do not use `@ts-ignore` — fix the type error or use `@ts-expect-error` with a reason',
@@ -362,7 +366,7 @@ const AUXILIARY_INDICATORS = {
 };
 
 function mineAntiPatterns(analysis) {
-  const patterns = [];
+  const patterns = [...ANTI_PATTERNS.universal];
   const stacks = analysis.stack;
 
   // Identify auxiliary language stacks to skip

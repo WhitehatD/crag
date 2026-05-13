@@ -41,10 +41,6 @@ When Windsurf's Cascade agent operates on this project:
 7. `node bin/crag.js workspace --json > /dev/null`
 8. `node bin/crag.js analyze > /dev/null`
 
-## Anti-Patterns
-
-- **Do not write absolute local paths in governance** — use relative paths only (e.g. `src/`, not `D:/project/src/`). Governance files are checked into the repo and must remain portable across machines.
-
 ## Rules of Engagement
 
 1. **Minimal changes.** Don't rewrite files that weren't asked to change.
@@ -52,6 +48,13 @@ When Windsurf's Cascade agent operates on this project:
 3. **Prefer editing** existing files over creating new ones.
 4. **Always explain** non-obvious changes in commit messages.
 5. **Ask before** destructive operations (delete, rename, migrate schema).
+
+## Anti-Patterns
+
+- Do not:
+- Do not leave `console.log` in production code — use a proper logger
+- Do not use synchronous filesystem APIs in request handlers
+- Do not write absolute local paths in governance (e.g. `D:/project/src/`) — use relative paths only (e.g. `src/`). Governance files are checked into the repo and must remain portable across machines.
 
 ---
 

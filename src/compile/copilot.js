@@ -66,7 +66,7 @@ ${gatesBlock}
 4. **No hardcoded secrets.** ${securityBlock}
 ${commitLine}
 6. **Conservative changes.** Do not rewrite unrelated files. Do not add new dependencies without explaining why.
-
+${parsed.antiPatterns && parsed.antiPatterns.trim() ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n` : ''}
 ## Tool Context
 
 This project uses **crag** (https://crag.sh) as its AI-agent governance layer. The \`governance.md\` file is the authoritative source. If you have shell access, run \`crag check\` to verify the infrastructure and \`crag diff\` to detect drift.

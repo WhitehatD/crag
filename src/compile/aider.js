@@ -47,6 +47,10 @@ function generateAider(cwd, parsed) {
     gatesBlock = parts.join('\n\n');
   }
 
+  const antiPatternsSection = parsed.antiPatterns && parsed.antiPatterns.trim()
+    ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n`
+    : '';
+
   const content = `# Conventions
 
 > Generated from governance.md by [crag](https://crag.sh). Regenerate: \`crag compile --target aider\`
@@ -54,7 +58,7 @@ function generateAider(cwd, parsed) {
 ## Quality Gates
 
 ${gatesBlock}
-`;
+${antiPatternsSection}`;
 
   const outPath = path.join(cwd, 'CONVENTIONS.md');
   const final = preserveCustomSections(outPath, content, 'markdown');

@@ -53,6 +53,10 @@ function generateGoose(cwd, parsed) {
     ? parsed.runtimes.join(', ')
     : 'unknown';
 
+  const antiPatternsSection = parsed.antiPatterns && parsed.antiPatterns.trim()
+    ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n`
+    : '';
+
   const content = `# Project Hints
 
 > Generated from governance.md by crag — https://crag.sh
@@ -61,7 +65,7 @@ function generateGoose(cwd, parsed) {
 ## Quality Gates
 
 ${gatesBlock}
-
+${antiPatternsSection}
 ## Stack
 
 - **Stack:** ${stackLine}

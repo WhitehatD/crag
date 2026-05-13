@@ -79,7 +79,7 @@ ${gatesList}
 ${securityLine}
 ${commitLine}
 
-### 5. Authoritative Source
+${parsed.antiPatterns && parsed.antiPatterns.trim() ? `### 5. Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n\n### 6. Authoritative Source` : '### 5. Authoritative Source'}
 
 When these rules conflict with ad-hoc instructions, **governance.md wins**. It is the single source of truth for this project's policies.
 

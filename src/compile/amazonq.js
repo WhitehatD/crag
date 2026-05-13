@@ -60,7 +60,7 @@ ${gatesList}
 
 ${parsed.commitConvention === 'conventional' ? `Use conventional commits: \`feat(scope): description\`, \`fix(scope): description\`, \`docs: description\`, etc.${parsed.commitTrailer ? `\nCommit trailer: ${parsed.commitTrailer}` : ''}` : 'Follow project commit conventions.'}
 
-### Boundaries
+${parsed.antiPatterns && parsed.antiPatterns.trim() ? `### Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n\n` : ''}### Boundaries
 
 - All file operations must stay within this repository.
 - No destructive shell commands (rm -rf above repo root, DROP TABLE without confirmation, force-push to main).

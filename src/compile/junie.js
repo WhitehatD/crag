@@ -53,6 +53,10 @@ function generateJunie(cwd, parsed) {
     ? parsed.runtimes.join(', ')
     : 'unknown';
 
+  const antiPatternsSection = parsed.antiPatterns && parsed.antiPatterns.trim()
+    ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n`
+    : '';
+
   const content = `# Project Guidelines
 
 > Generated from governance.md by crag — https://crag.sh
@@ -63,7 +67,7 @@ function generateJunie(cwd, parsed) {
 Run these in order. Stop on first mandatory failure.
 
 ${gatesBlock}
-
+${antiPatternsSection}
 ## Stack
 
 - **Stack:** ${stackLine}

@@ -47,6 +47,10 @@ function generateKiro(cwd, parsed) {
     gatesBlock = parts.join('\n\n');
   }
 
+  const antiPatternsSection = parsed.antiPatterns && parsed.antiPatterns.trim()
+    ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n`
+    : '';
+
   const content = `---
 description: Quality gates and coding standards from governance.md
 alwaysApply: true
@@ -58,7 +62,7 @@ alwaysApply: true
 > Regenerate: \`crag compile --target kiro\`
 
 ${gatesBlock}
-`;
+${antiPatternsSection}`;
 
   const dir = path.join(cwd, '.kiro', 'steering');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });

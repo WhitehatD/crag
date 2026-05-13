@@ -69,7 +69,7 @@ Always follow these when generating or modifying code:
 ## Quality Gates
 
 ${gatesList}
-
+${parsed.antiPatterns && parsed.antiPatterns.trim() ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n` : ''}
 ## Boundaries
 
 - All file operations stay within this repository
