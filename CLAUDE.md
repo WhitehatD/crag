@@ -34,9 +34,9 @@ Run these in order before committing. Stop on first MANDATORY failure:
 ## Anti-Patterns
 
 Do not:
+- Do not write absolute local paths in governance (e.g. `D:/project/src/`) — use relative paths only (e.g. `src/`). Governance files are checked into the repo and must remain portable across machines.
 - Do not leave `console.log` in production code — use a proper logger
 - Do not use synchronous filesystem APIs in request handlers
-- Do not write absolute local paths in governance (e.g. `D:/project/src/`) — use relative paths only (e.g. `src/`). Governance files are checked into the repo and must remain portable across machines.
 
 ## Security
 

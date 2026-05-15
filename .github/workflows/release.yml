@@ -57,7 +57,7 @@ jobs:
       skipped: ${{ steps.skip_check.outputs.skipped }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           # Need write access so we can push the auto-bump commit back to master.
@@ -81,7 +81,7 @@ jobs:
           fi
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
@@ -274,7 +274,7 @@ jobs:
       url: https://www.npmjs.com/package/@whitehatd/crag
     steps:
       - name: Checkout latest branch HEAD (includes auto-bump commit)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # IMPORTANT: Explicitly check out the BRANCH tip rather than the
           # triggering SHA. If the gates job auto-bumped the patch version
@@ -286,7 +286,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
