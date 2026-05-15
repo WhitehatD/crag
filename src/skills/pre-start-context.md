@@ -1,7 +1,7 @@
 ---
 name: pre-start-context
 version: 0.5.39
-source_hash: 489cfa244f9402642a4a7fe1f52c64ec3880a2f7b4b1269310bce849bc28ce7a
+source_hash: 377fc7be81b49f9b1d257dba63844deca9bb8e3e7f6d7f38fe6550c2fc85d405
 description: Universal context loader. Discovers any project's stack, architecture, and state at runtime. Reads governance.md for project-specific rules. Works for any language, framework, or deployment target.
 ---
 
@@ -208,14 +208,42 @@ git diff --stat HEAD~5 -- . ':!node_modules' ':!.next' ':!build' ':!target' ':!d
 
 > **Adaptive depth:** If nothing changed, abbreviate S1-S4. If only one module changed, focus there. If major structural changes, do a full deep read.
 
-### Step 1: Load cross-session memory (if available)
+### Step 1: Brain check + load cross-session memory
 
-Check for MemStack:
+Detect Brain MCP registration in global Claude settings:
+
 ```
-ls .claude/rules/memstack.md .claude/rules/echo.md 2>/dev/null | head -1 | grep -q . && echo "MemStack rules: loaded" || echo "MemStack: not configured"
+ls C:/Users/alexc/.claude/settings.json 2>/dev/null && grep -q '"brain"' C:/Users/alexc/.claude/settings.json && echo "Brain MCP: registered" || echo "Brain MCP: not registered"
 ```
 
-If MemStack rules exist (`.claude/rules/memstack.md` or legacy `echo.md`), follow them — they trigger context loading from the SQLite database (get-context, get-sessions, get-insights, stale-insights verification).
+If Brain is registered, announce it at session start:
+
+```
+echo "[BRAIN] online -- 7 MCP tools available:"
+echo "  recall(query, project?, topk?) -- hybrid semantic+FTS5 search"
+echo "  recall_principle(topic, project?) -- safety rules / high-trust"
+echo "  save_insight(content, type, tags) -- with cosine dedup + auto-embed"
+echo "  verify_insight(id, status) -- confirm/contradict an insight"
+echo "  distill(insight_ids[], content) -- merge insights into a principle"
+echo "  suggest_tags(content, project?) -- avoid tag fragmentation"
+echo "  recall_stats(project?, days?) -- usage telemetry"
+echo "Use them autonomously per global ~/.claude/CLAUDE.md cognitive-recall rule."
+```
+
+Then load principles + hot insights for context (these are small, ~5 KB total):
+
+```
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-principles <project>
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py hot-insights <project> --limit 10
+```
+
+The full insight set (1000+) stays in the brain. Call `recall()` via MCP on demand mid-task.
+
+**Legacy fallback (if Brain MCP is NOT registered):** detect legacy memstack rules and follow them.
+
+```
+ls .claude/rules/memstack.md .claude/rules/echo.md 2>/dev/null | head -1 | grep -q . && echo "Legacy MemStack: loaded" || echo "Memory: not configured"
+```
 
 ### Step 2: Check CI health
 
