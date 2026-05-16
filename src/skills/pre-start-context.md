@@ -1,7 +1,7 @@
 ---
 name: pre-start-context
 version: 0.5.44
-source_hash: 960ef2eccceb8aebff5d0ea3818343ac9bc4dea1b4a66c4a9c18489d3ef5bfcd
+source_hash: b17cfc87c04ed2c0e1b179bf9e845bef7512762e1e4c83411b3d1350b5325246
 description: Universal context loader. Discovers any project's stack, architecture, and state at runtime. Reads governance.md for project-specific rules. Works for any language, framework, or deployment target.
 ---
 
@@ -88,7 +88,7 @@ If the file exists, check:
 - Report: `"Warm start — continuing from <N> minutes ago: <task_summary>"`
 - Previous session's open questions and next steps are immediately relevant
 - If discovery cache is also valid (Section 0.3), most discovery is skipped
-- Skip full MemStack loading if session was recent (< 1 hour) — just load new insights
+- Skip full memory bulk-load if session was recent (< 1 hour) — just load new insights
 
 **Cold start** (any check fails):
 - Treat as a fresh session. Full discovery.
@@ -143,7 +143,7 @@ git branch --show-current
 
 - **Same commit + same branch + < 4 hours → FAST PATH**
   Skip Sections 0.5, 1, 2, 3, 5 entirely. Use cached runtimes, architecture, key files.
-  Still run: Section 0.6 (context loading — MemStack may have new data), Section 4 (governance — may have changed).
+  Still run: Section 0.6 (context loading — memory backend may have new data), Section 4 (governance — may have changed).
   Report: `"Fast path — cached discovery (N min old, commit XXXXXX). Skipping full scan."`
 
 - **Different commit + < 4 hours → INCREMENTAL**
@@ -234,7 +234,7 @@ The user's `~/.claude/CLAUDE.md` is the authoritative source for which CLI comma
 **B — Legacy file-based rules** (older pattern):
 
 ```
-ls .claude/rules/memstack.md .claude/rules/echo.md .claude/rules/brain.md 2>/dev/null | head -1 | grep -q . && echo "Memory rules: loaded — follow them" || echo "Memory: not configured"
+ls .claude/rules/echo.md .claude/rules/brain.md .claude/rules/memory.md 2>/dev/null | head -1 | grep -q . && echo "Memory rules: loaded — follow them" || echo "Memory: not configured"
 ```
 
 If a memory rule file is present, follow its instructions for context loading.
