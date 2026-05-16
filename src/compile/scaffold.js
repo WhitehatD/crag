@@ -460,7 +460,7 @@ function memstackTemplate() {
   return `# MemStack — Cross-Session Memory and Knowledge
 
 **Python path (SSH-safe):** \`/c/Users/alexc/headroom-venv/Scripts/python.exe\`
-**DB script:** \`D:/playground/memstack/db/memstack-db.py\`
+**DB script:** \`D:/playground/brain/db/brain-cli.py\`
 
 > All cross-session knowledge goes to MemStack. Never use Claude Code's built-in file-based auto-memory.
 
@@ -469,11 +469,11 @@ function memstackTemplate() {
 ## Recall (pre-start or when user says "remember" / "what did we do")
 
 \`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py get-context <project>
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py get-sessions <project> --limit 5
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py get-insights <project>
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py get-principles <project>
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py stale-insights <project> --days 7
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-context <project>
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-sessions <project> --limit 5
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-insights <project>
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-principles <project>
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py stale-insights <project> --days 7
 \`\`\`
 
 After loading stale insights: for each with a \`source_file\`, read the file and verify. Use \`verify-insight-v2\` if still accurate, \`update-insight\` if changed, \`verify-insight\` with status=invalidated if the file is gone.
@@ -483,7 +483,7 @@ After loading stale insights: for each with a \`source_file\`, read the file and
 ## Save knowledge (when user says "remember this" / non-obvious decision made)
 
 \`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py add-insight '{
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py add-insight '{
   "project":"<project>","type":"<type>","content":"<what is true and why>",
   "source_file":"<file or empty>","tags":"<comma-separated>"
 }'
@@ -498,7 +498,7 @@ Save when: user says "remember", non-obvious decision made, user corrects approa
 ## Log session (when user says "save diary" / "log session" / "wrapping up")
 
 \`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py add-session '{
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py add-session '{
   "project":"<project>","date":"<YYYY-MM-DD>","accomplished":"<what was done>",
   "files_changed":"<list>","commits":"<messages>","decisions":"<decisions and why>",
   "problems":"<issues>","next_steps":"<next session>"
@@ -508,8 +508,8 @@ Save when: user says "remember", non-obvious decision made, user corrects approa
 After logging: run \`auto-prune\` to remove redundant insights, then \`set-context\` to update project state.
 
 \`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py auto-prune
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py set-context '{
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py auto-prune
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py set-context '{
   "project":"<project>","last_session_date":"<date>","current_branch":"<branch>",
   "known_issues":"<open issues>","backlog":"<next priorities>"
 }'
@@ -520,12 +520,12 @@ After logging: run \`auto-prune\` to remove redundant insights, then \`set-conte
 ## Cost tracking (when user says "cost" / "token stats")
 
 \`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py cost-report --project <project> --days 7
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py cost-report --project <project> --days 7
 \`\`\`
 
 After task completion:
 \`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py add-token-record '{
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py add-token-record '{
   "project":"<project>","session_id":"<CLAUDE_SESSION_ID>","task_summary":"<one-line>",
   "tokens_in":<est_in>,"tokens_out":<est_out>,"model":"<model>"
 }'
@@ -536,7 +536,7 @@ After task completion:
 ## Pending events (during pre-start or when user says "pending events" / "queue")
 
 \`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py get-events --project <project> --limit 10
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-events --project <project> --limit 10
 \`\`\`
 
 If events exist: present grouped by priority, offer to claim/defer/expire. After completion: mark claimed events done.
@@ -546,7 +546,7 @@ If events exist: present grouped by priority, offer to claim/defer/expire. After
 ## Distill / prune (post-task cleanup)
 
 \`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/memstack/db/memstack-db.py auto-prune
+/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py auto-prune
 \`\`\`
 
 Use \`verify-insight-v2\` (not \`verify-insight\`) for all verification during pre-start.
