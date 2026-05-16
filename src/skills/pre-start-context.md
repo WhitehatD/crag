@@ -1,7 +1,7 @@
 ---
 name: pre-start-context
-version: 0.5.40
-source_hash: 377fc7be81b49f9b1d257dba63844deca9bb8e3e7f6d7f38fe6550c2fc85d405
+version: 0.5.41
+source_hash: 82a23bc6063560e804bb39c6030be6584a5b3a0c9c63a2c700f039ffdcb6bb28
 description: Universal context loader. Discovers any project's stack, architecture, and state at runtime. Reads governance.md for project-specific rules. Works for any language, framework, or deployment target.
 ---
 
@@ -230,14 +230,25 @@ echo "  recall_stats(project?, days?) -- usage telemetry"
 echo "Use them autonomously per global ~/.claude/CLAUDE.md cognitive-recall rule."
 ```
 
-Then load principles + hot insights for context (these are small, ~5 KB total):
+Then **bulk-load** principles + hot insights for context (these are small, ~5 KB total). The CLI is correct here — there's no MCP equivalent for "give me ALL principles" or "give me top-K by recall frequency":
 
 ```
 /c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-principles <project>
 /c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py hot-insights <project> --limit 10
 ```
 
-The full insight set (1000+) stays in the brain. Call `recall()` via MCP on demand mid-task.
+**CLI vs MCP boundary — ABSOLUTE:**
+
+| Operation | Use this | Never use |
+|---|---|---|
+| Bulk init load (get-principles, hot-insights) | CLI (Bash) | — |
+| Mid-task recall ("do I remember X?") | **MCP `recall(...)`** | Bash brain-cli.py recall |
+| Saving a new insight | **MCP `save_insight(...)`** | Bash brain-cli.py add-insight |
+| Searching principles by topic | **MCP `recall_principle(...)`** | Bash brain-cli.py |
+| Verifying / distilling / suggest_tags | **MCP tools** | Bash equivalents |
+| Lifecycle ops (migrate, backfill, decay, distill-candidates, recall-stats) | CLI (Bash) | — |
+
+After this initial bulk load, **do NOT shell out to `brain-cli.py recall` or `brain-cli.py add-insight` again in the session**. Use the MCP tools you announced above. They're warm-model, sub-100ms, ledger-logged. The CLI shell-out is cold-Python (~1-2s), bypasses the daemon, and may skip the recall_events ledger. Training the wrong pattern in your own session corrupts future sessions' habits via the cognitive-recall rule.
 
 **Legacy fallback (if Brain MCP is NOT registered):** detect legacy memstack rules and follow them.
 
