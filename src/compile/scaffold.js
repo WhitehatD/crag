@@ -16,7 +16,6 @@ const { flattenGates } = require('../governance/parse');
  *   - .claude/agents/test-runner.md      (from governance gates)
  *   - .claude/agents/security-reviewer.md (from governance security)
  *   - .claude/ci-playbook.md             (template with CI system)
- *   - .claude/rules/memstack.md           (consolidated MemStack rules)
  *
  * Unlike the 23 AI-config targets in `compile --target all`, scaffold
  * files are commit-once infrastructure. `scaffold` is intentionally NOT
@@ -35,8 +34,6 @@ function generateScaffold(cwd, parsed, options = {}) {
   results.push(writeAgent(cwd, 'test-runner.md', testRunnerTemplate(parsed), force));
   results.push(writeAgent(cwd, 'security-reviewer.md', securityReviewerTemplate(parsed), force));
   results.push(writeCiPlaybook(cwd, parsed, force));
-  results.push(writeMemstackRules(cwd, force));
-
   const wrote = results.filter(r => r.action === 'wrote').length;
   const skipped = results.filter(r => r.action === 'skipped').length;
 
@@ -445,111 +442,6 @@ If a test is flaky:
 ## Release Process
 
 Check governance.md for branch strategy and deployment configuration.
-`;
-}
-
-function writeMemstackRules(cwd, force) {
-  const dir = path.join(cwd, '.claude', 'rules');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  const filePath = path.join(dir, 'memstack.md');
-  const content = memstackTemplate();
-  return writeIfMissing(filePath, content, force);
-}
-
-function memstackTemplate() {
-  return `# MemStack — Cross-Session Memory and Knowledge
-
-**Python path (SSH-safe):** \`/c/Users/alexc/headroom-venv/Scripts/python.exe\`
-**DB script:** \`D:/playground/brain/db/brain-cli.py\`
-
-> All cross-session knowledge goes to MemStack. Never use Claude Code's built-in file-based auto-memory.
-
----
-
-## Recall (pre-start or when user says "remember" / "what did we do")
-
-\`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-context <project>
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-sessions <project> --limit 5
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-insights <project>
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-principles <project>
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py stale-insights <project> --days 7
-\`\`\`
-
-After loading stale insights: for each with a \`source_file\`, read the file and verify. Use \`verify-insight-v2\` if still accurate, \`update-insight\` if changed, \`verify-insight\` with status=invalidated if the file is gone.
-
----
-
-## Save knowledge (when user says "remember this" / non-obvious decision made)
-
-\`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py add-insight '{
-  "project":"<project>","type":"<type>","content":"<what is true and why>",
-  "source_file":"<file or empty>","tags":"<comma-separated>"
-}'
-\`\`\`
-
-Type mapping: \`architecture\` | \`config\` | \`pattern\` | \`gotcha\` | \`dependency\` | \`feedback\` | \`user-context\` | \`project-context\` | \`reference\`
-
-Save when: user says "remember", non-obvious decision made, user corrects approach, gotcha discovered.
-
----
-
-## Log session (when user says "save diary" / "log session" / "wrapping up")
-
-\`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py add-session '{
-  "project":"<project>","date":"<YYYY-MM-DD>","accomplished":"<what was done>",
-  "files_changed":"<list>","commits":"<messages>","decisions":"<decisions and why>",
-  "problems":"<issues>","next_steps":"<next session>"
-}'
-\`\`\`
-
-After logging: run \`auto-prune\` to remove redundant insights, then \`set-context\` to update project state.
-
-\`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py auto-prune
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py set-context '{
-  "project":"<project>","last_session_date":"<date>","current_branch":"<branch>",
-  "known_issues":"<open issues>","backlog":"<next priorities>"
-}'
-\`\`\`
-
----
-
-## Cost tracking (when user says "cost" / "token stats")
-
-\`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py cost-report --project <project> --days 7
-\`\`\`
-
-After task completion:
-\`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py add-token-record '{
-  "project":"<project>","session_id":"<CLAUDE_SESSION_ID>","task_summary":"<one-line>",
-  "tokens_in":<est_in>,"tokens_out":<est_out>,"model":"<model>"
-}'
-\`\`\`
-
----
-
-## Pending events (during pre-start or when user says "pending events" / "queue")
-
-\`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-events --project <project> --limit 10
-\`\`\`
-
-If events exist: present grouped by priority, offer to claim/defer/expire. After completion: mark claimed events done.
-
----
-
-## Distill / prune (post-task cleanup)
-
-\`\`\`bash
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py auto-prune
-\`\`\`
-
-Use \`verify-insight-v2\` (not \`verify-insight\`) for all verification during pre-start.
 `;
 }
 
