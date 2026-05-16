@@ -1,7 +1,7 @@
 ---
 name: pre-start-context
-version: 0.5.41
-source_hash: 82a23bc6063560e804bb39c6030be6584a5b3a0c9c63a2c700f039ffdcb6bb28
+version: 0.5.42
+source_hash: 960ef2eccceb8aebff5d0ea3818343ac9bc4dea1b4a66c4a9c18489d3ef5bfcd
 description: Universal context loader. Discovers any project's stack, architecture, and state at runtime. Reads governance.md for project-specific rules. Works for any language, framework, or deployment target.
 ---
 
@@ -208,53 +208,40 @@ git diff --stat HEAD~5 -- . ':!node_modules' ':!.next' ':!build' ':!target' ':!d
 
 > **Adaptive depth:** If nothing changed, abbreviate S1-S4. If only one module changed, focus there. If major structural changes, do a full deep read.
 
-### Step 1: Brain check + load cross-session memory
+### Step 1: Detect cross-session memory (if configured)
 
-Detect Brain MCP registration in global Claude settings:
+Cross-session memory is OPTIONAL. Crag does not bundle a memory backend; users opt in by installing one and registering it. Detect what's available without assuming any specific install:
 
-```
-ls C:/Users/alexc/.claude/settings.json 2>/dev/null && grep -q '"brain"' C:/Users/alexc/.claude/settings.json && echo "Brain MCP: registered" || echo "Brain MCP: not registered"
-```
+**A — MCP-based memory** (modern; the recommended path):
 
-If Brain is registered, announce it at session start:
+If the user has registered a memory MCP server in their global `~/.claude/settings.json`, your tool list will include its tools. Common patterns:
 
-```
-echo "[BRAIN] online -- 7 MCP tools available:"
-echo "  recall(query, project?, topk?) -- hybrid semantic+FTS5 search"
-echo "  recall_principle(topic, project?) -- safety rules / high-trust"
-echo "  save_insight(content, type, tags) -- with cosine dedup + auto-embed"
-echo "  verify_insight(id, status) -- confirm/contradict an insight"
-echo "  distill(insight_ids[], content) -- merge insights into a principle"
-echo "  suggest_tags(content, project?) -- avoid tag fragmentation"
-echo "  recall_stats(project?, days?) -- usage telemetry"
-echo "Use them autonomously per global ~/.claude/CLAUDE.md cognitive-recall rule."
-```
+- A server registered as `brain` → tools like `recall`, `save_insight`, `recall_principle`, etc.
+- Other memory MCPs (whatever the user installed)
 
-Then **bulk-load** principles + hot insights for context (these are small, ~5 KB total). The CLI is correct here — there's no MCP equivalent for "give me ALL principles" or "give me top-K by recall frequency":
+Look at your loaded MCP tools. If memory tools are present, **use them autonomously** per the user's `~/.claude/CLAUDE.md` cognitive-recall guidance. Do **not** shell out to a CLI binary if an equivalent MCP tool is available — MCP routes through a warm daemon process, the CLI spawns cold-Python per call.
 
-```
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py get-principles <project>
-/c/Users/alexc/headroom-venv/Scripts/python.exe D:/playground/brain/db/brain-cli.py hot-insights <project> --limit 10
-```
+**CLI vs MCP — when both exist for the same backend:**
 
-**CLI vs MCP boundary — ABSOLUTE:**
-
-| Operation | Use this | Never use |
+| Operation | Prefer | Why |
 |---|---|---|
-| Bulk init load (get-principles, hot-insights) | CLI (Bash) | — |
-| Mid-task recall ("do I remember X?") | **MCP `recall(...)`** | Bash brain-cli.py recall |
-| Saving a new insight | **MCP `save_insight(...)`** | Bash brain-cli.py add-insight |
-| Searching principles by topic | **MCP `recall_principle(...)`** | Bash brain-cli.py |
-| Verifying / distilling / suggest_tags | **MCP tools** | Bash equivalents |
-| Lifecycle ops (migrate, backfill, decay, distill-candidates, recall-stats) | CLI (Bash) | — |
+| Mid-task recall, save, search | **MCP tool** | Warm process, sub-100ms, ledger-logged |
+| Bulk init load (all principles, hot-set) | CLI (no MCP equivalent for bulk) | — |
+| Lifecycle ops (migrate, backfill, decay) | CLI | — |
 
-After this initial bulk load, **do NOT shell out to `brain-cli.py recall` or `brain-cli.py add-insight` again in the session**. Use the MCP tools you announced above. They're warm-model, sub-100ms, ledger-logged. The CLI shell-out is cold-Python (~1-2s), bypasses the daemon, and may skip the recall_events ledger. Training the wrong pattern in your own session corrupts future sessions' habits via the cognitive-recall rule.
+The user's `~/.claude/CLAUDE.md` is the authoritative source for which CLI commands and paths to use for their specific install. Do not hardcode paths in this skill.
 
-**Legacy fallback (if Brain MCP is NOT registered):** detect legacy memstack rules and follow them.
+**B — Legacy file-based rules** (older pattern):
 
 ```
-ls .claude/rules/memstack.md .claude/rules/echo.md 2>/dev/null | head -1 | grep -q . && echo "Legacy MemStack: loaded" || echo "Memory: not configured"
+ls .claude/rules/memstack.md .claude/rules/echo.md .claude/rules/brain.md 2>/dev/null | head -1 | grep -q . && echo "Memory rules: loaded — follow them" || echo "Memory: not configured"
 ```
+
+If a memory rule file is present, follow its instructions for context loading.
+
+**C — No cross-session memory configured (default):**
+
+That's fine. Proceed with single-session context (`README.md`, `governance.md`, recent git log). The rest of this skill (architecture discovery, governance, key files) gives you everything needed to start work productively without persistent memory.
 
 ### Step 2: Check CI health
 
