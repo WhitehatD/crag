@@ -91,6 +91,12 @@ function parseGovernance(content) {
     result.warnings.push('Invalid content type (expected string)');
     return result;
   }
+
+  // Normalize Windows CRLF to LF once, at the top, so every downstream
+  // operation (extractSection, gate parser, regex matches) works identically
+  // regardless of whether the file was checked out with CRLF or LF endings.
+  content = content.replace(/\r\n/g, '\n');
+
   if (content.length > MAX_CONTENT_SIZE) {
     // Truncate at a section boundary so we don't sever `## Gates` mid-list
     // and silently lose half the gates. Find the last `## ` heading before
@@ -138,6 +144,7 @@ function parseGovernance(content) {
   result.dependencyPolicy = extractSection(content, 'Dependencies') || '';
   result.antiPatterns = extractSection(content, 'Anti-Patterns') || '';
   result.frameworkConventions = extractSection(content, 'Framework Conventions') || '';
+  result.ciCdWorkflows = extractSection(content, 'CI / CD Workflows') || '';
 
   // Check for inheritance marker: ## Gates (inherit: root)
   const inheritMatch = content.match(/## Gates[^\n]*\(inherit:\s*(\w+)\)/);
@@ -211,6 +218,12 @@ function parseGovernance(content) {
         };
       } else if (line.match(/^\s*- (?!\[.*\]\()/) && line.match(/^\s*- [^\s]/) && line.trim() !== '-') {
         let cmd = line.replace(/^\s*- /, '').trim();
+        // Strip markdown inline-code backticks wrapping the command.
+        // governance.md often formats commands as `- \`cmd args\`` for readability,
+        // but the actual shell command should not include backtick characters.
+        if (cmd.startsWith('`') && cmd.includes('`', 1)) {
+          cmd = cmd.replace(/^`/, '').replace(/`(\s*#.*)?$/, '$1').trim();
+        }
         let classification = 'MANDATORY';
 
         // Check for # [OPTIONAL] or # [MANDATORY] suffix

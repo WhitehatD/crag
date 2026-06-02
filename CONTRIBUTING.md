@@ -80,6 +80,26 @@ node test/all.js
 - **`src/update/`** — version check, skill sync, integrity (hash/frontmatter).
 - **`src/skills/`** — universal skills shipped as markdown. Read at runtime by the AI agent. Any change requires bumping `version:` in the frontmatter and recomputing `source_hash:`.
 
+## Customizing compiled targets
+
+Compiled targets (`.github/workflows/gates.yml`, `.forgejo/workflows/gates.yml`, etc.) are wrapped in `# crag:auto-start` / `# crag:auto-end` comment markers. **Everything between these markers is overwritten on every `crag compile` run.** Content outside the markers is preserved.
+
+To add project-specific CI steps that survive recompilation — such as `paths-ignore` blocks, tool-specific cache steps, or extra environment variables — place them **after** the `# crag:auto-end` line:
+
+```yaml
+# crag:auto-start
+# ... crag-managed content ...
+# crag:auto-end
+
+# Project customizations below are NOT managed by crag and will NOT be overwritten:
+on:
+  push:
+    paths-ignore:
+      - '**/*.md'
+```
+
+For markdown targets (`CLAUDE.md`, `AGENTS.md`, etc.), the same principle applies using `<!-- crag:auto-start -->` / `<!-- crag:auto-end -->` HTML comment markers, with a `<!-- custom:start -->` convention for the preserved section.
+
 ## Release process (maintainers)
 
 Releases are fully automated. The maintainer workflow is:

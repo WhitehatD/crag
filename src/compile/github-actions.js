@@ -60,6 +60,7 @@ function detectJavaVersion(cwd) {
 
 /**
  * Detect Go version from go.mod.
+ * Returns the version string (e.g. "1.22") or null if go.mod is absent.
  */
 function detectGoVersion(cwd) {
   try {
@@ -71,6 +72,23 @@ function detectGoVersion(cwd) {
   } catch { return null; }
 }
 
+/**
+ * Parse action versions declared in a governance Dependencies or CI/CD section.
+ * Looks for patterns like `actions/setup-go@v6` or `hashicorp/setup-terraform@v3`.
+ * Returns a map of action name → version string, e.g. { 'actions/setup-go': 'v6' }.
+ */
+function parseActionVersions(text) {
+  const map = {};
+  if (!text || typeof text !== 'string') return map;
+  // Match patterns like `actions/setup-go@v6` or `hashicorp/setup-terraform@v3`
+  const re = /([\w-]+\/[\w-]+)@(v\d+(?:\.\d+)*)/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    map[m[1]] = m[2];
+  }
+  return map;
+}
+
 function generateGitHubActions(cwd, parsed) {
   const dir = path.join(cwd, '.github', 'workflows');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -79,12 +97,41 @@ function generateGitHubActions(cwd, parsed) {
   const nodeVersion = detectNodeVersion(cwd) || '22';
   const pythonVersion = detectPythonVersion(cwd) || '3.12';
   const javaVersion = detectJavaVersion(cwd) || '21';
-  const goVersion = detectGoVersion(cwd) || '1.22';
+
+  // For Go: prefer go-version-file when go.mod is present — it tracks the
+  // declared minimum automatically and avoids the hardcode-vs-reality skew
+  // that breaks CI when the module bumps its go directive. Fall back to a
+  // hardcoded version only for projects that genuinely have no go.mod.
+  const goModExists = fs.existsSync(path.join(cwd, 'go.mod'));
+  const goVersionFallback = detectGoVersion(cwd) || '1.22';
+
+  // Parse action versions from the governance Dependencies / CI sections so
+  // project-level declarations (e.g. "hashicorp/setup-terraform@v3") override
+  // crag's built-in defaults. This is the mechanism that lets governance.md
+  // pin specific action versions without requiring a crag release.
+  const declaredVersions = parseActionVersions(
+    (parsed.dependencyPolicy || '') + '\n' + (parsed.ciCdWorkflows || '')
+  );
+
+  // Resolve per-action versions: governance declaration wins, then built-in default.
+  const setupGoVersion    = declaredVersions['actions/setup-go']    || 'v6';
+  const setupNodeVersion  = declaredVersions['actions/setup-node']  || 'v5';
+  const setupPythonVersion = declaredVersions['actions/setup-python'] || 'v5';
+  const setupJavaVersion  = declaredVersions['actions/setup-java']  || 'v4';
+  const setupTerraformVersion = declaredVersions['hashicorp/setup-terraform'] || 'v3';
+
+  // Detect terraform usage from gate commands — terraform is a toolchain, not
+  // a language runtime, so it doesn't appear in parsed.runtimes. Check gate
+  // commands directly.
+  const allCmds = Object.values(parsed.gates || {})
+    .flatMap(g => (g.commands || []).map(c => c.cmd))
+    .join(' ');
+  const needsTerraform = /\bterraform\b/.test(allCmds);
 
   let setupSteps = '';
   if (parsed.runtimes.includes('node')) {
     setupSteps += '      - name: Setup Node.js\n';
-    setupSteps += '        uses: actions/setup-node@v5\n';
+    setupSteps += `        uses: actions/setup-node@${setupNodeVersion}\n`;
     setupSteps += `        with:\n          node-version: '${nodeVersion}'\n`;
     setupSteps += '      - run: npm ci\n';
   }
@@ -94,7 +141,7 @@ function generateGitHubActions(cwd, parsed) {
   }
   if (parsed.runtimes.includes('python')) {
     setupSteps += '      - name: Setup Python\n';
-    setupSteps += '        uses: actions/setup-python@v5\n';
+    setupSteps += `        uses: actions/setup-python@${setupPythonVersion}\n`;
     setupSteps += `        with:\n          python-version: '${pythonVersion}'\n`;
     // Explicit `shell: bash` so redirects work on Windows runners (which default to cmd.exe).
     setupSteps += '      - name: Install Python deps (best-effort)\n';
@@ -103,13 +150,21 @@ function generateGitHubActions(cwd, parsed) {
   }
   if (parsed.runtimes.includes('java')) {
     setupSteps += '      - name: Setup Java\n';
-    setupSteps += '        uses: actions/setup-java@v4\n';
+    setupSteps += `        uses: actions/setup-java@${setupJavaVersion}\n`;
     setupSteps += `        with:\n          distribution: temurin\n          java-version: '${javaVersion}'\n`;
   }
   if (parsed.runtimes.includes('go')) {
     setupSteps += '      - name: Setup Go\n';
-    setupSteps += '        uses: actions/setup-go@v5\n';
-    setupSteps += `        with:\n          go-version: '${goVersion}'\n`;
+    setupSteps += `        uses: actions/setup-go@${setupGoVersion}\n`;
+    if (goModExists) {
+      setupSteps += '        with:\n          go-version-file: go.mod\n          cache: true\n';
+    } else {
+      setupSteps += `        with:\n          go-version: '${goVersionFallback}'\n`;
+    }
+  }
+  if (needsTerraform) {
+    setupSteps += '      - name: Setup Terraform\n';
+    setupSteps += `        uses: hashicorp/setup-terraform@${setupTerraformVersion}\n`;
   }
 
   // GHA expression escape for strings inside hashFiles('...'):
@@ -137,9 +192,15 @@ function generateGitHubActions(cwd, parsed) {
     gateSteps += `        run: |\n          ${shell.replace(/\n/g, '\n          ')}\n`;
   }
 
+  // Project-specific customizations (paths-ignore, cache steps, env vars, etc.)
+  // belong OUTSIDE the auto markers — add them after the "# crag:auto-end" line.
+  // Everything between "# crag:auto-start" and "# crag:auto-end" is overwritten
+  // on every `crag compile --target github` run.
   const yaml = [
     '# Generated from governance.md by crag — https://crag.sh',
     '# Regenerate: crag compile --target github',
+    '# Project-specific additions (cache steps, paths-ignore, env vars) go AFTER',
+    '# the crag:auto-end marker below — they survive recompilation.',
     'name: Governance Gates',
     '',
     'on:',

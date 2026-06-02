@@ -195,6 +195,52 @@ test('github-actions generator marks optional gates continue-on-error', () => {
   });
 });
 
+test('github-actions: go project with go.mod uses go-version-file and setup-go@v6', () => {
+  withTempDir((dir) => {
+    fs.writeFileSync(path.join(dir, 'go.mod'), 'module example\n\ngo 1.22\n');
+    const parsed = {
+      name: 't', description: '', runtimes: ['go'],
+      gates: { code: { commands: [{ cmd: 'go test ./...', classification: 'MANDATORY' }], path: null, condition: null } },
+    };
+    generateGitHubActions(dir, parsed);
+    const yaml = fs.readFileSync(path.join(dir, '.github', 'workflows', 'gates.yml'), 'utf-8');
+    assert.ok(yaml.includes('actions/setup-go@v6'), 'should use setup-go@v6 not @v5');
+    assert.ok(yaml.includes('go-version-file: go.mod'), 'should use go-version-file when go.mod exists');
+    assert.ok(!yaml.match(/go-version: '\d/), 'should not hardcode go version when go.mod exists');
+  });
+});
+
+test('github-actions: terraform gate commands emit hashicorp/setup-terraform@v3', () => {
+  withTempDir((dir) => {
+    const parsed = {
+      name: 't', description: '', runtimes: ['go'],
+      gates: {
+        code: { commands: [{ cmd: 'go vet ./...', classification: 'MANDATORY' }], path: null, condition: null },
+        terraform: { commands: [{ cmd: 'terraform fmt -check -recursive', classification: 'MANDATORY' }], path: null, condition: null },
+      },
+    };
+    generateGitHubActions(dir, parsed);
+    const yaml = fs.readFileSync(path.join(dir, '.github', 'workflows', 'gates.yml'), 'utf-8');
+    assert.ok(yaml.includes('hashicorp/setup-terraform@v3'), 'should emit setup-terraform when terraform gate commands present');
+  });
+});
+
+test('github-actions: governance-declared action versions override defaults', () => {
+  withTempDir((dir) => {
+    const parsed = {
+      name: 't', description: '', runtimes: ['go'],
+      dependencyPolicy: '- actions/setup-go@v6\n- hashicorp/setup-terraform@v3',
+      gates: {
+        terraform: { commands: [{ cmd: 'terraform validate', classification: 'MANDATORY' }], path: null, condition: null },
+      },
+    };
+    generateGitHubActions(dir, parsed);
+    const yaml = fs.readFileSync(path.join(dir, '.github', 'workflows', 'gates.yml'), 'utf-8');
+    assert.ok(yaml.includes('actions/setup-go@v6'), 'governance-declared setup-go@v6 should be used');
+    assert.ok(yaml.includes('hashicorp/setup-terraform@v3'), 'governance-declared setup-terraform@v3 should be used');
+  });
+});
+
 // --- Security regression tests: injection via gate.path / gate.condition ---
 //
 // The parser now rejects absolute / traversal paths, but the compile targets

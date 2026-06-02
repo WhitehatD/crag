@@ -349,3 +349,83 @@ test('parseGovernance accepts normal path annotation', () => {
   assert.strictEqual(result.gates.frontend.path, 'packages/web');
   assert.strictEqual(result.warnings.length, 0);
 });
+
+// --- CRLF normalization ---
+
+test('CRLF governance.md parses identically to LF version', () => {
+  // Build a governance string that exercises extractSection (antiPatterns,
+  // architecture, ciCdWorkflows) and the gates parser.
+  const lf = [
+    '# Governance — crlf-test',
+    '',
+    '## Identity',
+    '- Project: crlf-test',
+    '- Description: A CRLF regression fixture',
+    '',
+    '## Architecture',
+    '- Single-node deployment',
+    '',
+    '## Gates (run in order, stop on first mandatory failure)',
+    '### Code',
+    '- go test ./...',
+    '- go vet ./...',
+    '',
+    '## CI / CD Workflows',
+    'Uses actions/setup-go@v6 with go-version-file: go.mod',
+    '',
+    '## Dependencies',
+    '- actions/setup-go@v6',
+    '- hashicorp/setup-terraform@v3',
+    '',
+    '## Anti-Patterns',
+    'Do not:',
+    '- Do not commit secrets',
+    '- Do not use panic() in library code',
+    '',
+  ].join('\n');
+
+  // Replace every LF with CRLF to simulate a Windows-checked-out file.
+  const crlf = lf.replace(/\n/g, '\r\n');
+
+  const lfResult   = parseGovernance(lf);
+  const crlfResult = parseGovernance(crlf);
+
+  // Gates must be identical
+  assert.deepStrictEqual(
+    crlfResult.gates,
+    lfResult.gates,
+    'gates should parse identically from CRLF input'
+  );
+
+  // antiPatterns section must be non-empty and identical
+  assert.ok(lfResult.antiPatterns.trim().length > 0, 'LF antiPatterns should be non-empty');
+  assert.strictEqual(
+    crlfResult.antiPatterns,
+    lfResult.antiPatterns,
+    'antiPatterns should parse identically from CRLF input'
+  );
+
+  // architecture section must be non-empty and identical
+  assert.ok(lfResult.architecture.trim().length > 0, 'LF architecture should be non-empty');
+  assert.strictEqual(
+    crlfResult.architecture,
+    lfResult.architecture,
+    'architecture should parse identically from CRLF input'
+  );
+
+  // ciCdWorkflows section must be non-empty and identical
+  assert.ok(lfResult.ciCdWorkflows.trim().length > 0, 'LF ciCdWorkflows should be non-empty');
+  assert.strictEqual(
+    crlfResult.ciCdWorkflows,
+    lfResult.ciCdWorkflows,
+    'ciCdWorkflows should parse identically from CRLF input'
+  );
+
+  // dependencyPolicy section must be non-empty and identical
+  assert.ok(lfResult.dependencyPolicy.trim().length > 0, 'LF dependencyPolicy should be non-empty');
+  assert.strictEqual(
+    crlfResult.dependencyPolicy,
+    lfResult.dependencyPolicy,
+    'dependencyPolicy should parse identically from CRLF input'
+  );
+});
