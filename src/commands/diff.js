@@ -124,6 +124,11 @@ function checkGateReality(cwd, cmd) {
   // not verifiable as local quality gates. Skip them.
   if (/\$\{?\w+\}?/.test(cmd)) return { status: 'match', detail: null };
 
+  // Per-call scratch: the -f <path> passed to a `docker build`, captured by the
+  // docker check so the hint can name the exact path that was missing instead
+  // of the generic "add one to the project root" message.
+  let _dockerCheckedPath = null;
+
   // Check if the tool referenced in the command actually exists
   const toolChecks = [
     { pattern: /^npx\s+(\w[\w-]*)/, check: (tool) => {
@@ -195,13 +200,39 @@ function checkGateReality(cwd, cmd) {
     // Docker
     { pattern: /^docker\s+compose/, check: () => true }, // docker compose commands are CI orchestration, assume valid
     { pattern: /^docker\s+/, check: (m, fullCmd) => {
-      // If -f <path> is specified, check that specific Dockerfile
+      // If `-f <path>` is specified, the build references a specific
+      // Dockerfile. Resolve it relative to cwd first; if absent there,
+      // scan the monorepo fallback dirs for the SAME relative path before
+      // declaring it missing — in monorepos/CI the build context often
+      // differs from the repo root, and a cwd-only check produces false
+      // "missing Dockerfile" findings (the live incident class).
       const fFlag = fullCmd.match(/\s-f\s+(\S+)/);
-      if (fFlag) return fs.existsSync(path.join(cwd, fFlag[1]));
+      if (fFlag) {
+        const rel = fFlag[1];
+        _dockerCheckedPath = rel; // stash for a path-specific hint
+        if (fs.existsSync(path.join(cwd, rel))) return true;
+        // Fallback for monorepos/CI where the build context differs from the
+        // repo root: look for the SAME relative -f path resolved against each
+        // workspace member dir. Do NOT accept an unrelated Dockerfile — only
+        // the specific path the build actually references counts, otherwise we
+        // trade a false-missing for a false-present.
+        const basename = path.basename(rel);
+        for (const subCwd of getWorkspaceDirs(cwd)) {
+          if (fs.existsSync(path.join(subCwd, rel))) return true;
+          // Also accept the file at the workspace member root when the -f path
+          // is just a bare filename (e.g. `-f Dockerfile.prod` run from a
+          // context dir): match by basename against member roots only.
+          if (rel === basename && fs.existsSync(path.join(subCwd, basename))) return true;
+        }
+        return false;
+      }
+      _dockerCheckedPath = null;
       return fs.existsSync(path.join(cwd, 'Dockerfile')) ||
              fs.existsSync(path.join(cwd, 'docker-compose.yml')) ||
              fs.existsSync(path.join(cwd, 'docker-compose.yaml'));
-    }, hint: () => 'No Dockerfile or docker-compose.yml found — add one to the project root' },
+    }, hint: () => _dockerCheckedPath
+        ? `Dockerfile not found at ${_dockerCheckedPath}`
+        : 'No Dockerfile or docker-compose.yml found — add one to the project root' },
   ];
 
   // Verify commands

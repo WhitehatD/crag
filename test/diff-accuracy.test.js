@@ -71,6 +71,34 @@ test('docker build (no -f) still matches against root Dockerfile', () => {
   });
 });
 
+// --- Fix 2: path-specific hint + monorepo build-context fallback ----------
+
+test('docker -f missing path drifts with a PATH-SPECIFIC hint (not "add one to root")', () => {
+  withTempRepo((_dir) => {
+    // Empty repo — the referenced -f path does not exist anywhere.
+  }, (dir) => {
+    const result = checkGateReality(dir, 'docker build -f build/prod.Dockerfile .');
+    assert.strictEqual(result.status, 'drift');
+    assert.ok(/not found at build\/prod\.Dockerfile/.test(result.detail || ''),
+      `expected a path-specific hint naming build/prod.Dockerfile, got: ${result.detail}`);
+    assert.ok(!/add one to the project root/.test(result.detail || ''),
+      `hint must NOT be the generic root message when -f was given, got: ${result.detail}`);
+  });
+});
+
+test('docker -f resolves against a workspace member dir (build context differs from root)', () => {
+  withTempRepo((dir) => {
+    // Monorepo: the -f relative path lives under a workspace member (services/api),
+    // not at the repo root. A cwd-only check would falsely report it missing.
+    fs.mkdirSync(path.join(dir, 'services', 'api', 'docker'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'services', 'api', 'docker', 'Dockerfile'), 'FROM alpine\n');
+  }, (dir) => {
+    const result = checkGateReality(dir, 'docker build -f docker/Dockerfile .');
+    assert.strictEqual(result.status, 'match',
+      `expected match via workspace-member fallback, got ${result.status} (${result.detail})`);
+  });
+});
+
 // --- Bug 2: make missing from subdir fallback -----------------------------
 
 test('make release matches when cli/Makefile exists in a subdir', () => {
