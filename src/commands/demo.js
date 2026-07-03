@@ -148,6 +148,7 @@ cargo fmt
     fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, content);
   }
+  const fileCount = Object.keys(files).length;
 
   // Initialize git so branch / commit inference does not warn.
   try {
@@ -158,6 +159,7 @@ cargo fmt
   } catch {
     // If git is missing the demo can still run — analyze just won't infer branch strategy.
   }
+  return fileCount;
 }
 
 function rmrf(p) {
@@ -259,9 +261,11 @@ function demo(args) {
   try {
     // --- Step 1: scaffold ---
     const t1 = process.hrtime.bigint();
-    scaffoldDemoProject(root);
+    const fileCount = scaffoldDemoProject(root);
     const ms1 = Math.round(Number(process.hrtime.bigint() - t1) / 1_000_000);
-    summary.steps.push({ step: 'scaffold', ms: ms1, detail: '9 files, 3 stacks + web/' });
+    // Derived, never hardcoded: a stale literal here shipped "9 files" while the
+    // scaffold actually wrote 12 — the exact drift class crag exists to catch.
+    summary.steps.push({ step: 'scaffold', ms: ms1, detail: `${fileCount} files, 3 stacks + web/` });
 
     // --- Step 2: analyze --dry-run (RUN #1) ---
     const t2 = process.hrtime.bigint();
