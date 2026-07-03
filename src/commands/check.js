@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const { EXIT_USER } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
+// Shared ANSI helper — empty strings under NO_COLOR / non-TTY stdout.
+const { G, R, Y, GRAY, X } = require('../colors');
 
 const CORE_CHECKS = [
   ['.claude/skills/pre-start-context/SKILL.md', 'Pre-start skill (universal)'],
@@ -79,13 +81,13 @@ function check(args = []) {
 
   console.log(`  Core:`);
   for (const c of report.core) {
-    const icon = c.present ? '\x1b[32m✓\x1b[0m' : '\x1b[31m✗\x1b[0m';
+    const icon = c.present ? `${G}✓${X}` : `${R}✗${X}`;
     console.log(`    ${icon} ${c.name}`);
   }
 
   console.log(`\n  Optional:`);
   for (const o of report.optional) {
-    const icon = o.present ? '\x1b[32m✓\x1b[0m' : '\x1b[90m○\x1b[0m';
+    const icon = o.present ? `${G}✓${X}` : `${GRAY}○${X}`;
     console.log(`    ${icon} ${o.name}`);
   }
 
@@ -122,12 +124,12 @@ function printUpgradeNudge(cwd) {
     return s + ' '.repeat(Math.max(0, width - 4 - visible.length));
   };
 
-  console.log(`  \x1b[33m┌─ crag update available ${'─'.repeat(width - 26)}┐\x1b[0m`);
+  console.log(`  ${Y}┌─ crag update available ${'─'.repeat(width - 26)}┐${X}`);
   for (const item of result.updated) {
-    console.log(`  \x1b[33m│\x1b[0m  ${pad(`${item.name}: ${item.from} → ${item.to}`)}\x1b[33m│\x1b[0m`);
+    console.log(`  ${Y}│${X}  ${pad(`${item.name}: ${item.from} → ${item.to}`)}${Y}│${X}`);
   }
-  console.log(`  \x1b[33m│\x1b[0m  ${pad('Run: crag upgrade')}\x1b[33m│\x1b[0m`);
-  console.log(`  \x1b[33m└${border}┘\x1b[0m\n`);
+  console.log(`  ${Y}│${X}  ${pad('Run: crag upgrade')}${Y}│${X}`);
+  console.log(`  ${Y}└${border}┘${X}\n`);
 }
 
 module.exports = { check, runChecks, CORE_CHECKS, OPTIONAL_CHECKS };

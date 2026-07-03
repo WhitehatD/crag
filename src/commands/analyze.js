@@ -8,6 +8,8 @@ const { enumerateMembers } = require('../workspace/enumerate');
 const { isGateCommand } = require('../governance/yaml-run');
 const { cliWarn, cliError, EXIT_USER, EXIT_INTERNAL, safeMtime } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
+// Shared color helper — NO_COLOR / non-TTY (piped output) yields empty strings.
+const { G, C, D, Y, B, X } = require('../colors');
 const { detectStack } = require('../analyze/stacks');
 const { inferGates } = require('../analyze/gates');
 const { normalizeCiGates } = require('../analyze/normalize');
@@ -203,9 +205,9 @@ function analyze(args) {
   }
 
   if (writeGovernance) {
-    console.log(`  \x1b[32m✓\x1b[0m Wrote ${path.relative(cwd, govPath)} — review and run: crag compile --target all`);
+    console.log(`  ${G}✓${X} Wrote ${path.relative(cwd, govPath)} — review and run: crag compile --target all`);
   } else {
-    console.log(`  \x1b[32m✓\x1b[0m Generated ${path.relative(cwd, govPath)}`);
+    console.log(`  ${G}✓${X} Generated ${path.relative(cwd, govPath)}`);
     console.log(`\n  Review the file — sections marked "# Inferred" should be verified.`);
     console.log(`  Run 'crag check' to verify infrastructure.\n`);
   }
@@ -291,12 +293,7 @@ function analyzeProject(dir, opts = {}) {
   detectStack(dir, result);
 
   // Per-file discovery output: show WHAT crag read and WHAT it understood
-  const G = '\x1b[32m';  // green
-  const C = '\x1b[36m';  // cyan
-  const D = '\x1b[2m';   // dim
-  const Y = '\x1b[33m';  // yellow
-  const B = '\x1b[1m';   // bold
-  const X = '\x1b[0m';   // reset
+  // G, C, D, Y, B, X are imported from ../colors at module scope.
   const manifests = result._manifests || {};
 
   // Report each discovered file → what it told us
@@ -377,7 +374,7 @@ function analyzeProject(dir, opts = {}) {
   // so analyze command can print a hint and --workspace can enumerate them.
   if (result._manifests && result._manifests.subservices) {
     result.subservices = result._manifests.subservices;
-    log(`  \x1b[32m\u2713\x1b[0m Services   \x1b[1m\x1b[33m${result.subservices.length}\x1b[0m \x1b[2mdetected\x1b[0m`);
+    log(`  ${G}\u2713${X} Services   ${B}${Y}${result.subservices.length}${X} ${D}detected${X}`);
   }
 
   // Mine project metadata BEFORE dropping _manifests (miners need the data)
@@ -392,17 +389,17 @@ function analyzeProject(dir, opts = {}) {
 
   // Progress: mining results
   if (result.testingProfile && result.testingProfile.framework) {
-    log(`  \x1b[32m\u2713\x1b[0m Testing    \x1b[2m${result.testingProfile.framework}${result.testingProfile.layout ? ' \u00b7 ' + result.testingProfile.layout : ''}\x1b[0m`);
+    log(`  ${G}\u2713${X} Testing    ${D}${result.testingProfile.framework}${result.testingProfile.layout ? ' \u00b7 ' + result.testingProfile.layout : ''}${X}`);
   }
   if (result.codeStyle && (result.codeStyle.formatter || result.codeStyle.linter)) {
     const parts = [];
     if (result.codeStyle.indent) parts.push(result.codeStyle.indent);
     if (result.codeStyle.formatter) parts.push(result.codeStyle.formatter);
     if (result.codeStyle.linter) parts.push(result.codeStyle.linter);
-    if (parts.length > 0) log(`  \x1b[32m\u2713\x1b[0m Style      \x1b[2m${parts.join(' \u00b7 ')}\x1b[0m`);
+    if (parts.length > 0) log(`  ${G}\u2713${X} Style      ${D}${parts.join(' \u00b7 ')}${X}`);
   }
   if (result.antiPatterns && result.antiPatterns.length > 0) {
-    log(`  \x1b[32m\u2713\x1b[0m Rules      \x1b[2m${result.antiPatterns.length} anti-patterns\x1b[0m`);
+    log(`  ${G}\u2713${X} Rules      ${D}${result.antiPatterns.length} anti-patterns${X}`);
   }
 
   // Drop the internal manifests attachment before returning

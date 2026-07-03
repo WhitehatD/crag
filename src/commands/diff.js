@@ -11,10 +11,9 @@ const { detectBranchStrategy, classifyGitBranchStrategy, detectCommitConvention,
 const { cliError, EXIT_USER, EXIT_INTERNAL, readFileOrExit, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 
-// ANSI constants used by human-readable output in this module.
-const Y = '\x1b[33m';  // yellow
-const D = '\x1b[2m';   // dim
-const X = '\x1b[0m';   // reset
+// ANSI constants — routed through the shared helper so NO_COLOR / non-TTY
+// (including --json consumers and piped output) get colorless text.
+const { G, R, Y, C, D, X } = require('../colors');
 
 /**
  * crag diff — compare governance.md against codebase reality.
@@ -38,7 +37,7 @@ function diff(args) {
   const content = readFileOrExit(fs, govPath, 'governance.md');
   const parsed = parseGovernance(content);
   if (parsed.warnings && parsed.warnings.length > 0 && !jsonMode) {
-    for (const w of parsed.warnings) console.warn(`  \x1b[33m!\x1b[0m ${w}`);
+    for (const w of parsed.warnings) console.warn(`  ${Y}!${X} ${w}`);
   }
   const flat = flattenGates(parsed.gates);
 
@@ -72,9 +71,9 @@ function diff(args) {
     }
 
     if (!jsonMode) {
-      const icon = check.status === 'match' ? '\x1b[32mMATCH\x1b[0m'
-        : check.status === 'drift' ? '\x1b[33mDRIFT\x1b[0m'
-        : '\x1b[31mMISSING\x1b[0m';
+      const icon = check.status === 'match' ? `${G}MATCH${X}`
+        : check.status === 'drift' ? `${Y}DRIFT${X}`
+        : `${R}MISSING${X}`;
       const prefix = gate.path ? `[${gate.path}] ` : '';
       console.log(`  ${icon}   ${prefix}${gate.cmd}`);
       if (check.detail) console.log(`          ${check.detail}`);
@@ -92,7 +91,7 @@ function diff(args) {
     if (reportedExtras.has(normalized)) continue; // already reported
     if (!govCommands.some(g => normalizeCmd(g) === normalized)) {
       if (!jsonMode) {
-        console.log(`  \x1b[36mEXTRA\x1b[0m   ${ciGate}`);
+        console.log(`  ${C}EXTRA${X}   ${ciGate}`);
         console.log(`          In CI workflow but not in governance`);
       }
       results.extra++;

@@ -234,13 +234,9 @@ function audit(args) {
   }
 
   // --- Terminal output ---
-  const G = '\x1b[32m';  // green
-  const R = '\x1b[31m';  // red
-  const Y = '\x1b[33m';  // yellow
-  const C = '\x1b[36m';  // cyan
-  const B = '\x1b[1m';   // bold
-  const D = '\x1b[2m';   // dim
-  const X = '\x1b[0m';   // reset
+  // Routed through the shared color helper: NO_COLOR / non-TTY yields empty
+  // strings, so this section is automatically colorless when piped.
+  const { G, R, Y, C, B, D, X } = require('../colors');
 
   console.log(`\n  ${B}crag audit${X} ${D}\u2014 governance drift report${X}\n`);
 
