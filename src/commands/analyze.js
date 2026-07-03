@@ -151,8 +151,8 @@ function analyze(args) {
     analysis.linters.length + analysis.testers.length + analysis.builders.length + analysis.ciGates.length;
   if (totalGates === 0) {
     cliWarn(`no gates detected — crag could not infer any quality checks from this project.`);
-    cliWarn(`  the generated governance.md will include a placeholder under '### Test'.`);
-    cliWarn(`  edit it manually or run 'crag init' for an interactive walkthrough.`);
+    cliWarn(`  the ONLY gate in the generated governance.md is a '- true' placeholder under '### Test' — it enforces NOTHING and will pass audit forever.`);
+    cliWarn(`  replace it with a real test/lint/build command, or run 'crag init' for an interactive walkthrough.`);
   }
 
   const govPath = path.join(cwd, '.claude', 'governance.md');

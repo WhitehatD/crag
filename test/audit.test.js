@@ -87,6 +87,60 @@ test('audit: --json produces valid JSON', () => {
   assert.ok(typeof parsed.summary.drift === 'number');
 });
 
+test('audit: placeholder-only governance flags placeholderOnly, exits 0, no issues', () => {
+  // Governance whose ONLY gate is the `- true  # TODO...` placeholder analyze
+  // writes when it can infer nothing. It passes checkGateReality forever, so
+  // it must be surfaced (placeholderOnly:true) but never counted as an issue.
+  const gov = `# Governance — test
+## Identity
+- Project: test
+
+## Gates
+### Test
+- true  # TODO: crag could not detect a gate — replace with your real test command
+`;
+  const dir = mkProject({
+    '.claude/governance.md': gov,
+    'CLAUDE.md': '# governance',
+  });
+
+  let out, status = 0;
+  try {
+    out = run(['audit', '--json'], { cwd: dir });
+  } catch (err) {
+    out = err.stdout || '';
+    status = err.status;
+  }
+  const parsed = JSON.parse(out.trim());
+  assert.strictEqual(status, 0, `placeholder-only must exit 0, got ${status}`);
+  assert.strictEqual(parsed.summary.total, 0, `placeholder must not be an issue, got total ${parsed.summary.total}`);
+  assert.strictEqual(parsed.summary.placeholderOnly, true, 'expected summary.placeholderOnly true');
+  assert.strictEqual(parsed.placeholderOnly, true, 'expected report.placeholderOnly true');
+});
+
+test('audit: real gate present ⇒ placeholderOnly is false', () => {
+  const gov = `# Governance — test
+## Identity
+- Project: test
+
+## Gates
+### Test
+- true  # TODO: crag could not detect a gate — replace with your real test command
+- npm run test
+`;
+  const dir = mkProject({
+    '.claude/governance.md': gov,
+    'CLAUDE.md': '# governance',
+    'package.json': '{"scripts":{"test":"echo ok"}}',
+  });
+  let out;
+  try { out = run(['audit', '--json'], { cwd: dir }); }
+  catch (err) { out = err.stdout || ''; }
+  const parsed = JSON.parse(out.trim());
+  assert.strictEqual(parsed.placeholderOnly, false,
+    'a real gate alongside the placeholder must clear placeholderOnly');
+});
+
 test('audit: detects stale compiled file', () => {
   const dir = mkProject({
     '.claude/governance.md': SAMPLE_GOV,

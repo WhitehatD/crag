@@ -161,13 +161,17 @@ test('analyze: generates placeholder for empty-gates projects', () => {
   // downstream doctor/compile don't blow up.
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-analyze-empty-'));
   fs.writeFileSync(path.join(dir, 'README.md'), '# Random notes\n');
-  const { rc } = runCrag(dir, ['analyze', '--no-install-skills']);
+  const { rc, stderr } = runCrag(dir, ['analyze', '--no-install-skills']);
   assert.strictEqual(rc, 0);
   const gov = fs.readFileSync(path.join(dir, '.claude', 'governance.md'), 'utf-8');
   assert.ok(gov.includes('## Gates'));
   // Must contain at least one gate under ### Test — the true placeholder
   assert.ok(/### Test[\s\S]*?- true/.test(gov),
     `expected placeholder '- true' in Test section, got:\n${gov}`);
+  // Fix 4(a): analyze must WARN clearly that the only gate is a placeholder
+  // that enforces nothing — not ship it silently.
+  assert.ok(/placeholder/i.test(stderr) && /no gates detected|enforces NOTHING/i.test(stderr),
+    `expected a placeholder warning on stderr, got: ${stderr}`);
   fs.rmSync(dir, { recursive: true, force: true });
 });
 

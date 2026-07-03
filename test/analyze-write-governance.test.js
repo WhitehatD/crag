@@ -127,3 +127,60 @@ test('--force overwrites existing governance.md', () => {
     rimraf(tmp);
   }
 });
+
+// --- Fix 4: placeholder-only gate is surfaced, never silently enforced ------
+
+test('analyze warns clearly when the ONLY gate is the true placeholder', () => {
+  const tmp = makeTmpDir();
+  try {
+    // A project with no detectable gates (empty dir, no manifests/CI).
+    // The warning is emitted via cliWarn → stderr, so redirect 2>&1 to capture
+    // it even when the process exits zero (execSync returns stdout only).
+    let combined = '';
+    try {
+      combined = execSync(`node "${CRAG_BIN}" analyze --write-governance --no-install-skills 2>&1`, {
+        cwd: tmp, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], shell: true,
+      });
+    } catch (err) {
+      combined = (err.stdout || '') + (err.stderr || '');
+    }
+    const govPath = path.join(tmp, '.claude', 'governance.md');
+    assert.ok(fs.existsSync(govPath), 'governance.md should still be written with a placeholder');
+    const gov = fs.readFileSync(govPath, 'utf-8');
+    assert.ok(/- true\s+# TODO: crag could not detect a gate/.test(gov),
+      'governance should contain the true placeholder gate');
+    assert.ok(/placeholder/i.test(combined) && /enforces NOTHING|no gates detected/i.test(combined),
+      `analyze must warn the placeholder enforces nothing, got:\n${combined}`);
+  } finally {
+    rimraf(tmp);
+  }
+});
+
+test('audit flags placeholderOnly (non-blocking) when governance has only the true placeholder', () => {
+  const tmp = makeTmpDir();
+  try {
+    fs.mkdirSync(path.join(tmp, '.claude'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, '.claude', 'governance.md'),
+      '# Governance — t\n## Identity\n- Project: t\n## Gates\n### Test\n' +
+      '- true  # TODO: crag could not detect a gate — replace with your real test command\n');
+    fs.writeFileSync(path.join(tmp, 'CLAUDE.md'), '# governance');
+
+    let out = '', status = 0;
+    try {
+      out = execSync(`node "${CRAG_BIN}" audit --json`, {
+        cwd: tmp, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
+      });
+    } catch (err) {
+      out = err.stdout || '';
+      status = err.status;
+    }
+    const parsed = JSON.parse(out.trim());
+    assert.strictEqual(status, 0, `placeholderOnly must not drive a non-zero exit, got ${status}`);
+    assert.strictEqual(parsed.placeholderOnly, true, 'top-level placeholderOnly must be true');
+    assert.strictEqual(parsed.summary.placeholderOnly, true, 'summary.placeholderOnly must be true');
+    assert.strictEqual(parsed.summary.total, 0, 'placeholder must not count as an issue');
+  } finally {
+    rimraf(tmp);
+  }
+});

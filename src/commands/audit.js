@@ -95,6 +95,9 @@ function audit(args) {
     // check are reported here — informational, never counted toward issues or
     // a non-zero exit (mirrors how unmanagedCI is treated).
     advisory: [],
+    // True when governance's only gate is the `- true  # TODO...` placeholder
+    // that analyze writes when it can infer nothing. Non-blocking notice.
+    placeholderOnly: false,
   };
 
   // --- Axis 1: Compiled file staleness ---
@@ -133,6 +136,13 @@ function audit(args) {
   // pre-commit, etc.), drift findings are spurious — crag is just flagging
   // CI commands against a baseline that doesn't exist.
   const richGates = flattenGatesRich(parsed.gates);
+  // Placeholder-only detection: `crag analyze` writes `- true  # TODO: crag
+  // could not detect a gate...` when it can infer nothing. That placeholder
+  // passes checkGateReality forever, so governance silently "has gates" while
+  // enforcing nothing. Flag it as a distinct non-blocking notice (never an
+  // issue, for backward compat) so operators know to add a real gate.
+  const isPlaceholderGate = (cmd) => /^true\b/.test(cmd) && /TODO:\s*crag could not detect a gate/i.test(cmd);
+  report.placeholderOnly = richGates.length > 0 && richGates.every(g => isPlaceholderGate(g.cmd));
   const aiConfigPresent = hasAnyAIConfig(cwd);
   if (aiConfigPresent) {
     for (const gate of richGates) {
@@ -213,6 +223,7 @@ function audit(args) {
       missing: report.missing.length,
       unmanagedCI: report.unmanagedCI.length,
       advisory: report.advisory.length,
+      placeholderOnly: report.placeholderOnly,
       // ADVISORY gate failures are deliberately excluded from `total` — they
       // are informational and must never drive a non-zero exit.
       total: report.stale.length + report.drift.length + report.extra.length + report.missing.length,
@@ -298,6 +309,13 @@ function audit(args) {
       if (a.detail) console.log(`    ${D}${a.detail}${X}`);
     }
     console.log('');
+  }
+
+  // --- Placeholder-only gates (informational — not counted as issues) ---
+  // Governance whose only gate is the `- true  # TODO...` placeholder enforces
+  // nothing. Surface it non-blockingly so it doesn't silently pass forever.
+  if (report.placeholderOnly) {
+    console.log(`  ${D}Notice: governance has no real gates — placeholder only (\`true\`). Add a real test/lint/build command.${X}\n`);
   }
 
   // --- Missing targets ---
