@@ -91,6 +91,10 @@ function audit(args) {
     drift: [],
     extra: [],
     unmanagedCI: [],
+    // ADVISORY gates (doc-mined, marked `# [ADVISORY]`) that fail their reality
+    // check are reported here — informational, never counted toward issues or
+    // a non-zero exit (mirrors how unmanagedCI is treated).
+    advisory: [],
   };
 
   // --- Axis 1: Compiled file staleness ---
@@ -135,7 +139,14 @@ function audit(args) {
       const checkDir = gate.path ? path.join(cwd, gate.path) : cwd;
       const check = checkGateReality(checkDir, gate.cmd);
       if (check.status === 'drift' || check.status === 'missing') {
-        report.drift.push({ command: gate.cmd, detail: check.detail });
+        // ADVISORY gates (doc-mined, marked `# [ADVISORY]`) must NOT count as
+        // enforced drift — report them separately so they never drive the
+        // issue count or a non-zero exit (same treatment as unmanagedCI).
+        if (gate.classification === 'ADVISORY') {
+          report.advisory.push({ command: gate.cmd, detail: check.detail });
+        } else {
+          report.drift.push({ command: gate.cmd, detail: check.detail });
+        }
       }
     }
   }
@@ -201,6 +212,9 @@ function audit(args) {
       extra: report.extra.length,
       missing: report.missing.length,
       unmanagedCI: report.unmanagedCI.length,
+      advisory: report.advisory.length,
+      // ADVISORY gate failures are deliberately excluded from `total` — they
+      // are informational and must never drive a non-zero exit.
       total: report.stale.length + report.drift.length + report.extra.length + report.missing.length,
     };
     console.log(JSON.stringify({ summary, ...report }, null, 2));
@@ -270,6 +284,18 @@ function audit(args) {
       for (const cmd of src.commands) {
         console.log(`    ${D}· ${cmd}${X}`);
       }
+    }
+    console.log('');
+  }
+
+  // --- Advisory gates (informational — not counted as issues) ---
+  // Doc-mined gates marked `# [ADVISORY]` that fail their reality check.
+  // Reported dim and non-blocking, exactly like unmanaged CI.
+  if (report.advisory.length > 0) {
+    console.log(`  ${D}Advisory gates${X} ${D}(mined from docs, marked [ADVISORY] — non-blocking)${X}`);
+    for (const a of report.advisory) {
+      console.log(`  ${D}\u2139 ${a.command}${X}`);
+      if (a.detail) console.log(`    ${D}${a.detail}${X}`);
     }
     console.log('');
   }

@@ -378,3 +378,40 @@ test('diff --json: parseable even when branch-strategy convention drifts', () =>
 
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+// --- Fix 3: ADVISORY gates reported separately, not counted as drift ------
+
+test('diff --json: ADVISORY gate failure lands in advisory[], not drift', () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const { execFileSync } = require('child_process');
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-diff-adv-'));
+  fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+  // One enforced no-op gate (`true`, always matches) + one ADVISORY gate whose
+  // tool is absent (no Cargo.toml → cargo drifts). Advisory must NOT count.
+  fs.writeFileSync(path.join(dir, '.claude', 'governance.md'),
+    '# Governance — test\n## Identity\n- Project: test\n' +
+    '## Gates\n### Test\n- true\n' +
+    '### Contributor docs (ADVISORY — confirm before enforcing)\n- cargo test  # [ADVISORY]\n');
+
+  const cragBin = path.join(__dirname, '..', 'bin', 'crag.js');
+  let output;
+  try {
+    output = execFileSync('node', [cragBin, 'diff', '--json'], {
+      cwd: dir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
+    });
+  } catch (err) {
+    output = (err.stdout || '').toString();
+  }
+  const parsed = JSON.parse(output.trim());
+  assert.ok(Array.isArray(parsed.advisory), 'expected advisory array in diff --json output');
+  assert.strictEqual(parsed.advisory.length, 1,
+    `expected 1 advisory entry, got: ${JSON.stringify(parsed.advisory)}`);
+  assert.strictEqual(parsed.drift, 0,
+    `advisory gate must not increment drift, got drift=${parsed.drift}`);
+
+  fs.rmSync(dir, { recursive: true, force: true });
+});

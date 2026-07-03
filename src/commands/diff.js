@@ -13,6 +13,7 @@ const { validateFlags } = require('../cli-args');
 
 // ANSI constants used by human-readable output in this module.
 const Y = '\x1b[33m';  // yellow
+const D = '\x1b[2m';   // dim
 const X = '\x1b[0m';   // reset
 
 /**
@@ -44,6 +45,11 @@ function diff(args) {
   if (!jsonMode) console.log(`\n  Governance vs Reality — ${parsed.name || 'project'}\n`);
 
   const results = { match: 0, drift: 0, missing: 0, extra: 0 };
+  // ADVISORY gates (mined from contributor docs, marked `# [ADVISORY]`) are
+  // suggestions, not enforced contracts. A failing advisory gate must NOT
+  // increment the issue count or drive a non-zero exit — it is reported
+  // separately, the same way unmanagedCI/placeholderOnly are treated.
+  const advisory = [];
 
   // Check each gate command, respecting path-scoped sections.
   // In monorepos, `### Frontend (path: frontend/)` gates should be checked
@@ -52,6 +58,19 @@ function diff(args) {
   for (const gate of rich) {
     const checkDir = gate.path ? path.join(cwd, gate.path) : cwd;
     const check = checkGateReality(checkDir, gate.cmd);
+    const isAdvisory = gate.classification === 'ADVISORY';
+
+    if (isAdvisory && check.status !== 'match') {
+      // Collect without counting toward drift/missing/exit.
+      advisory.push({ cmd: gate.cmd, status: check.status, detail: check.detail || null, path: gate.path || null });
+      if (!jsonMode) {
+        const prefix = gate.path ? `[${gate.path}] ` : '';
+        console.log(`  ${D}ADVISORY${X} ${prefix}${gate.cmd} (${check.status}, non-blocking)`);
+        if (check.detail) console.log(`          ${check.detail}`);
+      }
+      continue;
+    }
+
     if (!jsonMode) {
       const icon = check.status === 'match' ? '\x1b[32mMATCH\x1b[0m'
         : check.status === 'drift' ? '\x1b[33mDRIFT\x1b[0m'
@@ -97,12 +116,15 @@ function diff(args) {
     // Attach convention findings under a dedicated key so no data is lost
     // when the human-readable prose is suppressed. results.drift already
     // counts any convention drift (checkBranchStrategy/Convention increment it).
-    console.log(JSON.stringify({ ...results, conventions }));
+    console.log(JSON.stringify({ ...results, conventions, advisory }));
     if (issues > 0) process.exit(EXIT_USER);
     return;
   }
 
   console.log(`\n  ${results.match} match, ${results.drift} drift, ${results.missing} missing, ${results.extra} extra (${total} total)\n`);
+  if (advisory.length > 0) {
+    console.log(`  ${D}${advisory.length} advisory gate${advisory.length === 1 ? '' : 's'} not satisfied (non-blocking)${X}\n`);
+  }
 
   if (ciMode && issues > 0) {
     process.exit(EXIT_USER);

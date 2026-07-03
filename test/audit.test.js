@@ -227,3 +227,42 @@ test('audit: human-readable output contains → when drift is present', () => {
   }
   assert.ok(out.includes('→'), `human output should contain →, got:\n${out}`);
 });
+
+// --- Fix 3: ADVISORY gates are not counted as enforced drift --------------
+
+test('audit: ADVISORY gate failure does not count as an issue (exit 0, total 0, advisory 1)', () => {
+  const gov = `# Governance — test
+## Identity
+- Project: test
+- Stack: node
+
+## Gates
+### Test
+- true
+### Contributor docs (ADVISORY — confirm before enforcing)
+- cargo test  # [ADVISORY]
+`;
+  // No Cargo.toml → the advisory `cargo test` gate fails its reality check.
+  // CLAUDE.md makes the gate axis run (hasAnyAIConfig).
+  const dir = mkProject({
+    '.claude/governance.md': gov,
+    'package.json': '{}',
+    'CLAUDE.md': '# governance',
+  });
+
+  // Compile so CLAUDE.md is in sync (no stale drift muddying the total).
+  try { run(['compile', '--target', 'claude'], { cwd: dir }); } catch { /* best effort */ }
+
+  let out, status = 0;
+  try {
+    out = run(['audit', '--json'], { cwd: dir });
+  } catch (err) {
+    out = err.stdout || '';
+    status = err.status;
+  }
+  const parsed = JSON.parse(out.trim());
+  assert.strictEqual(status, 0, `audit must exit 0 when only advisory gate fails, got status ${status}`);
+  assert.strictEqual(parsed.summary.total, 0, `summary.total must be 0, got ${parsed.summary.total}`);
+  assert.ok(Array.isArray(parsed.advisory), 'advisory array must be present');
+  assert.strictEqual(parsed.advisory.length, 1, `expected 1 advisory entry, got ${JSON.stringify(parsed.advisory)}`);
+});
