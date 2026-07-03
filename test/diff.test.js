@@ -320,3 +320,61 @@ test('diff: picks up gates from non-GitHub CI systems', () => {
 
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+// --- Fix 1: --json stays parseable when convention checks fire -----------
+
+test('diff --json: parseable even when branch-strategy convention drifts', () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const { execFileSync } = require('child_process');
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-diff-json-conv-'));
+  fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+
+  // Governance DECLARES feature-branches, but the repo has no feat/* branches,
+  // so classifyGitBranchStrategy() returns trunk-based → a convention DRIFT
+  // that used to console.log ANSI prose before the JSON body.
+  fs.writeFileSync(path.join(dir, '.claude', 'governance.md'),
+    '# Governance — test\n## Identity\n- Project: test\n' +
+    '## Branch Strategy\n- Feature branches (feat/, fix/, docs/)\n- Conventional commits\n' +
+    '## Gates\n### Test\n- true\n');
+
+  // Initialize a real git repo on a trunk branch with a free-form commit so
+  // BOTH the branch-strategy and commit-convention checks report drift.
+  const git = (cmd) => execFileSync('git', cmd, { cwd: dir, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+  git(['init', '-q']);
+  git(['config', 'user.email', 'test@example.com']);
+  git(['config', 'user.name', 'Test']);
+  git(['add', '-A']);
+  git(['commit', '-q', '-m', 'initial dump of files']); // not a conventional prefix
+
+  const cragBin = path.join(__dirname, '..', 'bin', 'crag.js');
+  let output;
+  try {
+    output = execFileSync('node', [cragBin, 'diff', '--json'], {
+      cwd: dir,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1' },
+    });
+  } catch (err) {
+    // diff exits non-zero when drift exists; stdout still holds the JSON.
+    output = (err.stdout || '').toString();
+  }
+
+  // The WHOLE of stdout must be a single parseable JSON object — no ANSI
+  // prose leaking in front of it.
+  let parsed;
+  assert.doesNotThrow(() => { parsed = JSON.parse(output.trim()); },
+    `diff --json stdout was not parseable JSON: ${JSON.stringify(output)}`);
+  // The new conventions key must be present and record the drift.
+  assert.ok(Array.isArray(parsed.conventions), 'expected conventions array in JSON output');
+  const branchConv = parsed.conventions.find(c => c.kind === 'branch-strategy');
+  assert.ok(branchConv && branchConv.status === 'drift',
+    `expected a branch-strategy drift entry, got: ${JSON.stringify(parsed.conventions)}`);
+  // And there must be NO raw ANSI escape sequence anywhere in stdout.
+  assert.ok(!/\x1b\[/.test(output), 'diff --json output must not contain ANSI escapes');
+
+  fs.rmSync(dir, { recursive: true, force: true });
+});

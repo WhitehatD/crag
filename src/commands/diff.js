@@ -11,6 +11,10 @@ const { detectBranchStrategy, classifyGitBranchStrategy, detectCommitConvention,
 const { cliError, EXIT_USER, EXIT_INTERNAL, readFileOrExit, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 
+// ANSI constants used by human-readable output in this module.
+const Y = '\x1b[33m';  // yellow
+const X = '\x1b[0m';   // reset
+
 /**
  * crag diff — compare governance.md against codebase reality.
  *
@@ -77,18 +81,23 @@ function diff(args) {
     }
   }
 
-  // Check branch strategy
-  checkBranchStrategy(cwd, content, results);
-
-  // Check commit convention
-  checkCommitConvention(cwd, content, results);
+  // Check branch strategy and commit convention. These funnel their findings
+  // through `conventions` (collected, never printed in jsonMode) so that
+  // `crag diff --json` emits ONLY the JSON object — colored prose printed
+  // before the JSON would break JSON.parse for any consumer.
+  const conventions = [];
+  checkBranchStrategy(cwd, content, results, jsonMode, conventions);
+  checkCommitConvention(cwd, content, results, jsonMode, conventions);
 
   // Summary
   const issues = results.drift + results.missing + results.extra;
   const total = results.match + issues;
 
   if (jsonMode) {
-    console.log(JSON.stringify(results));
+    // Attach convention findings under a dedicated key so no data is lost
+    // when the human-readable prose is suppressed. results.drift already
+    // counts any convention drift (checkBranchStrategy/Convention increment it).
+    console.log(JSON.stringify({ ...results, conventions }));
     if (issues > 0) process.exit(EXIT_USER);
     return;
   }
@@ -332,7 +341,7 @@ function getSubdirs(dir) {
   return getWorkspaceDirs(dir).map(d => path.relative(dir, d));
 }
 
-function checkBranchStrategy(cwd, content, results) {
+function checkBranchStrategy(cwd, content, results, jsonMode, conventions) {
   const govStrategy = detectBranchStrategy(content);
   if (!govStrategy) return;
 
@@ -341,15 +350,22 @@ function checkBranchStrategy(cwd, content, results) {
     const actual = classifyGitBranchStrategy(branches);
 
     if (actual !== govStrategy) {
-      console.log(`  \x1b[33mDRIFT\x1b[0m   Branch strategy: governance says ${govStrategy}, git shows ${actual}`);
+      if (jsonMode) {
+        // Collect, never print: colored prose ahead of the JSON body would
+        // corrupt `crag diff --json` for any JSON.parse consumer.
+        if (conventions) conventions.push({ kind: 'branch-strategy', status: 'drift', governance: govStrategy, actual });
+      } else {
+        console.log(`  ${Y}DRIFT${X}   Branch strategy: governance says ${govStrategy}, git shows ${actual}`);
+      }
       results.drift++;
     } else {
+      if (jsonMode && conventions) conventions.push({ kind: 'branch-strategy', status: 'match', governance: govStrategy, actual });
       results.match++;
     }
   } catch { /* skip */ }
 }
 
-function checkCommitConvention(cwd, content, results) {
+function checkCommitConvention(cwd, content, results, jsonMode, conventions) {
   const govConvention = detectCommitConvention(content);
   if (!govConvention) return;
 
@@ -358,9 +374,14 @@ function checkCommitConvention(cwd, content, results) {
     const actual = classifyGitCommitConvention(log);
 
     if (actual !== govConvention) {
-      console.log(`  \x1b[33mDRIFT\x1b[0m   Commit convention: governance says ${govConvention}, git shows ${actual}`);
+      if (jsonMode) {
+        if (conventions) conventions.push({ kind: 'commit-convention', status: 'drift', governance: govConvention, actual });
+      } else {
+        console.log(`  ${Y}DRIFT${X}   Commit convention: governance says ${govConvention}, git shows ${actual}`);
+      }
       results.drift++;
     } else {
+      if (jsonMode && conventions) conventions.push({ kind: 'commit-convention', status: 'match', governance: govConvention, actual });
       results.match++;
     }
   } catch { /* skip */ }
