@@ -339,4 +339,10 @@ If `crag analyze` misses a language, CI system, or gate pattern on a public repo
 
 ---
 
+## Who builds this
+
+crag is built by [Alexandru Cioc](https://ciocandco.com), a systems and AI-infrastructure engineer in Maastricht, NL. It came out of real production work: the same drift problem, hit across enough repos to be worth solving properly, then validated on 99 public repositories before shipping. More production systems work, including a multi-region platform case study and a reproducible self-hosted-vs-cloud AI benchmark, at [ciocandco.com](https://ciocandco.com).
+
+---
+
 MIT -- [Alexandru Cioc (WhitehatD)](https://github.com/WhitehatD)
