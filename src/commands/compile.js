@@ -3,6 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 const { parseGovernance, flattenGates } = require('../governance/parse');
+const { composeGovernance } = require('../compile/compose');
+const { artifactPath } = require('../governance/layer-paths');
+const { atomicWrite } = require('../compile/atomic-write');
 const { generateGitHubActions } = require('../compile/github-actions');
 const { generateForgejo } = require('../compile/forgejo');
 const { generateHusky } = require('../compile/husky');
@@ -80,17 +83,41 @@ function compile(args) {
   }
 
   const cwd = process.cwd();
-  const govPath = path.join(cwd, '.claude', 'governance.md');
+  const govPath = artifactPath(cwd);
 
-  requireGovernance(cwd);
+  // Composed governance (docs/closed-loop.md REV 2/3): if ANY of the four
+  // split-source files (.crag/governance.{src,gen}.md, user + project
+  // layer) exist, compose them into the single governance.md artifact and
+  // use that composed content directly — this is what makes .claude/
+  // governance.md a PURE build artifact once a project opts in.
+  //
+  // BACKWARD COMPATIBILITY: composeGovernance() returns null when no split
+  // sources exist anywhere, in which case behavior is byte-identical to
+  // pre-compose crag — requireGovernance() + a direct file read, exactly
+  // as before. The split is additive/opt-in, never assumed.
+  const composed = composeGovernance(cwd);
+  let content;
+  if (composed) {
+    content = composed.content;
+    if (!args.includes('--dry-run')) {
+      atomicWrite(govPath, content);
+    }
+  } else {
+    requireGovernance(cwd);
+    content = readFileOrExit(fs, govPath, 'governance.md');
+  }
 
-  const content = readFileOrExit(fs, govPath, 'governance.md');
   const parsed = parseGovernance(content);
   if (parsed.warnings && parsed.warnings.length > 0) {
     for (const w of parsed.warnings) console.warn(`  \x1b[33m!\x1b[0m ${w}`);
   }
   const flat = flattenGates(parsed.gates);
   const gateCount = Object.values(flat).flat().length;
+
+  if (composed) {
+    const writeNote = args.includes('--dry-run') ? '(in-memory, --dry-run — not written)' : `→ ${path.relative(cwd, govPath)}`;
+    console.log(`  \x1b[36mcompose\x1b[0m .crag/ ${writeNote} \x1b[2m(${composed.genBulletsKept} distilled principle(s), ${composed.genBulletsOverflow} over budget)\x1b[0m`);
+  }
 
   if (!target || target === 'list') {
     console.log(`\n  crag compile — ${parsed.name || 'unnamed project'}`);

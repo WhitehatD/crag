@@ -57,6 +57,10 @@ function generateAgentsMd(cwd, parsed) {
     enriched.push('## Framework Conventions', '', parsed.frameworkConventions.trim(), '');
   }
 
+  if (parsed.distilledPrinciples && parsed.distilledPrinciples.trim()) {
+    enriched.push('## Distilled Principles', '', parsed.distilledPrinciples.trim(), '');
+  }
+
   const content = [
     '# AGENTS.md',
     '',

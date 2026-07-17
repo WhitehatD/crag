@@ -145,6 +145,12 @@ function parseGovernance(content) {
   result.antiPatterns = extractSection(content, 'Anti-Patterns') || '';
   result.frameworkConventions = extractSection(content, 'Framework Conventions') || '';
   result.ciCdWorkflows = extractSection(content, 'CI / CD Workflows') || '';
+  // Distilled Principles: only ever populated by the composed-governance
+  // model (`crag distill` writes it into .crag/governance.gen.md; `crag
+  // compile`'s compose step merges it into the composed .claude/
+  // governance.md). Absent from every pre-existing governance.md, so this
+  // is purely additive — no legacy file gains a new section unexpectedly.
+  result.distilledPrinciples = extractSection(content, 'Distilled Principles') || '';
 
   // Check for inheritance marker: ## Gates (inherit: root)
   const inheritMatch = content.match(/## Gates[^\n]*\(inherit:\s*(\w+)\)/);
