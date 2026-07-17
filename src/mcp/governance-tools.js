@@ -139,6 +139,29 @@ async function toolStatus(input) {
   };
 }
 
+/**
+ * crag.distill — the governance back-edge: render verified memory principles
+ * into `.crag/governance.gen.md`. Wraps the CLI in a subprocess (same
+ * rationale as compile/audit: distill exits non-zero on usage errors, and the
+ * subprocess boundary keeps the MCP server alive + byte-identical to the CLI).
+ * The memory fetch happens inside the CLI via the configured memory adapter;
+ * nothing here (or anywhere in src/mcp/) touches src/compile/ internals.
+ * input: { check?: boolean, cwd?: string }
+ */
+async function toolDistill(input) {
+  const args = ['distill'];
+  if (input && input.check) args.push('--check');
+  const cwd = input && input.cwd;
+  const result = await runCragCli(args, cwd);
+  // `--check` exits non-zero when a diff EXISTS — like audit, that is a
+  // successful tool call reporting a finding, not a broken invocation.
+  const hardFailure = result.exitCode !== 0 && !(input && input.check);
+  return {
+    content: [{ type: 'text', text: (result.stdout + result.stderr).trim() || '(no output)' }],
+    isError: hardFailure,
+  };
+}
+
 const GOVERNANCE_TOOLS = [
   {
     name: 'crag.compile',
@@ -176,6 +199,18 @@ const GOVERNANCE_TOOLS = [
     },
     handler: toolStatus,
   },
+  {
+    name: 'crag.distill',
+    description: 'Governance back-edge: render verified memory principles into .crag/governance.gen.md (the composed model). check=true previews the would-write diff without touching disk (CI-safe). Runs the same code path as `crag distill`.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        check: { type: 'boolean', description: 'Preview the would-change diff without writing (maps to --check).' },
+        cwd: { type: 'string', description: 'Project directory (defaults to the MCP server process cwd).' },
+      },
+    },
+    handler: toolDistill,
+  },
 ];
 
-module.exports = { GOVERNANCE_TOOLS, runCragCli, toolCompile, toolAudit, toolStatus };
+module.exports = { GOVERNANCE_TOOLS, runCragCli, toolCompile, toolAudit, toolStatus, toolDistill };
