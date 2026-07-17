@@ -40,6 +40,10 @@ function generateClaude(cwd, parsed) {
     ? `\n## Anti-Patterns\n\n${parsed.antiPatterns.trim()}\n`
     : '';
 
+  const distilledBlock = parsed.distilledPrinciples && parsed.distilledPrinciples.trim()
+    ? `\n## Distilled Principles\n\n${parsed.distilledPrinciples.trim()}\n`
+    : '';
+
   const content = `# CLAUDE.md — ${parsed.name || 'project'}
 
 > Generated from governance.md by [crag](https://crag.sh). Regenerate: \`crag compile --target claude\`
@@ -62,7 +66,7 @@ ${gatesList}
 4. Never modify files outside this repository.
 5. Never run destructive system commands (\`rm -rf /\`, \`DROP TABLE\`, force-push to main).
 ${commitLine}
-${antiPatternsBlock}
+${antiPatternsBlock}${distilledBlock}
 ## Security
 
 ${parsed.security || '- Never commit hardcoded secrets (grep for sk_live, sk_test, AKIA, password=)'}
