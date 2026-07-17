@@ -15,6 +15,7 @@ const { hook } = require('./commands/hook');
 const { login } = require('./commands/login');
 const { sync } = require('./commands/sync');
 const { team } = require('./commands/team');
+const { mcp } = require('./commands/mcp');
 const { checkOnce } = require('./update/version-check');
 const { EXIT_USER } = require('./cli-errors');
 
@@ -30,6 +31,7 @@ function printUsage() {
     crag compile        Compile governance.md → CI, hooks, AGENTS.md, Cursor, Gemini
     crag audit          Drift report: stale configs, outdated rules, missing targets
     crag hook install   Install pre-commit hook (auto-recompile on governance change)
+    crag mcp             Start the crag-mcp gateway (governance tools + opt-in memory federation)
     crag diff                         Compare governance against codebase reality
     crag diff --ci                     Exit non-zero on drift (for CI pipelines)
     crag diff --json                   Machine-readable JSON output
@@ -143,6 +145,7 @@ function run(args) {
     case 'demo':      demo(args.slice(1)); break;
     case 'audit':     audit(args); break;
     case 'hook':      hook(args); break;
+    case 'mcp':       mcp(args); break;
     case 'login':     login(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'sync':      sync(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'team':      team(args).catch(e => { console.error(e.message); process.exit(1); }); break;
