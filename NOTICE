@@ -1,0 +1,10 @@
+crag
+Copyright 2026 Alexandru Cioc (WhitehatD)
+
+This product is part of the crag ecosystem (https://crag.sh) — the
+reliability layer for AI coding agents.
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+crag ships zero runtime dependencies. The optional memory backend
+(crag-engine) is a separate install and carries its own license.
