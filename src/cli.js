@@ -18,6 +18,9 @@ const { team } = require('./commands/team');
 const { mcp } = require('./commands/mcp');
 const { distill } = require('./commands/distill');
 const { memory } = require('./commands/memory');
+const { status } = require('./commands/status');
+const { inbox } = require('./commands/inbox');
+const { why } = require('./commands/why');
 const { checkOnce } = require('./update/version-check');
 const { EXIT_USER } = require('./cli-errors');
 
@@ -40,6 +43,9 @@ function printUsage() {
     crag memory up       Start the crag-engine memory backend + wire .crag/mcp.json
     crag memory status   Engine reachability + corpus stats (exit 1 when down)
     crag memory down     Stop the engine daemon
+    crag status          Cockpit: trust score, corpus counts, needs-you, today (--json)
+    crag inbox           Review queue: items that need a human decision (--json)
+    crag why <id>        Lineage receipt: rule → principle → claims → verification (--json)
     crag diff                         Compare governance against codebase reality
     crag diff --ci                     Exit non-zero on drift (for CI pipelines)
     crag diff --json                   Machine-readable JSON output
@@ -157,6 +163,9 @@ function run(args) {
     case 'mcp':       mcp(args); break;
     case 'distill':   distill(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'memory':    memory(args.slice(1)).catch(e => { console.error(e.message); process.exit(1); }); break;
+    case 'status':    status(args.slice(1)).catch(e => { console.error(e.message); process.exit(1); }); break;
+    case 'inbox':     inbox(args.slice(1)).catch(e => { console.error(e.message); process.exit(1); }); break;
+    case 'why':       why(args.slice(1)).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'login':     login(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'sync':      sync(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'team':      team(args).catch(e => { console.error(e.message); process.exit(1); }); break;
