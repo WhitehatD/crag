@@ -58,17 +58,24 @@ function hasAnyAIConfig(cwd) {
 /**
  * crag audit — drift detection across governance, compiled configs, and reality.
  *
- * Three detection axes:
+ * Four detection axes:
  *   1. Staleness:  compiled configs older than governance.md
  *   2. Reality:    governance references tools/deps that don't exist
  *   3. Missing:    AI tool dirs exist but no compiled config for them
+ *   4. Memory:     managed .gen rules (from `crag distill`) — adoption-age
+ *                  census, offline + deterministic. With `--memory`, ALSO
+ *                  re-checks each rendered principle against the backend's
+ *                  current compile-eligible set (opt-in network edge, same
+ *                  fetch seam as distill). Axis 4 is ADVISORY — it never
+ *                  drives a non-zero exit, mirroring unmanagedCI/advisory.
  */
-function audit(args) {
+async function audit(args) {
   validateFlags('audit', args, {
-    boolean: ['--json', '--fix'],
+    boolean: ['--json', '--fix', '--memory'],
   });
   const json = args.includes('--json');
   const fix = args.includes('--fix');
+  const liveMemory = args.includes('--memory');
   const cwd = process.cwd();
   const govPath = path.join(cwd, '.claude', 'governance.md');
 
@@ -213,6 +220,32 @@ function audit(args) {
     }
   }
 
+  // --- Axis 4: Memory claim-health (advisory, never drives exit) ---
+  // Offline half: parse the .gen managed-rule annotations off disk.
+  const { auditGenLayers, diffAgainstEligible } = require('../distill/audit-gen');
+  const genAudit = auditGenLayers(cwd);
+  report.memory = {
+    managedRules: genAudit.totalRules,
+    staleAdoption: genAudit.staleAdoption,
+    staleAdoptionDays: genAudit.staleAdoptionDays,
+    live: null,
+  };
+  // Opt-in live half: re-check rendered principles against the backend's
+  // CURRENT eligible set through the same seam `crag distill` uses. Only
+  // runs with --memory; fail-soft like distill (error surfaced, no crash).
+  if (liveMemory && genAudit.present) {
+    const { fetchCompileEligiblePrinciples } = require('../distill/fetch-principles');
+    const fetched = await fetchCompileEligiblePrinciples(cwd);
+    if (!fetched.configured) {
+      report.memory.live = { configured: false };
+    } else if (fetched.error) {
+      report.memory.live = { configured: true, error: fetched.error };
+    } else {
+      const diffed = diffAgainstEligible(genAudit, fetched.principles);
+      report.memory.live = { configured: true, ...diffed };
+    }
+  }
+
   // --- JSON output ---
   if (json) {
     const summary = {
@@ -224,8 +257,12 @@ function audit(args) {
       unmanagedCI: report.unmanagedCI.length,
       advisory: report.advisory.length,
       placeholderOnly: report.placeholderOnly,
-      // ADVISORY gate failures are deliberately excluded from `total` — they
-      // are informational and must never drive a non-zero exit.
+      memoryManagedRules: report.memory.managedRules,
+      memoryStaleAdoption: report.memory.staleAdoption.length,
+      memoryRetired: report.memory.live && Array.isArray(report.memory.live.retired)
+        ? report.memory.live.retired.length : 0,
+      // ADVISORY gate failures and ALL memory-axis findings are deliberately
+      // excluded from `total` — informational, never a non-zero exit.
       total: report.stale.length + report.drift.length + report.extra.length + report.missing.length,
     };
     console.log(JSON.stringify({ summary, ...report }, null, 2));
@@ -312,6 +349,30 @@ function audit(args) {
   // nothing. Surface it non-blockingly so it doesn't silently pass forever.
   if (report.placeholderOnly) {
     console.log(`  ${D}Notice: governance has no real gates — placeholder only (\`true\`). Add a real test/lint/build command.${X}\n`);
+  }
+
+  // --- Memory axis (informational — not counted as issues) ---
+  if (report.memory.managedRules > 0) {
+    console.log(`  ${D}Memory-managed rules${X} ${D}(from \`crag distill\` — advisory)${X}`);
+    console.log(`  ${D}\u2139${X} ${report.memory.managedRules} rule${report.memory.managedRules !== 1 ? 's' : ''} under management`);
+    for (const s of report.memory.staleAdoption) {
+      console.log(`  ${Y}\u26a0${X} principle:${s.principleId} adopted ${s.adopted} (${s.ageDays}d ago > ${report.memory.staleAdoptionDays}d)  ${D}re-run \`crag distill\`${X}`);
+    }
+    const live = report.memory.live;
+    if (live) {
+      if (live.configured === false) {
+        console.log(`  ${D}\u2139 --memory: no backend configured (.crag/mcp.json / CRAG_MEMORY_MCP) — live check skipped${X}`);
+      } else if (live.error) {
+        console.log(`  ${Y}\u26a0 --memory: backend unreachable (${live.error}) — live check skipped${X}`);
+      } else if (live.retired.length > 0) {
+        for (const r of live.retired) {
+          console.log(`  ${Y}\u26a0${X} principle:${r.principleId} no longer compile-eligible backend-side  ${D}re-run \`crag distill\` to retire${X}`);
+        }
+      } else {
+        console.log(`  ${G}\u2713${X} ${D}--memory: all ${report.memory.managedRules} rendered rules still compile-eligible (${live.eligibleCount} eligible backend-side)${X}`);
+      }
+    }
+    console.log('');
   }
 
   // --- Missing targets ---

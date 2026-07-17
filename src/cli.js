@@ -17,6 +17,7 @@ const { sync } = require('./commands/sync');
 const { team } = require('./commands/team');
 const { mcp } = require('./commands/mcp');
 const { distill } = require('./commands/distill');
+const { memory } = require('./commands/memory');
 const { checkOnce } = require('./update/version-check');
 const { EXIT_USER } = require('./cli-errors');
 
@@ -36,6 +37,9 @@ function printUsage() {
     crag distill         Render verified memory principles into .crag/governance.gen.md
     crag distill --check   Preview would-change diff without writing (CI-safe)
     crag distill --migrate Opt this repo into the composed model (governance.md → .src)
+    crag memory up       Start the crag-engine memory backend + wire .crag/mcp.json
+    crag memory status   Engine reachability + corpus stats (exit 1 when down)
+    crag memory down     Stop the engine daemon
     crag diff                         Compare governance against codebase reality
     crag diff --ci                     Exit non-zero on drift (for CI pipelines)
     crag diff --json                   Machine-readable JSON output
@@ -75,6 +79,7 @@ function printUsage() {
     crag audit                        Human-readable drift report
     crag audit --json                 Machine-readable JSON output
     crag audit --fix                  Auto-recompile stale targets
+    crag audit --memory               Also re-check distilled rules against the live backend (opt-in)
 
   Hook options:
     crag hook install                 Install hook (auto-recompile on governance change)
@@ -147,10 +152,11 @@ function run(args) {
     case 'upgrade':   upgrade(args); break;
     case 'workspace': workspace(args); break;
     case 'demo':      demo(args.slice(1)); break;
-    case 'audit':     audit(args); break;
+    case 'audit':     audit(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'hook':      hook(args); break;
     case 'mcp':       mcp(args); break;
     case 'distill':   distill(args).catch(e => { console.error(e.message); process.exit(1); }); break;
+    case 'memory':    memory(args.slice(1)).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'login':     login(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'sync':      sync(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'team':      team(args).catch(e => { console.error(e.message); process.exit(1); }); break;
