@@ -9,6 +9,7 @@ deeper.
 | File | Contents |
 |---|---|
 | [commands.md](./commands.md) | Every subcommand, every flag, every exit code |
+| [mcp.md](./mcp.md) | `crag mcp` — the MCP gateway: governance tools + opt-in memory federation |
 | [compile-targets.md](./compile-targets.md) | All 23 compile targets with their output paths and consumers |
 | [governance-format.md](./governance-format.md) | The `governance.md` v2 format — annotations, sections, inheritance |
 | [languages.md](./languages.md) | The 25+ stack detectors and the gates each one emits |
