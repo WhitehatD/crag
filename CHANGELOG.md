@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Relicensed from MIT to Apache-2.0.** All contributions are owned by
+  Alexandru Cioc (WhitehatD), so the relicense is legally clean. Adds a
+  `NOTICE` file per Apache convention. `package.json` `license` field updated.
+- README refreshed to the converged product story: crag is the reliability
+  layer for AI coding agents — the deterministic compiler plus an opt-in
+  verified-memory loop (`crag memory` / `crag distill` / `crag audit --memory`).
+  Added an ecosystem section (crag-engine, crag.nvim, crag-audit-action,
+  app.crag.sh).
+
 ## [0.6.5] — 2026-07-17
 
 ## [0.6.4] — 2026-07-17
