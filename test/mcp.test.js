@@ -219,14 +219,14 @@ asyncTest('server: initialize handshake returns protocolVersion + serverInfo.nam
   assert.strictEqual(initMsg.result.serverInfo.version, pkg.version);
 });
 
-asyncTest('server: tools/list exposes exactly the 3 governance tools when unconfigured', async () => {
+asyncTest('server: tools/list exposes exactly the 4 governance tools when unconfigured', async () => {
   const { lines } = await runMcpServer([
     { jsonrpc: '2.0', id: 1, method: 'initialize', params: {} },
     { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} },
   ]);
   const listMsg = lines.find((l) => l.id === 2);
   const names = listMsg.result.tools.map((t) => t.name).sort();
-  assert.deepStrictEqual(names, ['crag.audit', 'crag.compile', 'crag.status']);
+  assert.deepStrictEqual(names, ['crag.audit', 'crag.compile', 'crag.distill', 'crag.status']);
 });
 
 asyncTest('server: tools/call crag.status returns structured content for an unset cwd', async () => {
