@@ -117,6 +117,7 @@ function printUsage() {
     crag sync                         Show sync status
     crag sync --push                  Push governance.md to cloud
     crag sync --pull                  Pull governance from cloud
+    crag sync --memory                Push verified-memory snapshot (trust + rules) to cloud
     crag sync --force                 Force overwrite on conflict
 
     crag team                         Show current team

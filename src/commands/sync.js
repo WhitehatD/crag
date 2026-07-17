@@ -1,30 +1,35 @@
 'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 const { execFileSync, spawnSync } = require('child_process');
 const { validateFlags } = require('../cli-args');
 const { cliError, cliWarn, EXIT_USER, requireGovernance, readFileOrExit } = require('../cli-errors');
-const { requireAuth } = require('../cloud/auth');
+const { requireAuth, readCredentials } = require('../cloud/auth');
 const { apiRequest } = require('../cloud/client');
 const { parseGovernance } = require('../governance/parse');
+const { engineUrl, getJson, printDownHint } = require('./cockpit-client');
 
 /**
- * crag sync — synchronize governance.md with crag cloud.
+ * crag sync — synchronize governance.md and verified-memory with crag cloud.
  *
  * Subcommands:
  *   crag sync              Show sync status (default)
  *   crag sync --push       Push local governance to cloud
  *   crag sync --pull       Pull governance from cloud
  *   crag sync --status     Show sync status (explicit)
+ *   crag sync --memory     Push a verified-memory snapshot (trust + rules) to cloud
  *   crag sync --force      Force overwrite on conflict (with --push or --pull)
+ *   crag sync --json       Machine-readable output (with --memory)
  */
 async function sync(args) {
   validateFlags('sync', args, {
-    boolean: ['--push', '--pull', '--status', '--force'],
+    boolean: ['--push', '--pull', '--status', '--memory', '--force', '--json'],
   });
 
+  if (args.includes('--memory')) return syncMemory(args);
   if (args.includes('--push')) return syncPush(args);
   if (args.includes('--pull')) return syncPull(args);
   return syncStatus();
@@ -293,4 +298,124 @@ async function syncStatus() {
   console.log('');
 }
 
-module.exports = { sync, detectRepo };
+// ── memory ──────────────────────────────────────────────────────────────
+
+/**
+ * A stable per-machine identifier, derived WITHOUT any new dependency:
+ * sha256(hostname + os-username + first non-zero MAC), truncated to 16 hex
+ * chars. Not cryptographically sensitive — just enough entropy to tell two
+ * machines apart for "latest per (org, user, device)" in a future cloud UI.
+ * Falls back gracefully if a sandbox has no network interfaces or userInfo.
+ */
+function deviceId() {
+  let mac = '';
+  const ifaces = os.networkInterfaces() || {};
+  outer:
+  for (const name of Object.keys(ifaces)) {
+    for (const iface of ifaces[name] || []) {
+      if (iface.mac && iface.mac !== '00:00:00:00:00:00') { mac = iface.mac; break outer; }
+    }
+  }
+  let username = '';
+  try { username = os.userInfo().username || ''; } catch { /* sandboxes without a user db */ }
+  const seed = `${os.hostname()}:${username}:${mac}`;
+  return crypto.createHash('sha256').update(seed).digest('hex').slice(0, 16);
+}
+
+/**
+ * crag sync --memory — push a verified-memory snapshot to crag cloud.
+ *
+ * Reads the LOCAL crag-engine daemon's GET /overview + GET /rules (the same
+ * aggregate endpoints `crag status` / `crag why` already consume — see
+ * cockpit-client.js) and POSTs a compact snapshot to POST /api/memory/snapshot,
+ * authenticated with the same bearer token every other cloud command uses.
+ *
+ * The cloud is never able to reach back to 127.0.0.1:8786 itself (browsers
+ * block HTTPS -> HTTP-localhost as mixed content) — this command is the SEND
+ * half of that bridge. Engine reachability is checked BEFORE auth so a dead
+ * daemon always produces the `crag memory up` hint, regardless of login state.
+ *
+ * NOTE on exit style below: once a fetch() to the engine has SUCCEEDED, the
+ * global undici agent pools a keep-alive socket. On Windows, a subsequent
+ * *forced* process.exit() (what cliError()/requireAuth() do) can race that
+ * socket's async-handle teardown and crash with `Assertion failed:
+ * !(handle->flags & UV_HANDLE_CLOSING)` — the same libuv class of bug this
+ * file already routes around for spawnSync in captureAuditReport(). So past
+ * this point we set process.exitCode + return instead of calling
+ * requireAuth()/cliError(), letting the event loop drain the socket
+ * naturally. The early engine-down exits above are unaffected (no successful
+ * fetch has happened yet there, so no pooled socket exists to race).
+ */
+async function syncMemory(args) {
+  const asJson = args.includes('--json');
+  const url = engineUrl();
+
+  const overviewResp = await getJson(url, '/overview');
+  if (!overviewResp || !overviewResp.ok) return memoryEngineDown(url, asJson);
+
+  const rulesResp = await getJson(url, '/rules');
+  if (!rulesResp || !rulesResp.ok) return memoryEngineDown(url, asJson);
+
+  const creds = readCredentials();
+  if (!creds || !creds.token) return memorySoftError('not logged in. Run crag login first.', asJson);
+
+  const overview = {
+    trust_score: overviewResp.trust_score,
+    counts: overviewResp.counts,
+    today: overviewResp.today,
+    generated_at: overviewResp.generated_at || new Date().toISOString(),
+  };
+  const rules = Array.isArray(rulesResp.rules) ? rulesResp.rules.map((r) => ({
+    principle_id: r.principle_id,
+    text: r.text,
+    confidence: r.confidence,
+    project: r.project,
+    claim_health: r.claim_health,
+    stale: r.stale,
+  })) : [];
+  const device = { device_id: deviceId(), hostname: os.hostname() };
+
+  let result;
+  try {
+    result = await apiRequest('POST', '/api/memory/snapshot', {
+      token: creds.token,
+      body: { overview, rules, device },
+    });
+  } catch (err) {
+    return memorySoftError(`memory push failed: ${err.message}`, asJson);
+  }
+
+  if (asJson) {
+    console.log(JSON.stringify({ ok: true, ...result, ruleCount: rules.length }));
+    return;
+  }
+
+  const G = '\x1b[32m'; const B = '\x1b[1m'; const D = '\x1b[2m'; const X = '\x1b[0m';
+  const trust = overview.trust_score;
+  const pct = trust && typeof trust.value === 'number' ? `${Math.round(trust.value * 100)}%` : '\u2014';
+
+  console.log(`\n  ${B}crag sync --memory${X}\n`);
+  console.log(`  ${G}\u2713${X} pushed snapshot: trust ${pct}, ${rules.length} rule${rules.length === 1 ? '' : 's'}`);
+  if (result && result.snapshotId) console.log(`  ${D}Snapshot${X}  ${String(result.snapshotId).slice(0, 8)}`);
+  console.log(`  ${D}Device${X}    ${device.hostname} (${device.device_id.slice(0, 8)})`);
+  console.log('');
+}
+
+function memoryEngineDown(url, asJson) {
+  if (asJson) console.log(JSON.stringify({ ok: false, error: 'engine_unreachable' }));
+  else printDownHint(url);
+  process.exit(EXIT_USER); // safe: no successful fetch has happened yet, nothing pooled to race
+}
+
+/**
+ * Non-forced failure path for syncMemory — see the NOTE above syncMemory()
+ * for why this doesn't call cliError()/process.exit() directly once an
+ * engine fetch has already succeeded. Same message format as cliError().
+ */
+function memorySoftError(message, asJson) {
+  if (asJson) console.log(JSON.stringify({ ok: false, error: message }));
+  else console.error(`  \x1b[31m\u2717\x1b[0m Error: ${message}`);
+  process.exitCode = EXIT_USER;
+}
+
+module.exports = { sync, detectRepo, deviceId };
