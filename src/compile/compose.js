@@ -156,12 +156,21 @@ function parseGenBullets(body) {
  * items go to the Reference Appendix, never a compiled prompt section.
  */
 function applyBudget(bullets, budgetChars) {
-  const ranked = [...bullets].sort((a, b) => b.confidence - a.confidence);
+  // Prefix semantics (not greedy knapsack): rank by confidence desc, then
+  // keep the confidence-ordered PREFIX that fits cumulatively. The moment
+  // one bullet doesn't fit, it AND every lower-ranked bullet overflow —
+  // so a higher-confidence rule can never be dropped in favor of a smaller
+  // lower-confidence one (which greedy packing would do, confusingly).
+  // Ties broken by id for determinism.
+  const ranked = [...bullets].sort((a, b) => {
+    if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+    return String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0;
+  });
   const keptSet = new Set();
   let used = 0;
   for (const b of ranked) {
     const cost = b.line.length + 1;
-    if (used + cost > budgetChars) continue;
+    if (used + cost > budgetChars) break;
     keptSet.add(b);
     used += cost;
   }

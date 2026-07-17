@@ -55,14 +55,25 @@ function artifactPath(cwd) {
 }
 
 /**
- * True if ANY of the four split-source files exist. Backward-compat
- * switch: when false, `crag compile` must behave exactly as it did before
- * the composed model existed (read .claude/governance.md directly, no
- * compose step).
+ * Composition activation gate — deliberately keyed on PROJECT-level opt-in
+ * only (`<repo>/.crag/governance.src.md` or `.gen.md`), NOT the user layer.
+ *
+ * Why not the user layer too: a user who sets up ~/.crag/governance.src.md
+ * would otherwise silently activate composition — and overwrite the
+ * hand-maintained .claude/governance.md — in EVERY legacy repo they touch
+ * that never opted into the split model. That is exactly the destructive
+ * surprise backward-compat must prevent. A repo opts in explicitly by
+ * adding a project-level .crag source (the migration step:
+ * governance.md -> .crag/governance.src.md, or a first `crag distill`
+ * which writes .crag/governance.gen.md). Once opted in, the user-layer
+ * files ARE composed in (see composeGovernance, which reads all four).
+ *
+ * When this returns false, `crag compile` behaves byte-for-byte as it did
+ * before the composed model existed.
  */
 function hasSplitSources(cwd) {
   const p = layerPaths(cwd);
-  return Object.values(p).some((f) => fs.existsSync(f));
+  return fs.existsSync(p.projectSrc) || fs.existsSync(p.projectGen);
 }
 
 module.exports = { resolveHome, userCragDir, projectCragDir, layerPaths, artifactPath, hasSplitSources };

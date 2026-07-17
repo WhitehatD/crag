@@ -15,9 +15,35 @@
  * imports this file or anything under src/distill/.
  */
 
+const fs = require('fs');
+const path = require('path');
 const { validateFlags } = require('../cli-args');
 const { runDistill } = require('../distill');
-const { EXIT_USER } = require('../cli-errors');
+const { atomicWrite } = require('../compile/atomic-write');
+const { layerPaths, artifactPath } = require('../governance/layer-paths');
+const { cliError, EXIT_USER } = require('../cli-errors');
+
+/**
+ * `crag distill --migrate` — one-shot opt-in to the composed model.
+ * Copies an existing .claude/governance.md to .crag/governance.src.md so
+ * the project starts composing from split sources. Non-destructive:
+ * refuses if .crag/governance.src.md already exists.
+ */
+function migrate(cwd) {
+  const src = artifactPath(cwd); // .claude/governance.md
+  const dest = layerPaths(cwd).projectSrc; // .crag/governance.src.md
+  if (!fs.existsSync(src)) {
+    cliError('no .claude/governance.md to migrate. Run `crag analyze` or `crag init` first.', EXIT_USER);
+  }
+  if (fs.existsSync(dest)) {
+    cliError(`.crag/governance.src.md already exists — refusing to overwrite. Edit it directly.`, EXIT_USER);
+  }
+  atomicWrite(dest, fs.readFileSync(src, 'utf-8'));
+  console.log(`\n  crag distill --migrate\n`);
+  console.log(`  \x1b[32m✓\x1b[0m copied ${path.relative(cwd, src)} → ${path.relative(cwd, dest)}`);
+  console.log(`  This repo now composes governance from .crag/ sources.`);
+  console.log(`  Next: \`crag distill\` to render principles, then \`crag compile\`.\n`);
+}
 
 function formatLayer(l) {
   const rel = l.path;
@@ -30,10 +56,15 @@ function formatLayer(l) {
 }
 
 async function distill(args) {
-  validateFlags('distill', args, { boolean: ['--check'] });
-  const check = args.includes('--check');
+  validateFlags('distill', args, { boolean: ['--check', '--migrate'] });
   const cwd = process.cwd();
 
+  if (args.includes('--migrate')) {
+    migrate(cwd);
+    return;
+  }
+
+  const check = args.includes('--check');
   const result = await runDistill({ cwd, check });
 
   if (!result.configured) {

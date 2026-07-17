@@ -14,8 +14,13 @@
  * docs/distill.md.
  */
 
-const { loadMemoryConfig } = require('../mcp/config');
-const { createAdapter } = require('../mcp/adapters/memory-adapter');
+// Required as namespaces (not destructured) so the config loader and the
+// adapter factory are looked up on the module object at CALL time. That is
+// what lets a test swap in a mock MemoryAdapter by overriding
+// `createAdapter` on the module exports — the genuine adapter seam, not a
+// higher-level stub. Runtime behavior is identical to a destructured import.
+const configModule = require('../mcp/config');
+const adapterModule = require('../mcp/adapters/memory-adapter');
 
 const EXPORT_TOOL_NAME = 'principles_export';
 
@@ -61,8 +66,8 @@ function extractPrinciplesFromToolResult(result) {
  * cwd parameter) and defaults to process.cwd().
  */
 async function fetchCompileEligiblePrinciples(cwd) {
-  const config = loadMemoryConfig(cwd || process.cwd());
-  const adapter = createAdapter(config);
+  const config = configModule.loadMemoryConfig(cwd || process.cwd());
+  const adapter = adapterModule.createAdapter(config);
 
   if (!adapter) {
     return { configured: false, principles: [] };

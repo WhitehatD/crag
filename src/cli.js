@@ -35,6 +35,7 @@ function printUsage() {
     crag mcp             Start the crag-mcp gateway (governance tools + opt-in memory federation)
     crag distill         Render verified memory principles into .crag/governance.gen.md
     crag distill --check   Preview would-change diff without writing (CI-safe)
+    crag distill --migrate Opt this repo into the composed model (governance.md → .src)
     crag diff                         Compare governance against codebase reality
     crag diff --ci                     Exit non-zero on drift (for CI pipelines)
     crag diff --json                   Machine-readable JSON output
