@@ -149,6 +149,30 @@ function summaryFlag(args) {
   return a.includes('=') ? a.split('=').slice(1).join('=') : args[i + 1] || null;
 }
 
+/**
+ * In --hook mode the harness pipes a JSON payload on stdin (Claude Code hooks:
+ * {session_id, transcript_path, ...}). That session_id is the DETERMINISTIC
+ * session identity — it keys the ONE canonical row in the engine's sessions
+ * table (the anti-fragmentation upsert). Read it fail-open: TTY (manual run)
+ * skips immediately; a pipe gets max 250ms; anything malformed → null.
+ */
+function readHookStdin(timeoutMs = 250) {
+  return new Promise((resolve) => {
+    if (process.stdin.isTTY) return resolve(null);
+    let buf = '';
+    const done = (v) => { clearTimeout(timer); resolve(v); };
+    const timer = setTimeout(() => done(safeParse(buf)), timeoutMs);
+    process.stdin.setEncoding('utf-8');
+    process.stdin.on('data', (c) => { buf += c; });
+    process.stdin.on('end', () => done(safeParse(buf)));
+    process.stdin.on('error', () => done(null));
+  });
+}
+
+function safeParse(s) {
+  try { return JSON.parse(s); } catch { return null; }
+}
+
 async function sessionEnd(args) {
   validateFlags('session-end', args, {
     boolean: ['--hook', '--json'], string: ['--project', '--summary'],
@@ -161,7 +185,17 @@ async function sessionEnd(args) {
   const body = {};
   if (project) body.project = project;
   if (summary) body.summary = summary;
-  if (process.env.CLAUDE_SESSION_ID) body.session_id = process.env.CLAUDE_SESSION_ID;
+  // Session identity precedence: hook stdin JSON (the harness's own id) beats
+  // the env var; env remains the fallback for non-hook/manual invocations.
+  if (isHook) {
+    const hookInput = await readHookStdin();
+    if (hookInput && typeof hookInput.session_id === 'string' && hookInput.session_id) {
+      body.session_id = hookInput.session_id;
+    }
+  }
+  if (!body.session_id && process.env.CLAUDE_SESSION_ID) {
+    body.session_id = process.env.CLAUDE_SESSION_ID;
+  }
 
   const timeout = isHook ? HOOK_TIMEOUT_MS : undefined;
   const data = await postJson(url, '/session/end', body, timeout);
