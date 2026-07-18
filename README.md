@@ -1,8 +1,8 @@
 # crag
 
-**Make every AI agent obey your codebase.**
+**The reliability layer for AI coding agents.**
 
-One `governance.md` -> compiled to CI, hooks, and every agent. No drift.
+Unit tests for memory, compiled into law. Your agents obey your codebase because crag compiles one `governance.md` to CI, hooks, and every agent — and, when you opt in, verifies what your agents learned is TRUE before it becomes an enforced rule.
 
 ```bash
 npx @whitehatd/crag
@@ -14,7 +14,7 @@ npx @whitehatd/crag
 
 [![npm version](https://img.shields.io/npm/v/%40whitehatd%2Fcrag?color=%23e8bb3a&label=npm&logo=npm)](https://www.npmjs.com/package/@whitehatd/crag)
 [![Test](https://github.com/WhitehatD/crag/actions/workflows/test.yml/badge.svg)](https://github.com/WhitehatD/crag/actions/workflows/test.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/node/v/%40whitehatd%2Fcrag)](https://nodejs.org)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](./package.json)
 [![99 repos audited](https://img.shields.io/badge/benchmark-99%20repos%20%C2%B7%200%20crashes-brightgreen)](./benchmarks/leaderboard.md)
@@ -30,11 +30,17 @@ Your CI is the ground truth for what quality means in your repo. Your AI agents 
 
 Developers fix bad AI suggestions in 2 seconds and think "AI is dumb sometimes." They never aggregate the cost: 30 seconds per bad suggestion x 10 devs x 50 prompts per day = hours of wasted time. Nobody diffs their config files.
 
+And the config is only half of it. Agents also accumulate *knowledge* between sessions — root causes, gotchas, conventions. Most of it is never checked against reality, so stale lessons quietly poison every future prompt.
+
 ## The fix
 
 crag reads your CI and codebase once, writes a single `governance.md`, and compiles it to every tool's native format. One file in. 23 files out. Change a rule once, recompile, done.
 
 Deterministic. No LLM. No network. No API keys. Zero dependencies.
+
+That deterministic core is the whole product for most users. On top of it, an **opt-in** memory seam closes the reliability loop: an agent failure becomes an insight, the insight becomes atomic claims with executable predicates, those predicates are machine-verified against reality (grounding), verified claims distill into principles, and principles compile into enforced governance rules across all 23 targets.
+
+Most tools check your config is well-formed. crag also checks your knowledge is *true* — then compiles it into enforcement.
 
 ---
 
@@ -101,7 +107,14 @@ crag auto         # full pipeline: analyze, compile, audit, hook install
 | `crag audit --json` | Machine-readable drift report |
 | `crag audit --explain` | Show actionable fix hint per drift finding |
 | `crag audit --fix` | Auto-recompile stale targets |
+| `crag audit --memory` | Add the claim-health axis: check distilled rules against a live memory backend |
 | `crag auto` | Full pipeline: analyze, compile, audit, hook install |
+| `crag memory up` | Start the crag-engine memory backend and wire `.crag/mcp.json` (opt-in) |
+| `crag memory status` | Reachability + corpus stats of the configured backend |
+| `crag memory down` | Stop the engine daemon |
+| `crag memory register` | Write `.crag/mcp.json` only (no daemon lifecycle) |
+| `crag distill` | Render verified principles from the backend into managed `governance.gen.md` blocks |
+| `crag distill --check` | Preview the would-change `.gen` diff, write nothing (CI-safe) |
 | `crag check` | Verify crag infrastructure is complete and current |
 | `crag demo` | Self-contained proof-of-value on a temp project |
 | `crag diff` | Show exactly where governance and codebase diverge |
@@ -306,6 +319,36 @@ Previous benchmark (50 repos): [`benchmarks/phase1-benchmark.md`](./benchmarks/p
 
 ---
 
+## Verified memory (opt-in)
+
+The deterministic compiler answers "is my agent config well-formed and in sync?" The memory seam answers a harder question: "is what my agent *learned* actually true?"
+
+It closes a loop:
+
+```
+agent failure -> insight -> atomic claims with executable predicates
+   -> grounding (predicates machine-verified against reality)
+   -> verified principle -> crag distill -> governance.gen.md
+   -> crag compile -> enforced rule across 23 targets
+```
+
+A lesson only becomes an enforced rule after its predicate has been checked against reality. Stale claims stop rendering by omission — no rot, no manual delete.
+
+```bash
+crag memory up            # start the crag-engine backend, wire .crag/mcp.json
+crag memory status        # reachability + corpus stats
+crag distill              # verified principles -> managed governance.gen.md
+crag distill --check      # preview the .gen diff, write nothing (CI-safe)
+crag compile              # compose .crag/ sources -> governance.md -> targets
+crag audit --memory       # add the claim-health axis to audit
+```
+
+**This is entirely opt-in and the trust boundary is sacred.** `crag compile` and `crag audit` (offline mode) stay zero-dependency, no-LLM, no-network — they never need a key. The memory backend is a separate install ([crag-engine](https://github.com/WhitehatD/crag-engine)); nothing under the compile core imports it. If you never run `crag memory`, crag behaves byte-for-byte as it always did. All backend/LLM interaction lives behind the opt-in adapter — crag itself only ever places verbatim, backend-verified text.
+
+See [docs/distill.md](./docs/distill.md) for the composed-governance model.
+
+---
+
 ## Universal skills
 
 AI agents forget context between sessions. Two skills ship with crag to fix this:
@@ -340,6 +383,16 @@ The skills read `governance.md` and adapt. Nothing hardcoded. Works with Claude 
 
 ## Ecosystem
 
+crag is a compiler, a CLI, and an MCP gateway. Around it:
+
+| Component | What it is |
+|---|---|
+| **crag** (this repo) | The deterministic governance compiler + CLI + MCP gateway. One `governance.md` → 23 targets. Zero-dep core. |
+| **[crag-engine](https://github.com/WhitehatD/crag-engine)** | The verified-memory engine: atomic claims with executable predicates, grounding that re-verifies against reality, a disposition control plane, and an embedded operator console. The opt-in backend for `crag memory` / `crag distill`. |
+| **[crag.nvim](https://github.com/WhitehatD/crag.nvim)** | Neovim integration for crag governance workflows. |
+| **[crag-audit-action](https://github.com/WhitehatD/crag-audit-action)** | GitHub Action that runs `crag audit` in CI to catch AI-config drift (and claim-health when a memory backend is configured). |
+| **[app.crag.sh](https://app.crag.sh)** | The cloud console: audit, dashboard, docs, leaderboard, pricing, status. |
+
 | Surface | URL |
 |---|---|
 | Website | [crag.sh](https://crag.sh) |
@@ -365,8 +418,8 @@ If `crag analyze` misses a language, CI system, or gate pattern on a public repo
 
 ## Who builds this
 
-crag is built by [Alexandru Cioc](https://ciocandco.com), a systems and AI-infrastructure engineer in Maastricht, NL. It came out of real production work: the same drift problem, hit across enough repos to be worth solving properly, then validated on 99 public repositories before shipping. More production systems work, including a multi-region platform case study and a reproducible self-hosted-vs-cloud AI benchmark, at [ciocandco.com](https://ciocandco.com).
+crag is built by [Alexandru Cioc (WhitehatD)](https://github.com/WhitehatD), a systems and AI-infrastructure engineer. It came out of real production work: the same drift problem, hit across enough repos to be worth solving properly, then validated on 99 public repositories before shipping.
 
 ---
 
-MIT -- [Alexandru Cioc (WhitehatD)](https://github.com/WhitehatD)
+Apache-2.0 -- [Alexandru Cioc (WhitehatD)](https://github.com/WhitehatD)

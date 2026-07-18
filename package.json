@@ -1,6 +1,6 @@
 {
   "name": "@whitehatd/crag",
-  "version": "0.6.4",
+  "version": "0.6.6",
   "description": "Make every AI agent obey your codebase. One governance.md → compiled to CI, hooks, and every agent. No drift.",
   "bin": {
     "crag": "bin/crag.js",
@@ -30,7 +30,7 @@
     "gitea"
   ],
   "author": "Alexandru Cioc (WhitehatD)",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/WhitehatD/crag.git"

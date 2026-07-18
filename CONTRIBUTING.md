@@ -150,4 +150,4 @@ If you find a security issue, **do not open a public issue**. Email alexc.forbus
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT license.
+By contributing, you agree that your contributions will be licensed under the Apache License, Version 2.0.
