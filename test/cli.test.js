@@ -2,6 +2,8 @@
 
 const assert = require('assert');
 const { execFileSync } = require('child_process');
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 function test(name, fn) {
@@ -46,9 +48,19 @@ test('crag help prints usage with all commands', () => {
 });
 
 test('crag with no args in project dir runs auto-pilot', () => {
-  // crag repo itself has package.json, so no-args triggers auto
-  const out = run([]);
-  assert.ok(out.includes('auto-pilot') || out.includes('Compiled') || out.includes('Governance'));
+  // MUST run in a throwaway project dir — running bare `crag` in the repo
+  // root made this test COMPILE INTO THE REPO on every suite run (mutating
+  // verification), which kept rewriting crag's own committed outputs.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'crag-cli-auto-'));
+  try {
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({
+      name: 'cli-auto-fixture', version: '0.0.0', scripts: { test: 'node -e ""' },
+    }));
+    const out = run([], { cwd: dir });
+    assert.ok(out.includes('auto-pilot') || out.includes('Compiled') || out.includes('Governance'));
+  } finally {
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
+  }
 });
 
 test('crag workspace --json produces valid JSON', () => {
