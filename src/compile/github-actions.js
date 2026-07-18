@@ -283,10 +283,11 @@ function generateGuardYaml(regenerateCmd, checkoutAction, setupNodeAction, nodeV
     '          # gitignores it) bootstrap one from the codebase first — diff then',
     '          # checks the workflows against derived reality. Repos that DO',
     '          # commit governance get the real committed-vs-CI drift check.',
+    '          npm install -g @whitehatd/crag > /dev/null 2>&1',
     '          if [ ! -f .claude/governance.md ]; then',
-    '            npx -y -p @whitehatd/crag crag analyze > /dev/null',
+    '            crag analyze > /dev/null',
     '          fi',
-    '          npx -y -p @whitehatd/crag crag diff --ci',
+    '          crag diff --ci',
     '',
   ].join('\n');
 }

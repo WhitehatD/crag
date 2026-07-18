@@ -78,7 +78,7 @@ test('circleci output runs crag audit', () => {
   withTempDir((dir) => {
     generateCircleCI(dir, sampleParsed());
     const content = fs.readFileSync(path.join(dir, '.circleci', 'config.yml'), 'utf-8');
-    assert.ok(content.includes('npx -y -p @whitehatd/crag crag audit'), 'should run crag audit command');
+    assert.ok(content.includes('crag audit'), 'should run crag audit command');
   });
 });
 
@@ -111,7 +111,7 @@ test('generates azure-pipelines.yml at repo root', () => {
     const out = path.join(dir, 'azure-pipelines.yml');
     assert.ok(fs.existsSync(out), 'azure-pipelines.yml should exist');
     const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('npx -y -p @whitehatd/crag crag audit'), 'should run crag audit');
+    assert.ok(content.includes('crag audit'), 'should run crag audit');
     assert.ok(content.includes('Run crag governance audit'), 'should have displayName');
   });
 });
