@@ -28,7 +28,7 @@ jobs:
       - checkout
       - run:
           name: Run crag governance audit
-          command: npx @whitehatd/crag audit
+          command: npx -y -p @whitehatd/crag crag audit
 
 workflows:
   governance:

@@ -34,6 +34,6 @@ jobs:
         with:
           node-version: '18'
       - name: Check CI and governance are in sync
-        run: npx @whitehatd/crag diff --ci
+        run: npx -y -p @whitehatd/crag crag diff --ci
 
 # crag:auto-end

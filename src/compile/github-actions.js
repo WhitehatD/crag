@@ -278,7 +278,7 @@ function generateGuardYaml(regenerateCmd, checkoutAction, setupNodeAction, nodeV
     '        with:',
     `          node-version: '${nodeVersion}'`,
     '      - name: Check CI and governance are in sync',
-    '        run: npx @whitehatd/crag diff --ci',
+    '        run: npx -y -p @whitehatd/crag crag diff --ci',
     '',
   ].join('\n');
 }
