@@ -5,16 +5,17 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { generateCopilot } = require('../src/compile/copilot');
-const { generateCline } = require('../src/compile/cline');
 const { generateContinue } = require('../src/compile/continue');
 const { generateWindsurf } = require('../src/compile/windsurf');
-const { generateZed } = require('../src/compile/zed');
-const { generateAmazonQ } = require('../src/compile/amazonq');
 const { generateAgentsMd } = require('../src/compile/agents-md');
 const { generateCursorRules } = require('../src/compile/cursor-rules');
-const { generateGeminiMd } = require('../src/compile/gemini-md');
-const { generateClaude } = require('../src/compile/claude');
 const { atomicWrite } = require('../src/compile/atomic-write');
+// Satellite targets (claude/gemini/cline/zed/amazonq/aider/junie/goose/kiro)
+// no longer have bespoke generators — they route through renderSatellite.
+// Their behavior is covered in test/satellite.test.js; the structural targets
+// (copilot/continue/windsurf/cursor) + canonical agents-md are tested here.
+const { renderSatellite } = require('../src/compile/satellite');
+const { getTarget } = require('../src/compile/targets');
 
 function test(name, fn) {
   try {
@@ -108,29 +109,6 @@ test('copilot output mentions governance.md as source of truth', () => {
   });
 });
 
-console.log('\n  compile/cline.js');
-
-test('generates .clinerules at repo root', () => {
-  withTempDir((dir) => {
-    generateCline(dir, sampleParsed());
-    const out = path.join(dir, '.clinerules');
-    assert.ok(fs.existsSync(out));
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('Cline Rules'));
-    assert.ok(content.includes('npm test'));
-    assert.ok(content.includes('MANDATORY'));
-  });
-});
-
-test('cline output annotates gates with classification tags', () => {
-  withTempDir((dir) => {
-    generateCline(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.clinerules'), 'utf-8');
-    assert.ok(content.includes('[OPTIONAL]'));
-    assert.ok(content.includes('[ADVISORY]'));
-  });
-});
-
 console.log('\n  compile/continue.js');
 
 test('generates .continuerules at repo root', () => {
@@ -181,67 +159,19 @@ test('windsurf output has YAML frontmatter with trigger: always_on', () => {
   });
 });
 
-console.log('\n  compile/zed.js');
+console.log('\n  compile target classifications (structural targets)');
 
-test('generates .rules at repo root', () => {
-  withTempDir((dir) => {
-    generateZed(dir, sampleParsed());
-    const out = path.join(dir, '.rules');
-    assert.ok(fs.existsSync(out));
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('Zed Assistant Rules'));
-  });
-});
-
-test('zed .rules includes gate commands and classifications', () => {
-  withTempDir((dir) => {
-    generateZed(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.rules'), 'utf-8');
-    assert.ok(content.includes('npm test'));
-    assert.ok(content.includes('OPTIONAL'));
-  });
-});
-
-console.log('\n  compile/amazonq.js');
-
-test('generates .amazonq/rules/governance.md', () => {
-  withTempDir((dir) => {
-    generateAmazonQ(dir, sampleParsed());
-    const out = path.join(dir, '.amazonq', 'rules', 'governance.md');
-    assert.ok(fs.existsSync(out));
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('Amazon Q Rules'));
-  });
-});
-
-test('amazonq output creates .amazonq/rules directory if missing', () => {
-  withTempDir((dir) => {
-    generateAmazonQ(dir, sampleParsed());
-    assert.ok(fs.existsSync(path.join(dir, '.amazonq', 'rules')));
-  });
-});
-
-console.log('\n  compile target classifications (all 6 new targets)');
-
-test('every new target honors gate classifications in output', () => {
+test('every structural target honors gate classifications in output', () => {
   withTempDir((dir) => {
     const parsed = sampleParsed();
     generateCopilot(dir, parsed);
-    generateCline(dir, parsed);
     generateContinue(dir, parsed);
     generateWindsurf(dir, parsed);
-    generateZed(dir, parsed);
-    generateAmazonQ(dir, parsed);
-    generateClaude(dir, parsed);
-    // Each target should reference OPTIONAL or ADVISORY or MANDATORY
+    // Each structural target should reference OPTIONAL or ADVISORY or MANDATORY
     const outputs = [
       fs.readFileSync(path.join(dir, '.github', 'copilot-instructions.md'), 'utf-8'),
-      fs.readFileSync(path.join(dir, '.clinerules'), 'utf-8'),
       fs.readFileSync(path.join(dir, '.continuerules'), 'utf-8'),
       fs.readFileSync(path.join(dir, '.windsurf', 'rules', 'governance.md'), 'utf-8'),
-      fs.readFileSync(path.join(dir, '.rules'), 'utf-8'),
-      fs.readFileSync(path.join(dir, '.amazonq', 'rules', 'governance.md'), 'utf-8'),
-      fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf-8'),
     ];
     for (const out of outputs) {
       const hasClassification =
@@ -309,47 +239,27 @@ test('cursor rules output contains gate commands and per-path files', () => {
   });
 });
 
-console.log('\n  compile/gemini-md.js');
+console.log('\n  satellite targets via renderSatellite (standalone/mirror)');
 
-test('generates GEMINI.md at repo root', () => {
+// Standalone (no agents-md in the run) → satellites emit a self-contained
+// mirror so an explicit `--target <id>` still yields a usable file.
+test('gemini (native) standalone renders a self-contained GEMINI.md mirror', () => {
   withTempDir((dir) => {
-    generateGeminiMd(dir, sampleParsed());
+    renderSatellite(getTarget('gemini'), sampleParsed(), { cwd: dir, agentsMdInRun: false });
     const out = path.join(dir, 'GEMINI.md');
-    assert.ok(fs.existsSync(out));
+    assert.ok(fs.existsSync(out), 'GEMINI.md should exist standalone');
     const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.length > 0);
     assert.ok(content.includes('test-project'));
-  });
-});
-
-test('GEMINI.md includes MANDATORY gates', () => {
-  withTempDir((dir) => {
-    generateGeminiMd(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, 'GEMINI.md'), 'utf-8');
     assert.ok(content.includes('npm test'));
-    assert.ok(content.includes('tsc --noEmit'));
+    assert.ok(content.includes('AGENTS.md'), 'mirror labels AGENTS.md as canonical');
   });
 });
 
-console.log('\n  compile/claude.js');
-
-test('generates CLAUDE.md at repo root', () => {
+test('claude (import) standalone renders a self-contained CLAUDE.md mirror', () => {
   withTempDir((dir) => {
-    generateClaude(dir, sampleParsed());
-    const out = path.join(dir, 'CLAUDE.md');
-    assert.ok(fs.existsSync(out));
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.length > 0);
-    assert.ok(content.includes('test-project'));
-  });
-});
-
-test('CLAUDE.md includes project description and gates', () => {
-  withTempDir((dir) => {
-    generateClaude(dir, sampleParsed());
+    renderSatellite(getTarget('claude'), sampleParsed(), { cwd: dir, agentsMdInRun: false });
     const content = fs.readFileSync(path.join(dir, 'CLAUDE.md'), 'utf-8');
     assert.ok(content.includes('A test project'));
-    assert.ok(content.includes('## Quality Gates'));
     assert.ok(content.includes('npm test'));
     assert.ok(content.includes('tsc --noEmit'));
   });

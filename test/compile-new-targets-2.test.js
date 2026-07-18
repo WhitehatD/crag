@@ -4,11 +4,14 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { generateJunie } = require('../src/compile/junie');
-const { generateKiro } = require('../src/compile/kiro');
 const { generateCircleCI } = require('../src/compile/circleci');
 const { generateAzureDevOps } = require('../src/compile/azuredevops');
-const { generateGoose } = require('../src/compile/goose');
+
+// junie, kiro, and goose are now satellite targets (their tools read AGENTS.md
+// natively, so a duplicate file is unnecessary). Their bespoke generators were
+// removed; satellite behavior is covered by test/satellite.test.js. This file
+// retains the structural CI targets (circleci, azuredevops) + the compile.js
+// registry-integration checks.
 
 function test(name, fn) {
   try {
@@ -53,126 +56,6 @@ function sampleParsed() {
     },
   };
 }
-
-function emptyParsed() {
-  return {
-    name: 'empty-project',
-    description: '',
-    stack: [],
-    runtimes: [],
-    commitConvention: '',
-    commitTrailer: '',
-    security: '',
-    gates: {},
-  };
-}
-
-// ---------------------------------------------------------------------------
-// junie.js
-// ---------------------------------------------------------------------------
-
-console.log('\n  compile/junie.js');
-
-test('generates .junie/guidelines.md', () => {
-  withTempDir((dir) => {
-    generateJunie(dir, sampleParsed());
-    const out = path.join(dir, '.junie', 'guidelines.md');
-    assert.ok(fs.existsSync(out), '.junie/guidelines.md should exist');
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('Quality Gates'), 'should include Quality Gates heading');
-    assert.ok(content.includes('npm test'), 'should include gate command');
-  });
-});
-
-test('junie output includes crag attribution', () => {
-  withTempDir((dir) => {
-    generateJunie(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.junie', 'guidelines.md'), 'utf-8');
-    assert.ok(content.includes('crag'), 'should reference crag');
-    assert.ok(content.includes('governance.md'), 'should mention governance.md');
-  });
-});
-
-test('junie output includes stack and runtimes', () => {
-  withTempDir((dir) => {
-    generateJunie(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.junie', 'guidelines.md'), 'utf-8');
-    assert.ok(content.includes('**Stack:**'), 'should include Stack line');
-    assert.ok(content.includes('**Runtimes:**'), 'should include Runtimes line');
-    assert.ok(content.includes('node'), 'should include node runtime');
-  });
-});
-
-test('junie output annotates OPTIONAL gates', () => {
-  withTempDir((dir) => {
-    generateJunie(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.junie', 'guidelines.md'), 'utf-8');
-    assert.ok(content.includes('OPTIONAL'), 'should annotate OPTIONAL gates');
-  });
-});
-
-test('junie output with no gates writes minimal file', () => {
-  withTempDir((dir) => {
-    generateJunie(dir, emptyParsed());
-    const out = path.join(dir, '.junie', 'guidelines.md');
-    assert.ok(fs.existsSync(out), '.junie/guidelines.md should exist even with no gates');
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('Quality Gates'), 'should still have Quality Gates section');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// kiro.js
-// ---------------------------------------------------------------------------
-
-console.log('\n  compile/kiro.js');
-
-test('generates .kiro/steering/quality-gates.md', () => {
-  withTempDir((dir) => {
-    generateKiro(dir, sampleParsed());
-    const out = path.join(dir, '.kiro', 'steering', 'quality-gates.md');
-    assert.ok(fs.existsSync(out), '.kiro/steering/quality-gates.md should exist');
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('alwaysApply: true'), 'should include alwaysApply: true frontmatter');
-    assert.ok(content.includes('Quality Gates'), 'should include Quality Gates heading');
-  });
-});
-
-test('kiro output includes YAML frontmatter with description', () => {
-  withTempDir((dir) => {
-    generateKiro(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.kiro', 'steering', 'quality-gates.md'), 'utf-8');
-    assert.ok(content.includes('description:'), 'should include description in frontmatter');
-    assert.ok(content.includes('---'), 'should have YAML frontmatter delimiters');
-  });
-});
-
-test('kiro output includes gate commands', () => {
-  withTempDir((dir) => {
-    generateKiro(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.kiro', 'steering', 'quality-gates.md'), 'utf-8');
-    assert.ok(content.includes('npm test'), 'should include mandatory gate command');
-  });
-});
-
-test('kiro output includes crag attribution', () => {
-  withTempDir((dir) => {
-    generateKiro(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.kiro', 'steering', 'quality-gates.md'), 'utf-8');
-    assert.ok(content.includes('crag'), 'should reference crag');
-    assert.ok(content.includes('governance.md'), 'should mention governance.md');
-  });
-});
-
-test('kiro output with no gates writes minimal file', () => {
-  withTempDir((dir) => {
-    generateKiro(dir, emptyParsed());
-    const out = path.join(dir, '.kiro', 'steering', 'quality-gates.md');
-    assert.ok(fs.existsSync(out), '.kiro/steering/quality-gates.md should exist even with no gates');
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('alwaysApply: true'), 'should still have alwaysApply: true');
-  });
-});
 
 // ---------------------------------------------------------------------------
 // circleci.js
@@ -259,80 +142,24 @@ test('azuredevops output includes crag attribution', () => {
 });
 
 // ---------------------------------------------------------------------------
-// goose.js
+// compile.js integration: registry-driven ALL_TARGETS and planOutputPath
 // ---------------------------------------------------------------------------
 
-console.log('\n  compile/goose.js');
+console.log('\n  compile.js — registry integration (batch 2)');
 
-test('generates .goose/GOOSEHINTS', () => {
-  withTempDir((dir) => {
-    generateGoose(dir, sampleParsed());
-    const out = path.join(dir, '.goose', 'GOOSEHINTS');
-    assert.ok(fs.existsSync(out), '.goose/GOOSEHINTS should exist');
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('Quality Gates'), 'should include Quality Gates heading');
-    assert.ok(content.includes('npm test'), 'should include gate command');
-  });
-});
-
-test('goose output includes crag attribution', () => {
-  withTempDir((dir) => {
-    generateGoose(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.goose', 'GOOSEHINTS'), 'utf-8');
-    assert.ok(content.includes('crag'), 'should reference crag');
-    assert.ok(content.includes('governance.md'), 'should mention governance.md');
-  });
-});
-
-test('goose output includes stack and runtimes', () => {
-  withTempDir((dir) => {
-    generateGoose(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.goose', 'GOOSEHINTS'), 'utf-8');
-    assert.ok(content.includes('**Stack:**'), 'should include Stack line');
-    assert.ok(content.includes('**Runtimes:**'), 'should include Runtimes line');
-    assert.ok(content.includes('node'), 'should include node runtime');
-  });
-});
-
-test('goose output annotates OPTIONAL gates', () => {
-  withTempDir((dir) => {
-    generateGoose(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, '.goose', 'GOOSEHINTS'), 'utf-8');
-    assert.ok(content.includes('OPTIONAL'), 'should annotate OPTIONAL gates');
-  });
-});
-
-test('goose output with no gates writes minimal file', () => {
-  withTempDir((dir) => {
-    generateGoose(dir, emptyParsed());
-    const out = path.join(dir, '.goose', 'GOOSEHINTS');
-    assert.ok(fs.existsSync(out), '.goose/GOOSEHINTS should exist even with no gates');
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('Quality Gates'), 'should still have Quality Gates section');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// compile.js integration: ALL_TARGETS and planOutputPath for new targets
-// ---------------------------------------------------------------------------
-
-console.log('\n  compile.js — new target registration (batch 2)');
-
-test('ALL_TARGETS includes all 5 new targets', () => {
+test('ALL_TARGETS includes the satellite + CI targets', () => {
   const { ALL_TARGETS } = require('../src/commands/compile');
-  assert.ok(ALL_TARGETS.includes('junie'), 'ALL_TARGETS should include junie');
-  assert.ok(ALL_TARGETS.includes('kiro'), 'ALL_TARGETS should include kiro');
-  assert.ok(ALL_TARGETS.includes('circleci'), 'ALL_TARGETS should include circleci');
-  assert.ok(ALL_TARGETS.includes('azuredevops'), 'ALL_TARGETS should include azuredevops');
-  assert.ok(ALL_TARGETS.includes('goose'), 'ALL_TARGETS should include goose');
+  for (const id of ['junie', 'kiro', 'goose', 'circleci', 'azuredevops']) {
+    assert.ok(ALL_TARGETS.includes(id), `ALL_TARGETS should include ${id}`);
+  }
 });
 
-test('ALL_TARGETS total is now 23', () => {
+test('ALL_TARGETS total is 23 (registry-sourced)', () => {
   const { ALL_TARGETS } = require('../src/commands/compile');
   assert.strictEqual(ALL_TARGETS.length, 23, `expected 23 targets, got ${ALL_TARGETS.length}`);
 });
 
-test('planOutputPath returns correct paths for new targets', () => {
+test('planOutputPath returns correct paths (registry-derived)', () => {
   const { planOutputPath } = require('../src/commands/compile');
   const cwd = '/fake/cwd';
   assert.ok(planOutputPath(cwd, 'junie').endsWith(path.join('.junie', 'guidelines.md')), 'junie → .junie/guidelines.md');

@@ -35,7 +35,7 @@ function printUsage() {
     crag                Run analyze + compile in one shot (auto-detects project)
     crag demo           Self-contained proof-of-value run (~3 s, no config)
     crag analyze        Generate governance from existing project (no interview)
-    crag compile        Compile governance.md → CI, hooks, AGENTS.md, Cursor, Gemini
+    crag compile        Detect this repo's AI tools → write AGENTS.md + only their deltas
     crag audit          Drift report: stale configs, outdated rules, missing targets
     crag hook install   Install pre-commit hook (auto-recompile on governance change)
     crag mcp             Start the crag-mcp gateway (governance tools + opt-in memory federation)
@@ -65,26 +65,17 @@ function printUsage() {
     crag team           Manage teams on crag cloud
     crag version        Show version
 
-  Compile targets (${ALL_TARGETS.length}):
-    AI agents — universal standard:
-      crag compile --target agents-md    AGENTS.md (60K+ repos, Linux Foundation)
-    AI agents — native:
-      crag compile --target cursor       .cursor/rules/governance.mdc
-      crag compile --target gemini       GEMINI.md
-      crag compile --target copilot      .github/copilot-instructions.md
-    AI agents — additional:
-      crag compile --target cline        .clinerules
-      crag compile --target continue     .continuerules
-      crag compile --target windsurf     .windsurf/rules/governance.md
-      crag compile --target zed          .rules
-      crag compile --target amazonq      .amazonq/rules/governance.md
-      crag compile --target claude       CLAUDE.md
-    CI / git hooks:
-      crag compile --target github       .github/workflows/gates.yml
-      crag compile --target forgejo      .forgejo/workflows/gates.yml
-      crag compile --target husky        .husky/pre-commit
-      crag compile --target pre-commit   .pre-commit-config.yaml
-    crag compile --target all            All ${ALL_TARGETS.length} targets at once
+  Compiling (AGENTS.md is canonical — the Linux-Foundation standard, 60K+ repos):
+      crag compile                     Detect this repo's tools → AGENTS.md + only their deltas
+      crag compile --refresh           Re-detect (ignore .crag/config.json)
+      crag compile --global            Machine-global user layer → ~/.agents/AGENTS.md (+ tool globals)
+      crag compile --target <id>       Force one target (see: crag compile list)
+      crag compile --target all        Every registry target (${ALL_TARGETS.length})
+      crag compile list                Show all targets grouped by class
+    Most tools (Codex/Cursor/Copilot/Gemini/Windsurf/Aider/Zed/Junie …) read
+    AGENTS.md natively — crag emits deltas only: CLAUDE.md (@AGENTS.md import),
+    Cursor/Copilot path-scoped rules, CI gates, and mirrors for tools that read
+    neither. It never blasts all 23 files.
 
   Audit options:
     crag audit                        Human-readable drift report

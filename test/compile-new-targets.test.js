@@ -4,7 +4,6 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { generateAider } = require('../src/compile/aider');
 const { generateLefthook } = require('../src/compile/lefthook');
 const { generateGitlabCI } = require('../src/compile/gitlab-ci');
 const { generateCoderabbit } = require('../src/compile/coderabbit');
@@ -74,58 +73,9 @@ function emptyParsed() {
   };
 }
 
-// ---------------------------------------------------------------------------
-// aider.js
-// ---------------------------------------------------------------------------
-
-console.log('\n  compile/aider.js');
-
-test('generates CONVENTIONS.md at repo root', () => {
-  withTempDir((dir) => {
-    generateAider(dir, sampleParsed());
-    const out = path.join(dir, 'CONVENTIONS.md');
-    assert.ok(fs.existsSync(out), 'CONVENTIONS.md should exist');
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('Quality Gates'), 'should include Quality Gates heading');
-    assert.ok(content.includes('npm test'), 'should include gate command');
-  });
-});
-
-test('aider output groups gates by section', () => {
-  withTempDir((dir) => {
-    generateAider(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, 'CONVENTIONS.md'), 'utf-8');
-    assert.ok(content.includes('### Test') || content.includes('### Frontend'), 'should have section headings');
-    assert.ok(content.includes('npx biome check .'), 'should include frontend gate');
-  });
-});
-
-test('aider output includes crag attribution', () => {
-  withTempDir((dir) => {
-    generateAider(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, 'CONVENTIONS.md'), 'utf-8');
-    assert.ok(content.includes('crag'), 'should reference crag');
-    assert.ok(content.includes('governance.md'), 'should mention governance.md');
-  });
-});
-
-test('aider output with no gates writes minimal file', () => {
-  withTempDir((dir) => {
-    generateAider(dir, emptyParsed());
-    const out = path.join(dir, 'CONVENTIONS.md');
-    assert.ok(fs.existsSync(out), 'CONVENTIONS.md should exist even with no gates');
-    const content = fs.readFileSync(out, 'utf-8');
-    assert.ok(content.includes('Quality Gates'), 'should still have Quality Gates section');
-  });
-});
-
-test('aider optional gate annotated in output', () => {
-  withTempDir((dir) => {
-    generateAider(dir, sampleParsed());
-    const content = fs.readFileSync(path.join(dir, 'CONVENTIONS.md'), 'utf-8');
-    assert.ok(content.includes('OPTIONAL'), 'should annotate OPTIONAL gates');
-  });
-});
+// aider is now a satellite target (Aider reads AGENTS.md natively) — its
+// bespoke generator was removed; satellite behavior is covered by
+// test/satellite.test.js.
 
 // ---------------------------------------------------------------------------
 // lefthook.js
