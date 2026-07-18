@@ -21,6 +21,8 @@ const { memory } = require('./commands/memory');
 const { status } = require('./commands/status');
 const { inbox } = require('./commands/inbox');
 const { why } = require('./commands/why');
+const { sessionStart, sessionEnd } = require('./commands/session');
+const { hooks } = require('./commands/hooks');
 const { checkOnce } = require('./update/version-check');
 const { EXIT_USER } = require('./cli-errors');
 
@@ -46,6 +48,9 @@ function printUsage() {
     crag status          Cockpit: trust score, corpus counts, needs-you, today (--json)
     crag inbox           Review queue: items that need a human decision (--json)
     crag why <id>        Lineage receipt: rule → principle → claims → verification (--json)
+    crag session-start   Load session context (invoked by the SessionStart hook; --hook for harness JSON)
+    crag session-end     Capture + payoff receipt (invoked by the SessionEnd hook; --hook = silent)
+    crag hooks install   Wire SessionStart/SessionEnd into .claude/settings.json (--codex too)
     crag diff                         Compare governance against codebase reality
     crag diff --ci                     Exit non-zero on drift (for CI pipelines)
     crag diff --json                   Machine-readable JSON output
@@ -145,8 +150,11 @@ function printUsage() {
 function run(args) {
   const command = args[0];
 
-  // Non-blocking update check (cached, ~1ms on warm path)
-  checkOnce();
+  // Non-blocking update check (cached, ~1ms on warm path).
+  // Suppressed in --hook mode: session hooks fire EVERY session start/end and
+  // must be silent on all streams (quiet-by-default — a banner per session is
+  // exactly the noise class that gets tools uninstalled).
+  if (!args.includes('--hook')) checkOnce();
 
   switch (command) {
     case 'init':      init(); break;
@@ -167,6 +175,9 @@ function run(args) {
     case 'status':    status(args.slice(1)).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'inbox':     inbox(args.slice(1)).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'why':       why(args.slice(1)).catch(e => { console.error(e.message); process.exit(1); }); break;
+    case 'session-start': sessionStart(args.slice(1)).catch(e => { console.error(e.message); process.exit(1); }); break;
+    case 'session-end':   sessionEnd(args.slice(1)).catch(e => { console.error(e.message); process.exit(1); }); break;
+    case 'hooks':     hooks(args.slice(1)); break;
     case 'login':     login(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'sync':      sync(args).catch(e => { console.error(e.message); process.exit(1); }); break;
     case 'team':      team(args).catch(e => { console.error(e.message); process.exit(1); }); break;

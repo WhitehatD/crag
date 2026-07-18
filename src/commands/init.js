@@ -122,6 +122,13 @@ function init() {
 
   claude.on('exit', (code, signal) => {
     if (code === 0) {
+      // Wire the deterministic session lifecycle hooks (idempotent, merge-safe).
+      // Best-effort: a hook-install failure must not fail `crag init`.
+      try {
+        const { installHooks, printInstalledLine } = require('./hooks');
+        installHooks(process.cwd());
+        printInstalledLine();
+      } catch { /* non-fatal — hooks can be installed later via `crag hooks install` */ }
       console.log(`\n  crag setup complete. Run 'crag check' to verify.`);
     } else if (signal) {
       console.error(`\n  Interview terminated by signal: ${signal}`);

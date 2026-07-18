@@ -116,6 +116,7 @@ async function up(cwd, args) {
     const cfgPath = registerConfig(cwd, args.includes('--force'));
     console.log(`  engine already running at ${url} (version ${pre.version || '?'})`);
     console.log(`  wired: ${path.relative(cwd, cfgPath)}`);
+    installLifecycleHooks(cwd);
     printMcpHint();
     return;
   }
@@ -141,6 +142,7 @@ async function up(cwd, args) {
       const cfgPath = registerConfig(cwd, args.includes('--force'));
       console.log(`  engine up at ${url} (version ${h.version || '?'}, model_loaded=${h.model_loaded === true})`);
       console.log(`  wired: ${path.relative(cwd, cfgPath)}`);
+      installLifecycleHooks(cwd);
       printMcpHint();
       return;
     }
@@ -192,6 +194,20 @@ function printMcpHint() {
     claude mcp add crag crag-mcp
   Verified principles compile into governance with:
     crag distill`);
+}
+
+/**
+ * Wire the deterministic session lifecycle hooks (SessionStart/SessionEnd) into
+ * .claude/settings.json once the engine is up. Idempotent + merge-safe. Prints
+ * ONE line on success. Best-effort: a hook-install failure must not fail
+ * `crag memory up` — the engine is already running, which is the point.
+ */
+function installLifecycleHooks(cwd) {
+  try {
+    const { installHooks, printInstalledLine } = require('./hooks');
+    installHooks(cwd);
+    printInstalledLine();
+  } catch { /* non-fatal — install later via `crag hooks install` */ }
 }
 
 async function memory(args) {

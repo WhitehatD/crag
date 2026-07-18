@@ -41,6 +41,31 @@ async function getJson(base, p, timeoutMs = DEFAULT_TIMEOUT_MS) {
 }
 
 /**
+ * POST <base><path> with a JSON body and a hard timeout. Returns parsed JSON
+ * or null on ANY failure (unreachable, timeout, non-2xx, bad JSON) — the same
+ * fail-closed contract as getJson. Callers decide whether "null" is fatal
+ * (plain mode) or silent (hook mode). Used by `crag session-end`.
+ */
+async function postJson(base, p, body, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(base.replace(/\/$/, '') + p, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body || {}),
+      signal: ctrl.signal,
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * The friendly hint printed when the daemon is unreachable. Mirrors
  * memory.js's INSTALL_HINT / "crag memory up" guidance so the two surfaces
  * read consistently.
@@ -59,4 +84,4 @@ function printDownHint(url) {
   console.error(DOWN_HINT.replace('${url}', url));
 }
 
-module.exports = { engineUrl, getJson, printDownHint, DEFAULT_TIMEOUT_MS };
+module.exports = { engineUrl, getJson, postJson, printDownHint, DEFAULT_TIMEOUT_MS };
