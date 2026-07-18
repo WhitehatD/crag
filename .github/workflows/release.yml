@@ -128,36 +128,44 @@ jobs:
           # (the crag repo does not track .claude/; it's generated)
           node bin/crag.js analyze > /dev/null
           node bin/crag.js compile --target all
-          # Every expected artifact must exist
+          # ── AGENTS.md-canonical shape (must match test.yml) ───────────
+          # Canonical + the Claude Code import satellite
+          test -f AGENTS.md
+          grep -q "@AGENTS.md" CLAUDE.md
+          # Native AGENTS.md readers must NOT get duplicate files — a bespoke
+          # file would shadow the canon (e.g. Zed prefers .rules > AGENTS.md)
+          test ! -f GEMINI.md
+          test ! -f .rules
+          test ! -f CONVENTIONS.md
+          test ! -f .junie/guidelines.md
+          # Labeled mirrors for tools that read neither AGENTS.md nor imports
+          grep -q "MIRROR of AGENTS.md" .clinerules
+          test -f .amazonq/rules/governance.md
+          test -f .goose/GOOSEHINTS
+          test -f .kiro/steering/quality-gates.md
+          # Structural targets (real per-tool formats)
+          test -f .cursor/rules/governance.mdc
+          test -f .windsurf/rules/governance.md
+          test -f .continuerules
+          test -f .github/copilot-instructions.md
           test -f .github/workflows/gates.yml
           test -f .husky/pre-commit
           test -f .pre-commit-config.yaml
-          test -f AGENTS.md
-          test -f .cursor/rules/governance.mdc
-          test -f GEMINI.md
-          test -f .github/copilot-instructions.md
-          test -f .clinerules
-          test -f .continuerules
-          test -f .windsurf/rules/governance.md
-          test -f .rules
-          test -f .amazonq/rules/governance.md
-          test -f CONVENTIONS.md
           test -f lefthook.yml
           test -f .gitlab-ci.yml
           test -f .coderabbit.yaml
-          test -f .junie/guidelines.md
-          test -f .kiro/steering/quality-gates.md
           test -f .circleci/config.yml
           test -f azure-pipelines.yml
-          test -f .goose/GOOSEHINTS
-          echo "All 23 compile targets produced artifacts."
-          # Clean up — these are all gitignored, so we just rm them.
+          echo "AGENTS.md-canonical compile shape verified."
+          # Clean up — generated artifacts are gitignored; the two TRACKED
+          # agent files (AGENTS.md, CLAUDE.md) are restored from git.
           rm -f .github/workflows/gates.yml
           rm -rf .husky .cursor .windsurf .amazonq
-          rm -f .pre-commit-config.yaml AGENTS.md GEMINI.md .clinerules .continuerules .rules
+          rm -f .pre-commit-config.yaml GEMINI.md .clinerules .continuerules .rules
           rm -f .github/copilot-instructions.md
           rm -f CONVENTIONS.md lefthook.yml .gitlab-ci.yml .coderabbit.yaml azure-pipelines.yml
           rm -rf .junie .kiro .circleci .goose
+          git checkout -- AGENTS.md CLAUDE.md
           # Also clean the bootstrapped .claude/ so subsequent steps don't
           # see a polluted tree. They already passed their checks.
           rm -rf .claude

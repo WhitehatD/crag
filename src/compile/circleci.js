@@ -28,7 +28,7 @@ jobs:
       - checkout
       - run:
           name: Run crag governance audit
-          command: npx @whitehatd/crag audit
+          command: npm install -g @whitehatd/crag > /dev/null 2>&1 && crag audit
 
 workflows:
   governance:

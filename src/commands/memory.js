@@ -1,12 +1,12 @@
 'use strict';
 
 /**
- * `crag memory` — lifecycle surface for the crag-engine memory backend.
+ * `crag memory` — lifecycle surface for the crag-anchor memory backend.
  *
- *   crag memory up        Start the engine daemon (crag-engine, pip/docker
+ *   crag memory up        Start the engine daemon (crag-anchor, pip/docker
  *                         install) and wire this repo's .crag/mcp.json.
  *   crag memory status    Reachability + corpus stats of the configured backend.
- *   crag memory down      Stop the engine daemon (delegates to crag-engine).
+ *   crag memory down      Stop the engine daemon (delegates to crag-anchor).
  *   crag memory register  Write .crag/mcp.json only (no daemon lifecycle).
  *
  * NOT part of the deterministic compile path: like `crag mcp` and
@@ -15,9 +15,9 @@
  * The determinism guarantee of `crag compile` / `crag audit` (offline mode)
  * is untouched — the engine is an OPT-IN backend that this command manages.
  *
- * The engine itself (crag-engine) is a separate install:
- *   pip install crag-engine        (or the docker image)
- * `crag memory up` shells out to the `crag-engine` CLI when present and
+ * The engine itself (crag-anchor) is a separate install:
+ *   pip install crag-anchor        (or the docker image)
+ * `crag memory up` shells out to the `crag-anchor` CLI when present and
  * fails with actionable install instructions when not. crag stays
  * zero-dependency — no python, no engine code, is vendored here.
  */
@@ -35,13 +35,13 @@ const UP_POLL_INTERVAL_MS = 1500;
 
 /**
  * Resolve the engine's REST base URL (for /health + /stats probes):
- * env CRAG_ENGINE_URL > default loopback. NOTE this is the daemon's REST
+ * env CRAG_ANCHOR_URL > default loopback. NOTE this is the daemon's REST
  * surface, distinct from the MCP config in .crag/mcp.json (which describes
  * how MCP clients — crag-mcp federation, crag distill — reach the backend's
- * MCP server, usually stdio `crag-engine mcp`).
+ * MCP server, usually stdio `crag-anchor mcp`).
  */
 function engineUrl() {
-  return process.env.CRAG_ENGINE_URL || DEFAULT_ENGINE_URL;
+  return process.env.CRAG_ANCHOR_URL || DEFAULT_ENGINE_URL;
 }
 
 /** GET <url><path> with a hard timeout. Returns parsed JSON or null. */
@@ -59,9 +59,9 @@ async function getJson(base, p, timeoutMs = HEALTH_TIMEOUT_MS) {
   }
 }
 
-/** Is the `crag-engine` CLI installed and on PATH? Returns its version or null. */
+/** Is the `crag-anchor` CLI installed and on PATH? Returns its version or null. */
 function engineCliVersion() {
-  const probe = spawnSync('crag-engine', ['--version'], {
+  const probe = spawnSync('crag-anchor', ['--version'], {
     encoding: 'utf-8', timeout: 10000, shell: process.platform === 'win32',
   });
   if (probe.error || probe.status !== 0) return null;
@@ -71,10 +71,10 @@ function engineCliVersion() {
 /**
  * Write .crag/mcp.json in the EXACT shape src/mcp/config.js loadMemoryConfig
  * expects: a top-level `{command, args}` (stdio MCP backend) — the standard
- * wiring for a pip-installed engine is `{"command":"crag-engine","args":["mcp"]}`.
+ * wiring for a pip-installed engine is `{"command":"crag-anchor","args":["mcp"]}`.
  * Idempotent; refuses to clobber a DIFFERENT existing config unless --force.
  */
-const STDIO_CONFIG = { command: 'crag-engine', args: ['mcp'] };
+const STDIO_CONFIG = { command: 'crag-anchor', args: ['mcp'] };
 
 function registerConfig(cwd, force) {
   const dir = path.join(cwd, '.crag');
@@ -89,7 +89,7 @@ function registerConfig(cwd, force) {
       cliError(
         `.crag/mcp.json already configures a memory backend (` +
         `${existing.command ? `command: ${existing.command}` : `url: ${existing.url}`}) — ` +
-        `re-run with --force to overwrite with the crag-engine stdio config.`, EXIT_USER);
+        `re-run with --force to overwrite with the crag-anchor stdio config.`, EXIT_USER);
     }
     if (same) return cfgPath; // already correctly wired
   }
@@ -99,11 +99,11 @@ function registerConfig(cwd, force) {
   return cfgPath;
 }
 
-const INSTALL_HINT = `crag-engine is not installed (the \`crag-engine\` CLI is not on PATH).
+const INSTALL_HINT = `crag Anchor is not installed (the \`crag-anchor\` CLI is not on PATH).
 
   Install it:
-    pip install crag-engine          # local daemon (recommended)
-  or run the docker image — see the crag-engine README.
+    pip install crag-anchor          # local daemon (recommended)
+  or run the docker image — see the crag-anchor README.
 
   Then re-run: crag memory up`;
 
@@ -116,6 +116,7 @@ async function up(cwd, args) {
     const cfgPath = registerConfig(cwd, args.includes('--force'));
     console.log(`  engine already running at ${url} (version ${pre.version || '?'})`);
     console.log(`  wired: ${path.relative(cwd, cfgPath)}`);
+    installLifecycleHooks(cwd);
     printMcpHint();
     return;
   }
@@ -123,12 +124,12 @@ async function up(cwd, args) {
   const version = engineCliVersion();
   if (!version) cliError(INSTALL_HINT, EXIT_USER);
 
-  console.log(`  starting crag-engine (${version}) ...`);
-  const start = spawnSync('crag-engine', ['up', '--detach'], {
+  console.log(`  starting crag-anchor (${version}) ...`);
+  const start = spawnSync('crag-anchor', ['up', '--detach'], {
     encoding: 'utf-8', timeout: 60000, shell: process.platform === 'win32',
   });
   if (start.error || start.status !== 0) {
-    cliError(`crag-engine up failed: ${(start.stderr || start.error && start.error.message || 'unknown error').trim()}`, EXIT_USER);
+    cliError(`crag-anchor up failed: ${(start.stderr || start.error && start.error.message || 'unknown error').trim()}`, EXIT_USER);
   }
 
   // Poll /health until the model is loaded (first boot downloads/loads ~60s).
@@ -141,6 +142,7 @@ async function up(cwd, args) {
       const cfgPath = registerConfig(cwd, args.includes('--force'));
       console.log(`  engine up at ${url} (version ${h.version || '?'}, model_loaded=${h.model_loaded === true})`);
       console.log(`  wired: ${path.relative(cwd, cfgPath)}`);
+      installLifecycleHooks(cwd);
       printMcpHint();
       return;
     }
@@ -148,7 +150,7 @@ async function up(cwd, args) {
     await new Promise((r) => setTimeout(r, UP_POLL_INTERVAL_MS));
   }
   process.stdout.write('\n');
-  cliError(`engine did not become healthy at ${url} within ${UP_WAIT_TOTAL_MS / 1000}s — check \`crag-engine logs\`.`, EXIT_USER);
+  cliError(`engine did not become healthy at ${url} within ${UP_WAIT_TOTAL_MS / 1000}s — check \`crag-anchor logs\`.`, EXIT_USER);
 }
 
 async function status(cwd) {
@@ -177,11 +179,11 @@ async function status(cwd) {
 function down() {
   const version = engineCliVersion();
   if (!version) cliError(INSTALL_HINT, EXIT_USER);
-  const stop = spawnSync('crag-engine', ['down'], {
+  const stop = spawnSync('crag-anchor', ['down'], {
     encoding: 'utf-8', timeout: 60000, shell: process.platform === 'win32',
   });
   if (stop.error || stop.status !== 0) {
-    cliError(`crag-engine down failed: ${(stop.stderr || stop.error && stop.error.message || 'unknown error').trim()}`, EXIT_USER);
+    cliError(`crag-anchor down failed: ${(stop.stderr || stop.error && stop.error.message || 'unknown error').trim()}`, EXIT_USER);
   }
   console.log('  engine stopped.');
 }
@@ -194,6 +196,20 @@ function printMcpHint() {
     crag distill`);
 }
 
+/**
+ * Wire the deterministic session lifecycle hooks (SessionStart/SessionEnd) into
+ * .claude/settings.json once the engine is up. Idempotent + merge-safe. Prints
+ * ONE line on success. Best-effort: a hook-install failure must not fail
+ * `crag memory up` — the engine is already running, which is the point.
+ */
+function installLifecycleHooks(cwd) {
+  try {
+    const { installHooks, printInstalledLine } = require('./hooks');
+    installHooks(cwd);
+    printInstalledLine();
+  } catch { /* non-fatal — install later via `crag hooks install` */ }
+}
+
 async function memory(args) {
   validateFlags('memory', args, { boolean: ['--force'], string: ['--url'] });
   const cwd = process.cwd();
@@ -204,7 +220,7 @@ async function memory(args) {
     const v = args[urlFlagIdx].includes('=')
       ? args[urlFlagIdx].split('=')[1]
       : args[urlFlagIdx + 1];
-    if (v) process.env.CRAG_ENGINE_URL = v;
+    if (v) process.env.CRAG_ANCHOR_URL = v;
   }
 
   if (sub === 'up') return up(cwd, args);
@@ -212,7 +228,7 @@ async function memory(args) {
   if (sub === 'down') return down();
   if (sub === 'register') {
     const cfgPath = registerConfig(cwd, args.includes('--force'));
-    console.log(`  wired: ${path.relative(cwd, cfgPath)} (stdio: crag-engine mcp)`);
+    console.log(`  wired: ${path.relative(cwd, cfgPath)} (stdio: crag-anchor mcp)`);
     return;
   }
   cliError(`unknown subcommand \`${sub}\` — expected up | status | down | register`, EXIT_USER);

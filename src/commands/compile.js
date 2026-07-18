@@ -12,64 +12,47 @@ const { generateHusky } = require('../compile/husky');
 const { generatePreCommitConfig } = require('../compile/pre-commit');
 const { generateAgentsMd } = require('../compile/agents-md');
 const { generateCursorRules } = require('../compile/cursor-rules');
-const { generateGeminiMd } = require('../compile/gemini-md');
 const { generateCopilot } = require('../compile/copilot');
-const { generateCline } = require('../compile/cline');
 const { generateContinue } = require('../compile/continue');
 const { generateWindsurf } = require('../compile/windsurf');
-const { generateZed } = require('../compile/zed');
-const { generateAmazonQ } = require('../compile/amazonq');
-const { generateClaude } = require('../compile/claude');
-const { generateAider } = require('../compile/aider');
 const { generateLefthook } = require('../compile/lefthook');
 const { generateGitlabCI } = require('../compile/gitlab-ci');
 const { generateCoderabbit } = require('../compile/coderabbit');
-const { generateJunie } = require('../compile/junie');
-const { generateKiro } = require('../compile/kiro');
 const { generateCircleCI } = require('../compile/circleci');
 const { generateAzureDevOps } = require('../compile/azuredevops');
-const { generateGoose } = require('../compile/goose');
 const { generateScaffold } = require('../compile/scaffold');
+const { renderSatellite } = require('../compile/satellite');
+const { getTarget, allTargetIds } = require('../compile/targets');
+const { resolveTargets } = require('../compile/detect');
+const { compileGlobal } = require('../compile/global');
+const { assertMigrateSafe } = require('../compile/migrate-guard');
 const { cliError, readFileOrExit, EXIT_USER, EXIT_INTERNAL, requireGovernance } = require('../cli-errors');
 const { validateFlags } = require('../cli-args');
 
-// All supported compile targets in dispatch order.
-// Grouped: CI (3) + AI agent native (3) + AI agent extras (6) + new (4)
-const ALL_TARGETS = [
-  'github',
-  'forgejo',
-  'husky',
-  'pre-commit',
-  'agents-md',
-  'cursor',
-  'gemini',
-  'copilot',
-  'cline',
-  'continue',
-  'windsurf',
-  'zed',
-  'amazonq',
-  'claude',
-  'aider',
-  'lefthook',
-  'gitlab',
-  'coderabbit',
-  'junie',
-  'kiro',
-  'circleci',
-  'azuredevops',
-  'goose',
-];
+// All supported compile targets, in dispatch order — sourced from the target
+// REGISTRY (src/compile/targets.js), the single source of truth for what each
+// target is (canonical / satellite / structural), where it writes, and how it
+// relates to AGENTS.md. The old hand-maintained array here WAS the
+// "no hand-maintained compiled-shape files" rot the registry removes.
+const ALL_TARGETS = allTargetIds();
 
 function compile(args) {
   validateFlags('compile', args, {
-    boolean: ['--dry-run', '--verbose', '--force'],
+    boolean: ['--dry-run', '--verbose', '--force', '--global', '--refresh'],
     string: ['--target'],
   });
-  const targetIdx = args.indexOf('--target');
-  const target = targetIdx !== -1 ? args[targetIdx + 1] : (args[1] && !args[1].startsWith('--') ? args[1] : undefined);
   const dryRun = args.includes('--dry-run');
   const verbose = args.includes('--verbose');
+
+  // --global: compile the machine-global user layer (~/.crag → ~/.agents/AGENTS.md
+  // + per-tool global paths), independent of any project. Fully separate flow.
+  if (args.includes('--global')) {
+    compileGlobal({ dryRun });
+    return;
+  }
+
+  const targetIdx = args.indexOf('--target');
+  const target = targetIdx !== -1 ? args[targetIdx + 1] : (args[1] && !args[1].startsWith('--') ? args[1] : undefined);
 
   // Validate the target BEFORE reading governance.md or doing any work. A
   // previous bug had target validation buried inside the compile loop, so
@@ -95,6 +78,12 @@ function compile(args) {
   // sources exist anywhere, in which case behavior is byte-identical to
   // pre-compose crag — requireGovernance() + a direct file read, exactly
   // as before. The split is additive/opt-in, never assumed.
+  // Guard the #3615 footgun: composing over a rich hand-maintained
+  // governance.md when a .gen layer exists but no .src seed does would
+  // silently gut it. assertMigrateSafe exits with a clear message pointing at
+  // `crag distill --migrate` instead of destroying the file.
+  assertMigrateSafe(cwd);
+
   const composed = composeGovernance(cwd);
   let content;
   if (composed) {
@@ -119,40 +108,30 @@ function compile(args) {
     console.log(`  \x1b[36mcompose\x1b[0m .crag/ ${writeNote} \x1b[2m(${composed.genBulletsKept} distilled principle(s), ${composed.genBulletsOverflow} over budget)\x1b[0m`);
   }
 
-  if (!target || target === 'list') {
+  if (target === 'list') {
     console.log(`\n  crag compile — ${parsed.name || 'unnamed project'}`);
     console.log(`  ${gateCount} gate(s) in ${Object.keys(parsed.gates).length} section(s), ${parsed.runtimes.length} runtime(s) detected\n`);
-    console.log('  CI / git hooks:');
-    console.log('    crag compile --target github       .github/workflows/gates.yml');
-    console.log('    crag compile --target forgejo      .forgejo/workflows/gates.yml');
-    console.log('    crag compile --target husky        .husky/pre-commit');
-    console.log('    crag compile --target pre-commit   .pre-commit-config.yaml');
-    console.log('    crag compile --target lefthook     lefthook.yml');
-    console.log('    crag compile --target gitlab       .gitlab-ci.yml');
-    console.log('    crag compile --target circleci     .circleci/config.yml');
-    console.log('    crag compile --target azuredevops  azure-pipelines.yml\n');
-    console.log('  AI coding agents — native formats:');
-    console.log('    crag compile --target agents-md    AGENTS.md (Codex, Aider, Factory)');
-    console.log('    crag compile --target cursor       .cursor/rules/governance.mdc');
-    console.log('    crag compile --target gemini       GEMINI.md\n');
-    console.log('  AI coding agents — additional formats:');
-    console.log('    crag compile --target copilot      .github/copilot-instructions.md');
-    console.log('    crag compile --target cline        .clinerules');
-    console.log('    crag compile --target continue     .continuerules');
-    console.log('    crag compile --target windsurf     .windsurf/rules/governance.md');
-    console.log('    crag compile --target zed          .rules');
-    console.log('    crag compile --target amazonq      .amazonq/rules/governance.md');
-    console.log('    crag compile --target claude       CLAUDE.md');
-    console.log('    crag compile --target aider        CONVENTIONS.md');
-    console.log('    crag compile --target coderabbit   .coderabbit.yaml');
-    console.log('    crag compile --target junie        .junie/guidelines.md');
-    console.log('    crag compile --target kiro         .kiro/steering/quality-gates.md');
-    console.log('    crag compile --target goose        .goose/GOOSEHINTS\n');
+    console.log('  AGENTS.md is the canonical agent file (the Linux-Foundation standard,');
+    console.log('  read natively by Codex, Cursor, Copilot, Gemini, Windsurf, Aider, Zed …).');
+    console.log('  Bare `crag compile` DETECTS the harnesses in this repo and writes only');
+    console.log('  AGENTS.md + the deltas each one needs — not all 23 files.\n');
+    console.log('  Canonical:');
+    console.log('    agents-md     AGENTS.md  (the source every native tool reads)');
+    console.log('  Satellites (only the deltas):');
+    console.log('    claude        CLAUDE.md  (@AGENTS.md import — the one holdout)');
+    console.log('    cline/amazonq/goose/kiro   labeled mirrors (tools that read neither)');
+    console.log('    gemini/zed/aider/junie     native — skipped when AGENTS.md is present\n');
+    console.log('  Structural (real per-tool value):');
+    console.log('    cursor · windsurf · continue · copilot   (path-scoped rule formats)');
+    console.log('    github · forgejo · husky · pre-commit · lefthook · gitlab · circleci · azuredevops · coderabbit   (executable gates)\n');
     console.log('  Infrastructure:');
     console.log('    crag compile --target scaffold     Hooks, settings, agents, CI playbook\n');
-    console.log('  Combined:');
-    console.log(`    crag compile --target all          All ${ALL_TARGETS.length} AI config targets at once`);
-    console.log('    crag compile --target <t> --dry-run  Preview paths without writing\n');
+    console.log('  Escape hatches:');
+    console.log('    crag compile                       Detect + compile this repo\'s harnesses');
+    console.log('    crag compile --refresh             Re-detect (ignore .crag/config.json)');
+    console.log('    crag compile --target <id>         Force one target');
+    console.log(`    crag compile --target all          All ${ALL_TARGETS.length} targets`);
+    console.log('    crag compile --global              Machine-global user layer → ~/.agents\n');
     return;
   }
 
@@ -181,7 +160,26 @@ function compile(args) {
     return;
   }
 
-  const targets = target === 'all' ? ALL_TARGETS : [target];
+  // Target resolution:
+  //   --target all   → every registry target (explicit escape hatch)
+  //   --target <id>  → exactly that one
+  //   (no target)    → DETECT this repo's harnesses and compile only those
+  //                    (AGENTS.md canonical + the deltas each needs). The
+  //                    resolved set persists to .crag/config.json.
+  let targets;
+  if (target === 'all') {
+    targets = ALL_TARGETS;
+  } else if (!target) {
+    const res = resolveTargets(cwd, { refresh: args.includes('--refresh'), persist: !dryRun });
+    targets = res.targets;
+    console.log(`\n  \x1b[36mdetected\x1b[0m (${res.source === 'config' ? '.crag/config.json' : (dryRun ? 'repo scan, dry-run — config not written' : 'repo scan → .crag/config.json')}): ${targets.join(', ')}`);
+  } else {
+    targets = [target];
+  }
+
+  // Whether the canonical AGENTS.md is part of this run — drives satellite
+  // behavior (import/skip vs self-contained mirror).
+  const agentsMdInRun = targets.includes('agents-md');
 
   // Refuse to emit a workflow / hook / CI file when there are 0 gates —
   // these targets produce broken artifacts (empty workflows, hooks with
@@ -234,13 +232,16 @@ function compile(args) {
   let failures = 0;
   for (const t of targets) {
     try {
-      runGenerator(t, cwd, parsed);
+      runGenerator(t, cwd, parsed, { agentsMdInRun });
       if (verbose) {
         const outPath = planOutputPath(cwd, t);
-        let size = 0;
-        try { size = fs.statSync(outPath).size; } catch { /* ignore */ }
-        const rel = path.relative(cwd, outPath);
-        console.log(`  \x1b[32mwrote\x1b[0m ${rel.padEnd(44)} \x1b[2m${formatBytes(size)}\x1b[0m`);
+        // A native satellite that read AGENTS.md writes no file — skip the
+        // (misleading) "wrote 0 B" line; renderSatellite already logged it.
+        if (outPath && fs.existsSync(outPath)) {
+          const size = fs.statSync(outPath).size;
+          const rel = path.relative(cwd, outPath);
+          console.log(`  \x1b[32mwrote\x1b[0m ${rel.padEnd(44)} \x1b[2m${formatBytes(size)}\x1b[0m`);
+        }
       }
     } catch (err) {
       // Per-target failure: warn and continue so one broken target
@@ -264,7 +265,21 @@ function compile(args) {
  * real compile path and by `computeArtifactSizes` (which runs the same
  * generators against a scratch dir for dry-run byte counts).
  */
-function runGenerator(target, cwd, parsed) {
+function runGenerator(target, cwd, parsed, opts = {}) {
+  // Satellite-class targets (claude/gemini/cline/zed/amazonq/aider/junie/goose/
+  // kiro) route through the ONE shared renderer, which decides import-stub /
+  // native-skip / labeled-mirror from the registry entry + whether AGENTS.md is
+  // part of this run. `opts.importRef` lets --global pass an absolute import.
+  const entry = getTarget(target);
+  if (entry && entry.class === 'satellite') {
+    renderSatellite(entry, parsed, {
+      cwd,
+      agentsMdInRun: !!opts.agentsMdInRun,
+      importRef: opts.importRef,
+    });
+    return;
+  }
+
   switch (target) {
     case 'github':     generateGitHubActions(cwd, parsed); break;
     case 'forgejo':    generateForgejo(cwd, parsed); break;
@@ -272,23 +287,14 @@ function runGenerator(target, cwd, parsed) {
     case 'pre-commit': generatePreCommitConfig(cwd, parsed); break;
     case 'agents-md':  generateAgentsMd(cwd, parsed); break;
     case 'cursor':     generateCursorRules(cwd, parsed); break;
-    case 'gemini':     generateGeminiMd(cwd, parsed); break;
     case 'copilot':    generateCopilot(cwd, parsed); break;
-    case 'cline':      generateCline(cwd, parsed); break;
     case 'continue':   generateContinue(cwd, parsed); break;
     case 'windsurf':   generateWindsurf(cwd, parsed); break;
-    case 'zed':        generateZed(cwd, parsed); break;
-    case 'amazonq':    generateAmazonQ(cwd, parsed); break;
-    case 'claude':     generateClaude(cwd, parsed); break;
-    case 'aider':      generateAider(cwd, parsed); break;
     case 'lefthook':   generateLefthook(cwd, parsed); break;
     case 'gitlab':     generateGitlabCI(cwd, parsed); break;
     case 'coderabbit': generateCoderabbit(cwd, parsed); break;
-    case 'junie':      generateJunie(cwd, parsed); break;
-    case 'kiro':       generateKiro(cwd, parsed); break;
     case 'circleci':   generateCircleCI(cwd, parsed); break;
     case 'azuredevops': generateAzureDevOps(cwd, parsed); break;
-    case 'goose':      generateGoose(cwd, parsed); break;
     default:
       console.error(`  Unknown target: ${target}`);
       console.error(`  Valid targets: ${ALL_TARGETS.join(', ')}, all, list`);
@@ -344,32 +350,10 @@ function formatBytes(n) {
  * Used by --dry-run to show what would be written.
  */
 function planOutputPath(cwd, target) {
-  const map = {
-    'github':     path.join(cwd, '.github', 'workflows', 'gates.yml'),
-    'forgejo':    path.join(cwd, '.forgejo', 'workflows', 'gates.yml'),
-    'husky':      path.join(cwd, '.husky', 'pre-commit'),
-    'pre-commit': path.join(cwd, '.pre-commit-config.yaml'),
-    'agents-md':  path.join(cwd, 'AGENTS.md'),
-    'cursor':     path.join(cwd, '.cursor', 'rules', 'governance.mdc'),
-    'gemini':     path.join(cwd, 'GEMINI.md'),
-    'copilot':    path.join(cwd, '.github', 'copilot-instructions.md'),
-    'cline':      path.join(cwd, '.clinerules'),
-    'continue':   path.join(cwd, '.continuerules'),
-    'windsurf':   path.join(cwd, '.windsurf', 'rules', 'governance.md'),
-    'zed':        path.join(cwd, '.rules'),
-    'amazonq':    path.join(cwd, '.amazonq', 'rules', 'governance.md'),
-    'claude':     path.join(cwd, 'CLAUDE.md'),
-    'aider':      path.join(cwd, 'CONVENTIONS.md'),
-    'lefthook':   path.join(cwd, 'lefthook.yml'),
-    'gitlab':     path.join(cwd, '.gitlab-ci.yml'),
-    'coderabbit': path.join(cwd, '.coderabbit.yaml'),
-    'junie':      path.join(cwd, '.junie', 'guidelines.md'),
-    'kiro':       path.join(cwd, '.kiro', 'steering', 'quality-gates.md'),
-    'circleci':   path.join(cwd, '.circleci', 'config.yml'),
-    'azuredevops': path.join(cwd, 'azure-pipelines.yml'),
-    'goose':      path.join(cwd, '.goose', 'GOOSEHINTS'),
-  };
-  return map[target] || null;
+  const entry = getTarget(target);
+  if (!entry) return null;
+  // entry.file is a posix-style relative path (e.g. ".github/workflows/gates.yml")
+  return path.join(cwd, ...entry.file.split('/'));
 }
 
 module.exports = { compile, ALL_TARGETS, planOutputPath, formatBytes, computeArtifactSizes, runGenerator };

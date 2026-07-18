@@ -96,6 +96,10 @@ crag auto         # full pipeline: analyze, compile, audit, hook install
 | `crag` | Default: analyze + compile + audit in one shot |
 | `crag analyze` | Read CI, package manifests, code patterns. Write `governance.md` |
 | `crag analyze --write-governance` | Generate `governance.md` from scratch. Add `--force` to overwrite existing. |
+| `crag status` | Cockpit: trust score + corpus counts from the local engine (`--json`) *(next release)* |
+| `crag inbox` | Items that need a human — TRUE-T2 dispositions (`--json`) *(next release)* |
+| `crag why <id>` | Show the evidence chain behind a rule or claim (`--json`) *(next release)* |
+| `crag sync --memory` | Push a verified-memory snapshot (overview + rules) to app.crag.sh *(next release)* |
 | `crag compile --target <t>` | Compile governance.md to a specific target format |
 | `crag compile --target all` | Compile to all 23 targets at once |
 | `crag compile --target scaffold` | Generate hooks, settings, agents, CI playbook |
@@ -217,6 +221,26 @@ Returns:
 ```bash
 crag audit --fix    # recompiles all stale targets
 ```
+
+---
+
+## Cockpit — verified memory *(next release)*
+
+When a local [crag-anchor](https://github.com/WhitehatD/crag-anchor) daemon is
+running, the CLI becomes a read-model cockpit over your agent's verified memory.
+These commands ship in the next `@whitehatd/crag` release (currently on
+`feat/memory-seam`):
+
+```bash
+crag status              # trust score + corpus counts (--json for machines)
+crag inbox               # items that need a human (TRUE-T2 dispositions)
+crag why <id>            # the evidence chain behind a rule or claim
+crag sync --memory       # push an overview + rules snapshot to app.crag.sh
+```
+
+`crag sync --memory` reads the daemon's `/overview` + `/rules` and pushes them
+to the cloud, which renders a "Verified Memory" card — the cloud never reaches
+back to your local daemon.
 
 ---
 

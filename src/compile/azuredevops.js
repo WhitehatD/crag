@@ -34,7 +34,7 @@ steps:
       versionSpec: '20.x'
     displayName: 'Install Node.js'
 
-  - script: npx @whitehatd/crag audit
+  - script: npm install -g @whitehatd/crag > /dev/null 2>&1 && crag audit
     displayName: 'Run crag governance audit'
 `;
 

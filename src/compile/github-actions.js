@@ -278,7 +278,16 @@ function generateGuardYaml(regenerateCmd, checkoutAction, setupNodeAction, nodeV
     '        with:',
     `          node-version: '${nodeVersion}'`,
     '      - name: Check CI and governance are in sync',
-    '        run: npx @whitehatd/crag diff --ci',
+    '        run: |',
+    '          # Repos that do not COMMIT .claude/governance.md (crag itself',
+    '          # gitignores it) bootstrap one from the codebase first — diff then',
+    '          # checks the workflows against derived reality. Repos that DO',
+    '          # commit governance get the real committed-vs-CI drift check.',
+    '          npm install -g @whitehatd/crag > /dev/null 2>&1',
+    '          if [ ! -f .claude/governance.md ]; then',
+    '            crag analyze > /dev/null',
+    '          fi',
+    '          crag diff --ci',
     '',
   ].join('\n');
 }

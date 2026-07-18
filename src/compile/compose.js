@@ -194,18 +194,34 @@ function parseOrNull(content) {
  * caller must fall back to reading .claude/governance.md directly).
  */
 function composeGovernance(cwd, opts = {}) {
-  if (!hasSplitSources(cwd)) return null;
-
-  const budgetChars = typeof opts.budgetChars === 'number' ? opts.budgetChars : DEFAULT_GEN_BUDGET_CHARS;
+  const scope = opts.scope || 'project';
   const paths = layerPaths(cwd);
 
+  // Activation gate. Project scope keys on the project layer (see
+  // hasSplitSources). User scope (`crag compile --global`) composes the
+  // machine-global user layer ALONE — no project involved — so it activates on
+  // a ~/.crag source existing, and never reads the project layer.
+  if (scope === 'user') {
+    if (!fs.existsSync(paths.userSrc) && !fs.existsSync(paths.userGen)) return null;
+  } else if (!hasSplitSources(cwd)) {
+    return null;
+  }
+
+  const budgetChars = typeof opts.budgetChars === 'number' ? opts.budgetChars : DEFAULT_GEN_BUDGET_CHARS;
+
   // Precedence order: user.src > user.gen > project.src > project.gen
-  const sourceOrder = [
-    { key: 'userSrc', path: paths.userSrc },
-    { key: 'userGen', path: paths.userGen },
-    { key: 'projectSrc', path: paths.projectSrc },
-    { key: 'projectGen', path: paths.projectGen },
-  ];
+  // (user scope stops after the user layer — the machine-global set.)
+  const sourceOrder = scope === 'user'
+    ? [
+        { key: 'userSrc', path: paths.userSrc },
+        { key: 'userGen', path: paths.userGen },
+      ]
+    : [
+        { key: 'userSrc', path: paths.userSrc },
+        { key: 'userGen', path: paths.userGen },
+        { key: 'projectSrc', path: paths.projectSrc },
+        { key: 'projectGen', path: paths.projectGen },
+      ];
   const raw = sourceOrder.map((s) => ({ ...s, content: readIfExists(s.path) }));
   const parsedList = raw.map((s) => ({ ...s, parsed: parseOrNull(s.content) }));
   const present = parsedList.filter((s) => s.parsed !== null);

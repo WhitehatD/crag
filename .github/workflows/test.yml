@@ -135,21 +135,33 @@ jobs:
           # (the crag repo does not track .claude/; it's generated)
           node bin/crag.js analyze > /dev/null
           node bin/crag.js compile --target all
-          # Verify every expected artifact exists
+          # ── AGENTS.md-canonical shape ─────────────────────────────────
+          # Canonical + the Claude Code import satellite
+          test -f AGENTS.md
+          grep -q "@AGENTS.md" CLAUDE.md
+          # Native AGENTS.md readers must NOT get duplicate files — a bespoke
+          # file would shadow the canon (e.g. Zed prefers .rules > AGENTS.md)
+          test ! -f GEMINI.md
+          test ! -f .rules
+          test ! -f CONVENTIONS.md
+          test ! -f .junie/guidelines.md
+          # Labeled mirrors for tools that read neither AGENTS.md nor imports
+          grep -q "MIRROR of AGENTS.md" .clinerules
+          test -f .amazonq/rules/governance.md
+          test -f .goose/GOOSEHINTS
+          test -f .kiro/steering/quality-gates.md
+          # Structural targets (real per-tool formats)
+          test -f .cursor/rules/governance.mdc
+          test -f .windsurf/rules/governance.md
+          test -f .continuerules
+          test -f .github/copilot-instructions.md
           test -f .github/workflows/gates.yml
           test -f .husky/pre-commit
           test -f .pre-commit-config.yaml
-          test -f AGENTS.md
-          test -f .cursor/rules/governance.mdc
-          test -f GEMINI.md
-          test -f .github/copilot-instructions.md
-          test -f .clinerules
-          test -f .continuerules
-          test -f .windsurf/rules/governance.md
-          test -f .rules
-          test -f .amazonq/rules/governance.md
-          echo "All 12 compile targets produced artifacts."
-          # Clean up — everything above is gitignored, just rm it
-          rm -f AGENTS.md GEMINI.md .clinerules .continuerules .rules .pre-commit-config.yaml
-          rm -rf .cursor .husky .windsurf .amazonq .claude
+          echo "AGENTS.md-canonical compile shape verified."
+          # Clean up — generated artifacts are gitignored; the two TRACKED
+          # agent files (AGENTS.md, CLAUDE.md) are restored from git.
+          rm -f GEMINI.md .clinerules .continuerules .rules .pre-commit-config.yaml
+          rm -rf .cursor .husky .windsurf .amazonq .goose .kiro .claude
           rm -f .github/copilot-instructions.md .github/workflows/gates.yml
+          git checkout -- AGENTS.md CLAUDE.md
