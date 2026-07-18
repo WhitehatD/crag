@@ -170,9 +170,9 @@ function compile(args) {
   if (target === 'all') {
     targets = ALL_TARGETS;
   } else if (!target) {
-    const res = resolveTargets(cwd, { refresh: args.includes('--refresh') });
+    const res = resolveTargets(cwd, { refresh: args.includes('--refresh'), persist: !dryRun });
     targets = res.targets;
-    console.log(`\n  \x1b[36mdetected\x1b[0m (${res.source === 'config' ? '.crag/config.json' : 'repo scan → .crag/config.json'}): ${targets.join(', ')}`);
+    console.log(`\n  \x1b[36mdetected\x1b[0m (${res.source === 'config' ? '.crag/config.json' : (dryRun ? 'repo scan, dry-run — config not written' : 'repo scan → .crag/config.json')}): ${targets.join(', ')}`);
   } else {
     targets = [target];
   }

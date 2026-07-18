@@ -164,13 +164,17 @@ function resolveTargets(cwd, opts = {}) {
     }
   }
   const det = detectTargets(cwd, opts);
-  const cfg = readConfig(cwd) || {};
-  writeConfig(cwd, {
-    ...cfg,
-    targets: det.targets,
-    detected: det.signals,
-    updatedAt: new Date().toISOString(),
-  });
+  // Persist unless the caller says not to (a --dry-run compile must stay
+  // side-effect-free — it reports what WOULD happen, it writes nothing).
+  if (opts.persist !== false) {
+    const cfg = readConfig(cwd) || {};
+    writeConfig(cwd, {
+      ...cfg,
+      targets: det.targets,
+      detected: det.signals,
+      updatedAt: new Date().toISOString(),
+    });
+  }
   return { targets: det.targets, source: 'detected', signals: det.signals };
 }
 

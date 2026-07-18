@@ -121,6 +121,15 @@ test('second resolve reads config (authoritative, reproducible)', () => {
   });
 });
 
+test('persist:false detects without writing config (dry-run purity)', () => {
+  withTempDir((dir) => {
+    fs.mkdirSync(path.join(dir, '.cursor'));
+    const res = resolveTargets(dir, { persist: false });
+    assert.strictEqual(res.source, 'detected');
+    assert.strictEqual(readConfig(dir), null, 'no .crag/config.json on persist:false');
+  });
+});
+
 test('--refresh re-detects, ignoring stale config', () => {
   withTempDir((dir) => {
     fs.mkdirSync(path.join(dir, '.cursor'));
