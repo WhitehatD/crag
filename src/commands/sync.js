@@ -325,7 +325,7 @@ function deviceId() {
 /**
  * crag sync --memory — push a verified-memory snapshot to crag cloud.
  *
- * Reads the LOCAL crag-engine daemon's GET /overview + GET /rules (the same
+ * Reads the LOCAL crag-anchor daemon's GET /overview + GET /rules (the same
  * aggregate endpoints `crag status` / `crag why` already consume — see
  * cockpit-client.js) and POSTs a compact snapshot to POST /api/memory/snapshot,
  * authenticated with the same bearer token every other cloud command uses.

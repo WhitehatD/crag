@@ -58,14 +58,14 @@ test('memory register writes top-level stdio config loadMemoryConfig understands
   const cwd = tmpdir();
   run(['memory', 'register'], { cwd });
   const cfg = JSON.parse(fs.readFileSync(path.join(cwd, '.crag', 'mcp.json'), 'utf-8'));
-  assert.strictEqual(cfg.command, 'crag-engine');
+  assert.strictEqual(cfg.command, 'crag-anchor');
   assert.deepStrictEqual(cfg.args, ['mcp']);
   // Must round-trip through the real loader as a stdio backend.
   const { loadMemoryConfig } = require('../src/mcp/config');
   const loaded = loadMemoryConfig(cwd);
   assert.ok(loaded, 'loadMemoryConfig returned null for registered config');
   assert.strictEqual(loaded.kind, 'stdio');
-  assert.strictEqual(loaded.command, 'crag-engine');
+  assert.strictEqual(loaded.command, 'crag-anchor');
 });
 
 test('memory register is idempotent', () => {
@@ -73,7 +73,7 @@ test('memory register is idempotent', () => {
   run(['memory', 'register'], { cwd });
   run(['memory', 'register'], { cwd }); // second run must not throw
   const cfg = JSON.parse(fs.readFileSync(path.join(cwd, '.crag', 'mcp.json'), 'utf-8'));
-  assert.strictEqual(cfg.command, 'crag-engine');
+  assert.strictEqual(cfg.command, 'crag-anchor');
 });
 
 test('memory register refuses to clobber a different backend without --force', () => {
@@ -85,7 +85,7 @@ test('memory register refuses to clobber a different backend without --force', (
   // With --force it overwrites.
   run(['memory', 'register', '--force'], { cwd });
   const cfg = JSON.parse(fs.readFileSync(path.join(cwd, '.crag', 'mcp.json'), 'utf-8'));
-  assert.strictEqual(cfg.command, 'crag-engine');
+  assert.strictEqual(cfg.command, 'crag-anchor');
 });
 
 test('memory rejects unknown subcommand', () => {
@@ -97,7 +97,7 @@ test('memory status exits 1 when engine is down', () => {
   const cwd = tmpdir();
   let failed = false;
   try {
-    run(['memory', 'status'], { cwd, env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1', CRAG_ENGINE_URL: 'http://127.0.0.1:1' } });
+    run(['memory', 'status'], { cwd, env: { ...process.env, CRAG_NO_UPDATE_CHECK: '1', CRAG_ANCHOR_URL: 'http://127.0.0.1:1' } });
   } catch (err) {
     failed = true;
     assert.match(String(err.stdout || ''), /DOWN/);

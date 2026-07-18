@@ -3,7 +3,7 @@
 /**
  * `crag session-start` / `crag session-end` — the deterministic session
  * lifecycle CLI (design laws 1-2). These are the shims the harness SessionStart
- * / SessionEnd `command` hooks invoke; they are thin clients of the crag-engine
+ * / SessionEnd `command` hooks invoke; they are thin clients of the crag-anchor
  * daemon's /session/start and /session/end endpoints (see cockpit-client.js).
  *
  * Two modes each:

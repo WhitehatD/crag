@@ -3,7 +3,7 @@
 /**
  * `crag inbox` — the needs-you review queue.
  *
- * A thin client of the crag-engine daemon's GET /inbox aggregate endpoint.
+ * A thin client of the crag-anchor daemon's GET /inbox aggregate endpoint.
  * Lists items awaiting a human decision (t2 dispositions, grounding proposals,
  * contradictions, stale rules) with id / kind / title / why. Read-only: this
  * task ships the cockpit VIEW only — approve/reject mutation is via the console

@@ -11,7 +11,7 @@
  *   - a claim id                e.g. `insight:123`, `claim:123`, or a bare `123`
  *     that matches no principle
  *
- * Endpoints (crag-engine daemon):
+ * Endpoints (crag-anchor daemon):
  *   GET /rules                          -> match principle_id for rule text + claim_health
  *   GET /claims/{claim_id}              -> the claim + linked insights/principles
  *   GET /ground/history/{kind}/{cid}    -> the reasoning / verification trail

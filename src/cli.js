@@ -42,7 +42,7 @@ function printUsage() {
     crag distill         Render verified memory principles into .crag/governance.gen.md
     crag distill --check   Preview would-change diff without writing (CI-safe)
     crag distill --migrate Opt this repo into the composed model (governance.md → .src)
-    crag memory up       Start the crag-engine memory backend + wire .crag/mcp.json
+    crag memory up       Start the crag-anchor memory backend + wire .crag/mcp.json
     crag memory status   Engine reachability + corpus stats (exit 1 when down)
     crag memory down     Stop the engine daemon
     crag status          Cockpit: trust score, corpus counts, needs-you, today (--json)

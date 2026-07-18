@@ -160,25 +160,25 @@ test('installHooks: creates settings.json when absent; merge-safe when present',
 // ── CLI behavior: fail-open vs friendly hint ────────────────────────────
 
 test('session-start --hook with dead daemon: SILENT, exit 0 (fail-open)', () => {
-  const r = runCrag(['session-start', '--hook'], { CRAG_ENGINE_URL: DEAD_URL });
+  const r = runCrag(['session-start', '--hook'], { CRAG_ANCHOR_URL: DEAD_URL });
   assert.strictEqual(r.rc, 0, `expected exit 0, got ${r.rc}: ${r.stderr}`);
   assert.strictEqual(r.stdout.trim(), '', `expected empty stdout, got: ${r.stdout}`);
 });
 
 test('session-end --hook with dead daemon: SILENT, exit 0 (fail-open)', () => {
-  const r = runCrag(['session-end', '--hook'], { CRAG_ENGINE_URL: DEAD_URL });
+  const r = runCrag(['session-end', '--hook'], { CRAG_ANCHOR_URL: DEAD_URL });
   assert.strictEqual(r.rc, 0, `expected exit 0, got ${r.rc}: ${r.stderr}`);
   assert.strictEqual(r.stdout.trim(), '', `expected empty stdout, got: ${r.stdout}`);
 });
 
 test('session-start plain with dead daemon: friendly hint, exit 1', () => {
-  const r = runCrag(['session-start'], { CRAG_ENGINE_URL: DEAD_URL });
+  const r = runCrag(['session-start'], { CRAG_ANCHOR_URL: DEAD_URL });
   assert.strictEqual(r.rc, 1);
   assert.ok(r.stderr.includes('crag memory up'), `expected down-hint, got: ${r.stderr}`);
 });
 
 test('session-end plain with dead daemon: friendly hint, exit 1', () => {
-  const r = runCrag(['session-end'], { CRAG_ENGINE_URL: DEAD_URL });
+  const r = runCrag(['session-end'], { CRAG_ANCHOR_URL: DEAD_URL });
   assert.strictEqual(r.rc, 1);
   assert.ok(r.stderr.includes('crag memory up'), `expected down-hint, got: ${r.stderr}`);
 });
@@ -244,7 +244,7 @@ function waitForPort(child, timeoutMs = 5000) {
   const url = `http://127.0.0.1:${port}`;
 
   await testAsync('session-start --hook: stdout is EXACTLY the SessionStart hook JSON', async () => {
-    const r = runCrag(['session-start', '--hook'], { CRAG_ENGINE_URL: url });
+    const r = runCrag(['session-start', '--hook'], { CRAG_ANCHOR_URL: url });
     assert.strictEqual(r.rc, 0, r.stderr);
     const parsed = JSON.parse(r.stdout.trim()); // single JSON line, nothing else
     assert.strictEqual(parsed.hookSpecificOutput.hookEventName, 'SessionStart');
@@ -254,14 +254,14 @@ function waitForPort(child, timeoutMs = 5000) {
   });
 
   await testAsync('session-start plain: human block with trust + last session', async () => {
-    const r = runCrag(['session-start'], { CRAG_ENGINE_URL: url });
+    const r = runCrag(['session-start'], { CRAG_ANCHOR_URL: url });
     assert.strictEqual(r.rc, 0, r.stderr);
     assert.ok(r.stdout.includes('Trust: 67%'), r.stdout);
     assert.ok(r.stdout.includes('Last session (2026-07-16): shipped'), r.stdout);
   });
 
   await testAsync('session-end plain: prints the payoff line', async () => {
-    const r = runCrag(['session-end'], { CRAG_ENGINE_URL: url });
+    const r = runCrag(['session-end'], { CRAG_ANCHOR_URL: url });
     assert.strictEqual(r.rc, 0, r.stderr);
     assert.ok(r.stdout.includes('captured 3 lessons'), r.stdout);
     assert.ok(r.stdout.includes('1 verified'), r.stdout);
@@ -270,7 +270,7 @@ function waitForPort(child, timeoutMs = 5000) {
   });
 
   await testAsync('session-end --hook against live daemon: still silent, exit 0', async () => {
-    const r = runCrag(['session-end', '--hook'], { CRAG_ENGINE_URL: url });
+    const r = runCrag(['session-end', '--hook'], { CRAG_ANCHOR_URL: url });
     assert.strictEqual(r.rc, 0, r.stderr);
     assert.strictEqual(r.stdout.trim(), '');
   });

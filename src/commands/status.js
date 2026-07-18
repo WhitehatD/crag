@@ -3,7 +3,7 @@
 /**
  * `crag status` — the cockpit dashboard.
  *
- * A thin client of the crag-engine daemon's GET /overview aggregate endpoint.
+ * A thin client of the crag-anchor daemon's GET /overview aggregate endpoint.
  * Renders a compact cockpit: trust score (%), corpus counts, needs-you count,
  * and today's capture/verify/promote strip. `--json` prints the raw contract
  * JSON for scripting; nothing else.

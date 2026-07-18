@@ -213,7 +213,7 @@ crag audit --fix    # recompiles all stale targets
 
 ## Cockpit — verified memory *(next release)*
 
-When a local [crag-engine](https://github.com/WhitehatD/crag-engine) daemon is
+When a local [crag-anchor](https://github.com/WhitehatD/crag-anchor) daemon is
 running, the CLI becomes a read-model cockpit over your agent's verified memory.
 These commands ship in the next `@whitehatd/crag` release (currently on
 `feat/memory-seam`):

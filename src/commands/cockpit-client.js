@@ -4,8 +4,8 @@
  * Shared HTTP client for the read-only cockpit commands
  * (`crag status`, `crag inbox`, `crag why`).
  *
- * These are thin clients of the crag-engine daemon's aggregate endpoints
- * (default http://127.0.0.1:8786, env CRAG_ENGINE_URL). Like `crag memory`,
+ * These are thin clients of the crag-anchor daemon's aggregate endpoints
+ * (default http://127.0.0.1:8786, env CRAG_ANCHOR_URL). Like `crag memory`,
  * they are the OPT-IN engine bridge layer — NOT part of the deterministic
  * compile path. Nothing under src/compile/ imports this file, and it imports
  * nothing from src/compile/. The determinism guarantee of `crag compile` /
@@ -20,9 +20,9 @@
 const DEFAULT_ENGINE_URL = 'http://127.0.0.1:8786';
 const DEFAULT_TIMEOUT_MS = 3000;
 
-/** env CRAG_ENGINE_URL > default loopback. */
+/** env CRAG_ANCHOR_URL > default loopback. */
 function engineUrl() {
-  return process.env.CRAG_ENGINE_URL || DEFAULT_ENGINE_URL;
+  return process.env.CRAG_ANCHOR_URL || DEFAULT_ENGINE_URL;
 }
 
 /** GET <base><path> with a hard timeout. Returns parsed JSON or null. */
@@ -70,14 +70,14 @@ async function postJson(base, p, body, timeoutMs = DEFAULT_TIMEOUT_MS) {
  * memory.js's INSTALL_HINT / "crag memory up" guidance so the two surfaces
  * read consistently.
  */
-const DOWN_HINT = `crag-engine is not reachable at ${'${url}'} — the memory backend is down.
+const DOWN_HINT = `crag Anchor is not reachable at ${'${url}'} — the memory backend is down.
 
   Start it:
     crag memory up            # start the engine + wire this repo
   Check status:
     crag memory status
 
-  (Override the URL with CRAG_ENGINE_URL if the daemon runs elsewhere.)`;
+  (Override the URL with CRAG_ANCHOR_URL if the daemon runs elsewhere.)`;
 
 /** Print the down hint with the resolved url interpolated. */
 function printDownHint(url) {
